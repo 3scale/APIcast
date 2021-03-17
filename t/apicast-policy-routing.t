@@ -2416,3 +2416,59 @@ operations is an empty array instead of nil
 [200, 200]
 --- no_error_log
 [error]
+
+
+=== TEST 35: Path encoding
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "replace_path": "{{uri | remove_first: '/test'}}",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "matches",
+                        "value": "^(/test/.*|/test/?)"
+                      }
+                    ]
+                  }
+                },
+
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "condition": {
+                    "operations": []
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location ~ / {
+     content_by_lua_block {
+       ngx.say(ngx.var.request_uri)
+     }
+  }
+--- request eval
+["GET /test/foo+foo", "GET /test/foo%2Bfoo", "GET /test/foo%2Ffoo", "GET /test/foo%20foo" ]
+--- response_body eval
+["/foo+foo\n", "/foo+foo\n", "/foo/foo\n", "/foo%20foo\n"]
+--- error_code eval
+[200, 200, 200, 200]
+--- no_error_log
+[error]
