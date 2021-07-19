@@ -146,7 +146,12 @@ jobs:
       - run: make test-runtime-image gateway-logs --keep-going
       - login-docker:
           command: |
-            IMAGE_NAME="apicast:${CIRCLE_TAG:-${CIRCLE_BRANCH}}"
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH}}"
+            if [ "${IMAGE_TAG}" == "master" ]
+            then
+              IMAGE_TAG="latest"
+            fi
+            IMAGE_NAME="apicast:${IMAGE_TAG}"
             docker tag apicast-runtime-image ${IMAGE_NAME}
             make push
       - cleanup-docker
@@ -174,7 +179,12 @@ jobs:
 
       - login-docker:
           command: |
-            IMAGE_NAME="apicast:${CIRCLE_TAG:-${CIRCLE_BRANCH}}-builder"
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH}}"
+            if [ "${IMAGE_TAG}" == "master-builder" ]
+            then
+              IMAGE_TAG="latest-builder"
+            fi
+            IMAGE_NAME="apicast:${IMAGE_TAG}"
             docker tag apicast-builder-image ${IMAGE_NAME}
             make push
 

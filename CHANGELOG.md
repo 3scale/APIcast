@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Upstream MTLS server verify [PR #1280](https://github.com/3scale/APIcast/pull/1280) [THREESCALE-7099](https://issues.redhat.com/browse/THREESCALE-7099)
 - Add Nginx filter policy [PR #1279](https://github.com/3scale/APIcast/pull/1279) [THREESCALE-6704](https://issues.redhat.com/browse/THREESCALE-6704)
 - Added on_failed policy [PR#1286](https://github.com/3scale/APIcast/pull/1286) [THREESCALE-6705](https://issues.redhat.com/browse/THREESCALE-6705)
+- Master branch containers builds are now latest tag on quay.io [PR#1289](https://github.com/3scale/APIcast/pull/1289) [THREESCALE-7251](https://issues.redhat.com/browse/THREESCALE-7251)
 
 
 ## [3.10.0] 2021-01-04
