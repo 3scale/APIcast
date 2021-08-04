@@ -33,7 +33,6 @@
                 0
             ]
         }
-    },
-    "additionalProperties": true
+    }
   }
 }

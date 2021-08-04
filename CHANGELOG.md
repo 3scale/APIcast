@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed warning messages [PR #1282](https://github.com/3scale/APIcast/pull/1282) [THREESCALE-5816](https://issues.redhat.com/browse/THREESCALE-5816)
 - Fixed lua socket error on ssl_certificate [PR #1283](https://github.com/3scale/APIcast/pull/1283) [THREESCALE-7230](https://issues.redhat.com/browse/THREESCALE-7230)
 - Fixed Acess log header [PR #1284](https://github.com/3scale/APIcast/pull/1284) [THREESCALE-6193](https://issues.redhat.com/browse/THREESCALE-6193)
+- Fixed Payload limit jsonschema [PR #1293](https://github.com/3scale/APIcast/pull/1293) [THREESCALE-6965](https://issues.redhat.com/browse/THREESCALE-6965)
 
 ### Added
 
