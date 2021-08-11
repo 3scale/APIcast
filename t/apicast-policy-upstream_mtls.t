@@ -385,7 +385,7 @@ $Test::Nginx::Util::ENDPOINT_SSL_PORT = Test::APIcast::get_random_port();
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "https://test:$Test::Nginx::Util::ENDPOINT_SSL_PORT/",
+        "api_backend": "https://localhost:$Test::Nginx::Util::ENDPOINT_SSL_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ],
@@ -456,7 +456,7 @@ $Test::Nginx::Util::ENDPOINT_SSL_PORT = Test::APIcast::get_random_port();
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "https://test:$Test::Nginx::Util::ENDPOINT_SSL_PORT/",
+        "api_backend": "https://localhost:$Test::Nginx::Util::ENDPOINT_SSL_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ],
@@ -505,7 +505,81 @@ GET /?user_key=value
 routines:tls_process_server_certificate:certificate verify failed
 
 
-=== TEST 7: MTLS policy with correct one correct CA certificate works
+=== TEST 7: MTLS policy with correct CA works as expected
+--- init eval
+$Test::Nginx::Util::ENDPOINT_SSL_PORT = Test::APIcast::get_random_port();
+--- user_files fixture=mutual_ssl.pl eval
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_token=token-value&service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- configuration eval
+<<EOF
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "api_backend": "https://localhost:$Test::Nginx::Util::ENDPOINT_SSL_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" },
+          {
+            "name": "apicast.policy.upstream_mtls",
+            "configuration": {
+                "certificate": "$ENV{TEST_NGINX_SERVER_ROOT}/html/client.crt",
+                "certificate_type": "path",
+                "certificate_key": "$ENV{TEST_NGINX_SERVER_ROOT}/html/client.key",
+                "certificate_key_type": "path",
+                "ca_certificates": [
+                  "$Test::Nginx::Util::UPSTREAM_INVALID_CA_CERT",
+                  "$Test::Nginx::Util::UPSTREAM_CA_CERT"
+                ],
+                "verify": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+EOF
+--- upstream eval
+<<EOF
+  listen $Test::Nginx::Util::ENDPOINT_SSL_PORT ssl;
+
+  ssl_certificate $ENV{TEST_NGINX_SERVER_ROOT}/html/server.crt;
+  ssl_certificate_key $ENV{TEST_NGINX_SERVER_ROOT}/html/server.key;
+
+  ssl_client_certificate $ENV{TEST_NGINX_SERVER_ROOT}/html/client.crt;
+  ssl_verify_client on;
+
+  location / {
+     echo 'ssl_client_s_dn: \$ssl_client_s_dn';
+     echo 'ssl_client_i_dn: \$ssl_client_i_dn';
+  }
+EOF
+--- request
+GET /?user_key=value
+--- response_body
+ssl_client_s_dn: CN=localhost,OU=APIcast,O=3scale
+ssl_client_i_dn: CN=localhost,OU=APIcast,O=3scale
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+=== TEST 8: MTLS policy with correct CA certificate, but invalid host
+The upstream host will use `test` instead of localhost, so things are expected
+to fail due to TLS certs are set for localhost
 --- init eval
 $Test::Nginx::Util::ENDPOINT_SSL_PORT = Test::APIcast::get_random_port();
 --- user_files fixture=mutual_ssl.pl eval
@@ -569,9 +643,6 @@ EOF
 EOF
 --- request
 GET /?user_key=value
---- response_body
-ssl_client_s_dn: CN=localhost,OU=APIcast,O=3scale
-ssl_client_i_dn: CN=localhost,OU=APIcast,O=3scale
---- error_code: 200
---- no_error_log
-[error]
+--- error_code: 502
+--- error_log
+upstream SSL certificate does not match
