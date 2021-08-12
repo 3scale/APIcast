@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed Payload limit jsonschema [PR #1293](https://github.com/3scale/APIcast/pull/1293) [THREESCALE-6965](https://issues.redhat.com/browse/THREESCALE-6965)
 - Fixed Status code overwrite policy jsonschema [PR #1294](https://github.com/3scale/APIcast/pull/1294) [THREESCALE-7238](https://issues.redhat.com/browse/THREESCALE-7238)
 - Fixed TLS host validation [PR #1295](https://github.com/3scale/APIcast/pull/1295) [THREESCALE-768](https://issues.redhat.com/browse/THREESCALE-768)
+- Fixed Status code overwrite policy jsonschema [PR #1296](https://github.com/3scale/APIcast/pull/1296) [THREESCALE-6415](https://issues.redhat.com/browse/THREESCALE-6415)
 
 ### Added
 
