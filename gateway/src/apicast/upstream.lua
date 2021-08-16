@@ -135,7 +135,10 @@ function _M:append_path(path)
     if not self.uri.path then
       self.uri.path = "/"
     end
-    self.uri.path = resty_url.join(self.uri.path, tmp_path)
+
+    if tmp_path ~= "" then
+      self.uri.path = resty_url.join(self.uri.path, tmp_path)
+    end
 
     -- If query is already present, do not need to add more.
     if tmp_query and tmp_query ~= "" then

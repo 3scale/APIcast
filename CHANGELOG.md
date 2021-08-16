@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed TLS host validation [PR #1295](https://github.com/3scale/APIcast/pull/1295) [THREESCALE-768](https://issues.redhat.com/browse/THREESCALE-768)
 - Fixed Status code overwrite policy jsonschema [PR #1296](https://github.com/3scale/APIcast/pull/1296) [THREESCALE-6415](https://issues.redhat.com/browse/THREESCALE-6415)
 - Fixed URL encoding on set-path [PR #1297](https://github.com/3scale/APIcast/pull/1297) [THREESCALE-5117](https://issues.redhat.com/browse/THREESCALE-5117)
+- Fixed trailing slash on routing policy [PR #1298](https://github.com/3scale/APIcast/pull/1298) [THREESCALE-7146](https://issues.redhat.com/browse/THREESCALE-7146)
 
 
 ### Added

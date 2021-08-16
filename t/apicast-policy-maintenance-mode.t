@@ -188,7 +188,6 @@ Content-Type: application/json
 
 
 === TEST 5: Maintenance mode is applied with routing policy + matching upstream condition
-
 --- configuration
 {
   "services": [
@@ -204,7 +203,7 @@ Content-Type: application/json
             "configuration": {
               "rules": [
                 {
-                    "url": "http://test:$TEST_NGINX_SERVER_PORT/b1",
+                    "url": "http://test:$TEST_NGINX_SERVER_PORT/b1/",
                     "condition": {
                         "operations": [
                             {
@@ -219,7 +218,7 @@ Content-Type: application/json
               ]
             }
           },
-          { 
+          {
             "name": "apicast.policy.maintenance_mode",
             "configuration": {
                 "condition": {

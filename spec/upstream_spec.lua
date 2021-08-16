@@ -80,6 +80,12 @@ describe('Upstream', function()
             assert.same(up.uri.path, "/test/")
         end)
 
+        it('trailing slash is not appended', function()
+            local up = Upstream.new('http://host:8090/test')
+            up:append_path("")
+            assert.same(up.uri.path, "/test")
+        end)
+
     end)
 
     local function stub_ngx_request()
