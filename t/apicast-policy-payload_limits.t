@@ -183,6 +183,7 @@ yay, api backend
 
 
 === TEST 4: Response limit set to 100 rejects the request
+--- timeout: 5s
 --- backend
   location /transactions/authrep.xml {
     content_by_lua_block {
@@ -245,6 +246,7 @@ Content-Length: 17
 
 
 === TEST 5: Request body size smaller than the limit
+--- timeout: 5s
 --- backend
   location /transactions/authrep.xml {
     content_by_lua_block {
