@@ -179,7 +179,7 @@ jobs:
 
       - login-docker:
           command: |
-            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH}}"
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH}}-builder"
             if [ "${IMAGE_TAG}" == "master-builder" ]
             then
               IMAGE_TAG="latest-builder"
