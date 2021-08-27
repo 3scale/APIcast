@@ -49,6 +49,6 @@ content_by_lua_block {
 
 --- error_code: 200
 --- expected_json
-{"services":[{"id":42,"backend_version":1}],"oidc":[false]}
+{"services":[{"id":42,"backend_version":1}],"oidc":[{"service_id": 42}]}
 --- no_error_log
 [error]

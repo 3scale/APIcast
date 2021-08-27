@@ -40,7 +40,8 @@ function _M.call(...)
         for i,service in ipairs(config.services or empty) do
             -- Assign false instead of nil to avoid sparse arrays. cjson raises
             -- an error by default when converting sparse arrays.
-            oidc[i] = oidc[i] or load_service(service) or false
+            oidc[i] = oidc[i] or load_service(service) or { service_id = service.id}
+            -- oidc[i] = oidc[i] or load_service(service) or false
         end
 
         config.oidc = oidc

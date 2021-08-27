@@ -173,7 +173,7 @@ include $TEST_NGINX_MANAGEMENT_CONFIG;
 --- request
 POST /boot
 --- expected_json
-{"status":"ok","config":{"oidc":[false],"services":[{"id":42}]}}
+{"status":"ok","config":{"oidc":[{"service_id": 42}],"services":[{"id":42}]}}
 --- error_code: 200
 --- udp_listen random_port env chomp
 $TEST_NGINX_RANDOM_PORT
@@ -198,8 +198,8 @@ include $TEST_NGINX_MANAGEMENT_CONFIG;
 --- request eval
 ['POST /boot', 'POST /boot']
 --- expected_json eval
-['{"status":"ok","config":{"services":[{"id":42}],"oidc":[false]}}',
-'{"status":"ok","config":{"services":[{"id":42}],"oidc":[false]}}']
+['{"status":"ok","config":{"services":[{"id":42}],"oidc":[{"service_id": 42}]}}',
+'{"status":"ok","config":{"services":[{"id":42}],"oidc":[{"service_id": 42}]}}']
 --- error_code eval
 [200, 200]
 --- udp_listen random_port env chomp

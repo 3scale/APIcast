@@ -201,6 +201,17 @@ use JSON qw(to_json);
 to_json({
   services => [
   {
+    id => 12,
+    backend_version => '1',
+    proxy => {
+        api_backend => "http://test:$TEST_NGINX_SERVER_PORT/",
+        hosts => ["null.com"],
+        proxy_rules => [
+          { pattern => '/', http_method => 'GET', metric_system_name => 'hits', delta => 1  }
+        ]
+    }
+  },
+  {
     id => 24,
     backend_version => 'oauth',
     backend_authentication_type => 'provider_key',
@@ -231,8 +242,10 @@ to_json({
     }
   }
   ],
-  oidc => [{
-    service_id => 24, 
+  oidc => [
+  {service_id => 12},
+  {
+    service_id => 24,
     issuer => 'https://example.com/auth/realms/apicast_zero',
     config => { id_token_signing_alg_values_supported => [ 'RS256' ] },
     keys => { somekid => { pem => $::public_key } },

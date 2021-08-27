@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed trailing slash on routing policy [PR #1298](https://github.com/3scale/APIcast/pull/1298) [THREESCALE-7146](https://issues.redhat.com/browse/THREESCALE-7146)
 - Fixed race condition on caching mode [PR #1259](https://github.com/3scale/APIcast/pull/1259) [THREESCALE-4464](https://issues.redhat.com/browse/THREESCALE-4464)
 - Fixed Nginx filter issues on jsonschema [PR #1302](https://github.com/3scale/APIcast/pull/1302) [THREESCALE-7349](https://issues.redhat.com/browse/THREESCALE-7349)
+- Fixed issues with OIDC filters [PR #1304](https://github.com/3scale/APIcast/pull/1304) [THREESCALE-6042](https://issues.redhat.com/browse/THREESCALE-6042)
 
 
 ### Added
