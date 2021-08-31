@@ -135,8 +135,11 @@ function _M:authorize(context, service, usage, credentials, ttl)
   else
     ngx.log(ngx.INFO, 'apicast cache miss key: ', cached_key, ' value: ', is_known)
 
+    -- push cached_key on context for possible future use on post_action
+    context.cached_key = cached_key
     -- set cached_key to nil to avoid doing the authrep in post_action
     ngx.var.cached_key = nil
+
 
     local backend = build_backend_client(self, service)
     local res = backend:authrep(formatted_usage, credentials, self.extra_params_backend_authrep)
@@ -322,21 +325,12 @@ local function post_action(self, context, cached_key, service, credentials, form
           formatted_usage,
           credentials,
           response_codes_data(response_status_code),
-          self.extra_params_backend_authrep
-  )
-
+          self.extra_params_backend_authrep)
   self:handle_backend_response(context, cached_key, res)
 end
 
 function _M:post_action(context)
   local cached_key = ngx.var.cached_key
-
-  if not cached_key or cached_key == "null" or cached_key == '' then
-      ngx.log(ngx.INFO, '[async] skipping after action, no cached key')
-      return
-  end
-
-  ngx.log(ngx.INFO, '[async] reporting to backend asynchronously, cached_key: ', cached_key)
 
   local service_id = ngx.var.service_id
   local service = ngx.ctx.service or self.configuration:find_by_id(service_id)
@@ -344,6 +338,23 @@ function _M:post_action(context)
   local credentials = context.credentials
   local formatted_usage = context.usage:format()
 
+  if not cached_key or cached_key == "null" or cached_key == '' then
+    if not response_codes then
+      ngx.log(ngx.INFO, '[async] skipping after action, no cached key')
+      return
+    end
+
+    -- usage should have at least one entry, but in this case, metrics will be
+    -- zero. The main reason, is that we  we don't want to increment the
+    -- metrics, only the status_code, metric has been incremented on rewrite
+    -- phase
+    local empty_usage = Usage.new()
+    empty_usage:add('hits', 0)
+    reporting_executor:post(post_action, self, context, context.cached_key, service, credentials, empty_usage:format(), ngx.var.status)
+    return
+  end
+
+  ngx.log(ngx.INFO, '[async] reporting to backend asynchronously, cached_key: ', cached_key)
   reporting_executor:post(post_action, self, context, cached_key, service, credentials, formatted_usage, ngx.var.status)
 end
 
