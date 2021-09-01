@@ -353,15 +353,9 @@ EOF
 EOF
 --- request
 GET /?user_key=value
---- response_body
-ssl_client_s_dn: CN=localhost,OU=APIcast,O=3scale
-ssl_client_i_dn: CN=localhost,OU=APIcast,O=3scale
---- error_code: 200
+--- error_code: 502
 --- no_error_log
 [error]
---- error_log
-Set verify without including CA certificates
-
 
 
 === TEST 5: MTLS policy with correct certificate, verify works as expected

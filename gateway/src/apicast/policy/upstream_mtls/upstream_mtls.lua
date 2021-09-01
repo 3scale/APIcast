@@ -170,17 +170,17 @@ function _M:balancer(context)
     return
   end
 
+  local val = C.ngx_http_apicast_ffi_set_ssl_verify(r, ffi.new("int", 1), ffi.new("int", 1))
+  if val ~= ngx.OK then
+    ngx.log(ngx.WARN, "Cannot verify SSL upstream connection")
+  end
+
   if not self.ca_store then
     ngx.log(ngx.WARN, "Set verify without including CA certificates")
     return
   end
 
   self.set_ca_cert(r, self.ca_store)
-
-  local val = C.ngx_http_apicast_ffi_set_ssl_verify(r, ffi.new("int", 1), ffi.new("int", 1))
-  if val ~= ngx.OK then
-    ngx.log(ngx.WARN, "Cannot verify SSL upstream connection")
-  end
 end
 
 return _M
