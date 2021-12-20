@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fixed issues with OIDC filters [PR #1304](https://github.com/3scale/APIcast/pull/1304) [THREESCALE-6042](https://issues.redhat.com/browse/THREESCALE-6042)
 - Fixed issues with Upstream MTLS certs [PR #1307](https://github.com/3scale/APIcast/pull/1307) [THREESCALE-7508](https://issues.redhat.com/browse/THREESCALE-7508)
+- Fixed warning messages [PR #1318](https://github.com/3scale/APIcast/pull/1318) [THREESCALE-7906](https://issues.redhat.com/browse/THREESCALE-7906)
 
 ### Added
 
