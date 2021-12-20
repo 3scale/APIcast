@@ -4,6 +4,15 @@ map $status $extended_access_log {
     default '';
 }
 
+map $status $access_logs_enabled {
+  default '1';
+}
+
+map $status $extended_access_logs_enabled {
+  default '0';
+}
+
+
 log_format extended escape=none '$extended_access_log';
 
 server {
@@ -50,9 +59,7 @@ server {
 server {
   {% capture log_buffer %} {%if log_buffer_size %}buffer={{ log_buffer_size }} {% endif %} {% endcapture %}
 
-  set $access_logs_enabled '1';
   access_log {{ access_log_file | default: "/dev/stdout" }} time if=$access_logs_enabled {{ log_buffer }};
-  set $extended_access_logs_enabled '0';
   access_log {{ access_log_file | default: "/dev/stdout" }} extended if=$extended_access_logs_enabled {{ log_buffer }};
 
   {%- assign http_port = port.apicast | default: 8080 %}
