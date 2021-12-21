@@ -146,7 +146,8 @@ jobs:
       - run: make test-runtime-image gateway-logs --keep-going
       - login-docker:
           command: |
-            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH}}"
+            CIRCLE_BRANCH_LOWER=`echo $CIRCLE_BRANCH | tr '[:upper:]' '[:lower:]'`
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH_LOWER}}"
             if [ "${IMAGE_TAG}" == "master" ]
             then
               IMAGE_TAG="latest"
@@ -179,7 +180,8 @@ jobs:
 
       - login-docker:
           command: |
-            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH}}-builder"
+            CIRCLE_BRANCH_LOWER=`echo $CIRCLE_BRANCH | tr '[:upper:]' '[:lower:]'`
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH_LOWER}}-builder"
             if [ "${IMAGE_TAG}" == "master-builder" ]
             then
               IMAGE_TAG="latest-builder"
@@ -281,7 +283,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: IMAGE_TAG=${CIRCLE_TAG:-${CIRCLE_BRANCH}} make benchmark
+      - run: IMAGE_TAG=`echo $CIRCLE_BRANCH | tr '[:upper:]' '[:lower:]'` make benchmark
       - run: IMAGE_TAG=master make benchmark
       - store_artifacts:
           path: tmp/benchmark
