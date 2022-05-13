@@ -342,11 +342,10 @@ is not matched
           proxy = {
             api_backend = 'http://127.0.0.1:$TEST_NGINX_SERVER_PORT/api/',
             proxy_rules = {
-              { pattern = '/foo?bar=baz',
-                querystring_parameters = { bar = 'baz' },
-                http_method = 'POST',
+              { pattern = '/foo',
+                http_method = 'GET',
                 metric_system_name = 'bar',
-                delta = 7 }
+                delta = 1 }
             }
           }
         },
@@ -365,11 +364,6 @@ is not matched
   }
 --- request
 POST /bar
---- more_headers
-X-3scale-Debug: my-token
---- response_body
-api response
 --- error_code: 404
 --- response_headers
-X-3scale-matched-rules: /foo?bar=baz
-X-3scale-usage: usage%5Bbar%5D=7
+X-3scale-Debug: my-token
