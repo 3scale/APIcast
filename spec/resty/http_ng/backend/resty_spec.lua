@@ -11,7 +11,7 @@ describe('resty backend', function()
     local method = 'GET'
 
     it('accesses the url', function()
-      local response, err = backend:send{method = method, url = 'http://example.com/'}
+      local response, err = backend:send{method = method, url = 'http://httpbin.org/get'}
       assert.falsy(err)
       assert.falsy(response.error)
       assert.truthy(response.ok)

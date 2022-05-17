@@ -19,7 +19,7 @@ __DATA__
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ],
@@ -46,12 +46,13 @@ __DATA__
     }
   }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
     access_by_lua_block {
       local host = ngx.req.get_headers()["Host"]
-      local result = string.match(host, "^test:")
+      local result = string.match(host, "^test%-upstream%.lvh%.me:")
       local assert = require('luassert')
-      assert.equals(result, "test:")
+      assert.equals(result, "test-upstream.lvh.me:")
       ngx.say("yay, api backend")
     }
   }
@@ -73,7 +74,7 @@ using proxy: $TEST_NGINX_HTTP_PROXY
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ],
@@ -100,12 +101,13 @@ using proxy: $TEST_NGINX_HTTP_PROXY
     }
   }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
     access_by_lua_block {
       local host = ngx.req.get_headers()["Host"]
-      local result = string.match(host, "^test:")
+      local result = string.match(host, "^test%-upstream%.lvh%.me:")
       local assert = require('luassert')
-      assert.equals(result, "test:")
+      assert.equals(result, "test-upstream.lvh.me:")
       ngx.say("yay, api backend")
     }
   }
@@ -125,7 +127,7 @@ using proxy: $TEST_NGINX_HTTP_PROXY
     {
       "backend_version":  1,
       "proxy": {
-        "api_backend": "https://test:$TEST_NGINX_RANDOM_PORT",
+        "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ],
@@ -151,6 +153,7 @@ using proxy: $TEST_NGINX_HTTP_PROXY
     }
   }
 --- upstream env
+server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -165,11 +168,11 @@ location /test {
       assert = require('luassert')
       assert.equal('https', ngx.var.scheme)
       assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-      assert.equal('test', ngx.var.ssl_server_name)
+      assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
 
       local host = ngx.req.get_headers()["Host"]
-      local result = string.match(host, "^test:")
-      assert.equals(result, "test:")
+      local result = string.match(host, "^test%-upstream%.lvh%.me:")
+      assert.equals(result, "test-upstream.lvh.me:")
     }
 }
 --- request
@@ -177,15 +180,17 @@ GET /test?user_key=test3
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
---- response_body env
-GET /test?user_key=test3 HTTP/1.1
-User-Agent: Test::APIcast::Blackbox
-ETag: foobar
-Connection: close
-Host: test:$TEST_NGINX_RANDOM_PORT
+--- expected_response_body_like_multiple eval
+[[
+    qr{GET \/test\?user_key=test3 HTTP\/1\.1},
+    qr{ETag\: foobar},
+    qr{Connection\: close},
+    qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
+    qr{Host\: test-upstream.lvh.me\:\d+}
+]]
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- user_files fixture=tls.pl eval
 --- error_log env
 using proxy: $TEST_NGINX_HTTPS_PROXY

@@ -2,6 +2,9 @@ local find = string.find
 local sub = string.sub
 local assert = assert
 local setmetatable = setmetatable
+local resty_url = require 'resty.url'
+local format = string.format
+
 
 ------------
 -- @module middleware
@@ -20,13 +23,20 @@ local request = { }
 
 request.headers = require 'resty.http_ng.headers'
 
+local function host_header(uri)
+    local port = uri.port
+    local default_port = resty_url.default_port(uri.scheme)
+
+    if port and port ~= default_port then
+        return format('%s:%s', uri.host, port)
+    else
+        return uri.host
+    end
+end
+
 local function extract_host(url)
-  local _, last = find(url, '://', 0, true)
-  local len = find(url, '/', last + 1, true)
-
-  if len then len = len - 1 end
-
-  return sub(url, last + 1, len)
+  local uri = resty_url.parse(url)
+  return host_header(uri or {})
 end
 
 function request.extract_headers(req)

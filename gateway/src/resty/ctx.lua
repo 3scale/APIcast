@@ -37,7 +37,7 @@ function _M.ref()
 
   local _ = ngx.ctx -- load context
 
-  local ctx_ref = C.ngx_http_lua_ffi_get_ctx_ref(r)
+  local ctx_ref = C.ngx_http_lua_ffi_get_ctx_ref(r, ffi.new("int[1]"), ffi.new("int[1]"))
 
   if ctx_ref == FFI_NO_REQ_CTX then
     return error("no request ctx found")

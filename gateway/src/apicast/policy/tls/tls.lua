@@ -191,7 +191,6 @@ function _M:ssl_certificate()
   for _, cert in ipairs(self.certificates) do
     if set_certificate(cert) then
       -- Certificate is set correctly, use this one and end the loop.
-      ngx.exit(ngx.OK)
       break
     end
   end

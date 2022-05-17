@@ -7,6 +7,7 @@ our $public_key = `cat t/fixtures/rsa.pub`;
 # Test::Nginx does not allow to grep access logs, so we redirect them to
 # stderr to be able to use "grep_error_log" by setting APICAST_ACCESS_LOG_FILE
 $ENV{APICAST_ACCESS_LOG_FILE} = "$Test::Nginx::Util::ErrLogFile";
+$ENV{APICAST_HTTPS_RANDOM_PORT} = Test::APIcast::get_random_port();
 check_accum_error_log();
 run_tests();
 
@@ -498,7 +499,7 @@ to_json({
   oidc => [{
     issuer => 'https://example.com/auth/realms/apicast',
     config => { id_token_signing_alg_values_supported => [ 'RS256' ] },
-    keys => { somekid => { pem => $::public_key } },
+    keys => { somekid => { pem => $::public_key, alg => 'RS256' } },
   }]
 });
 --- upstream
@@ -527,3 +528,216 @@ my $jwt = encode_jwt(payload => {
 [qr/^AUD::something/]
 --- no_error_log
 [error]
+
+=== TEST 13: Verify credentials on logs
+Some users want to log some credentials on the log for debugging purposes.
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "hosts": [
+          "localhost"
+        ],
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.logging",
+            "configuration": {
+              "custom_logging": "Status::{{ status }} USER_KEY::{{credentials.user_key }} {{service.id}}",
+              "enable_json_logs": false
+            }
+          },
+          {
+            "name": "apicast",
+            "version": "builtin",
+            "configuration": {}
+          }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+location /transactions/authrep.xml {
+  content_by_lua_block {
+    ngx.exit(200)
+  }
+}
+--- upstream env
+location / {
+  access_by_lua_block {
+      ngx.say("OK")
+  }
+}
+--- request
+GET /?user_key=123
+--- response_body env
+OK
+--- error_code: 200
+--- error_log eval
+[qr/^Status\:\:200 USER_KEY\:\:123 42/]
+--- no_error_log
+[error]
+
+=== TEST 14: APICAST_ACCESS_LOG_BUFFER env parameter
+When buffer is enabled, log will be bumped in chunks
+--- env eval
+('APICAST_ACCESS_LOG_BUFFER' => '1k')
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "hosts": [
+          "localhost"
+        ],
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.logging",
+            "configuration": {
+              "custom_logging": "Status::{{ status }} USER_KEY::{{credentials.user_key }} {{service.id}}",
+              "enable_json_logs": false
+            }
+          },
+          {
+            "name": "apicast",
+            "version": "builtin",
+            "configuration": {}
+          }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+location /transactions/authrep.xml {
+  content_by_lua_block {
+    ngx.exit(200)
+  }
+}
+--- upstream env
+location / {
+  access_by_lua_block {
+      ngx.say("OK")
+  }
+}
+--- request
+GET /?user_key=123
+--- response_body env
+OK
+--- error_code: 200
+--- no_error_log eval
+[qr/^Status\:\:200 USER_KEY\:\:123 42/]
+
+=== TEST 15: original_request must contain the right information 
+for requests after the first when the same TCP connection is reused
+--- env eval
+(
+    'APICAST_HTTPS_PORT' => $ENV{APICAST_HTTPS_RANDOM_PORT},
+    'HTTP_KEEPALIVE_TIMEOUT' => '5'
+)
+--- backend
+location /transactions/authrep.xml {
+  content_by_lua_block {
+    ngx.exit(200)
+  }
+}
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version": 1,
+      "proxy": {
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/",
+        "hosts": ["127.0.0.1"],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.apicast"
+          },
+          {
+            "name": "apicast.policy.logging",
+            "configuration": {
+              "custom_logging": "Status::{{ status }} {{original_request.path}}",
+              "enable_json_logs": false
+            }
+          }
+        ],
+        "proxy_rules": [
+          {
+            "pattern": "/one",
+            "http_method": "GET",
+            "metric_system_name": "hits",
+            "delta": 1
+          },
+          {
+            "pattern": "/two",
+            "http_method": "GET",
+            "metric_system_name": "hits",
+            "delta": 1
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+location ~ /api-backend(/.+) {
+  echo 'yay, api backend: $1';
+}
+--- test
+content_by_lua_block {
+  local http = require "resty.http"
+  local resty_env = require 'resty.env'
+
+  local https_port = resty_env.get('APICAST_HTTPS_PORT')
+  local httpc = http.new()
+  httpc:connect("127.0.0.1", https_port)
+  httpc:ssl_handshake(nil, "127.0.0.1", false)
+
+  local responses, err = httpc:request_pipeline({
+    {
+      method = "GET",
+      path = "/one",
+      version = 1.1,
+      ssl_verify = false,
+      query = "?user_key=foo"
+    },
+    {
+      method = "GET",
+      path = "/two",
+      version = 1.1,
+      ssl_verify = false,
+      query = "?user_key=foo"
+    }
+  })
+
+  local res1 = responses[1]
+  res1.body = responses[1]:read_body()
+  local res2 = responses[2]
+  res2.body = responses[2]:read_body()
+
+  assert(responses[1], "Request failed"..(err or ""))
+  assert(responses[2], "Request failed"..(err or ""))
+  httpc:close()
+}
+--- no_error_log
+[error]
+--- error_log eval
+[qr/^Status\:\:200 \/one/, qr/^Status\:\:200 \/two/]

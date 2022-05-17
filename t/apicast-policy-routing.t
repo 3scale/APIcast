@@ -3,6 +3,8 @@ use Test::APIcast::Blackbox 'no_plan';
 
 our $rsa = `cat t/fixtures/rsa.pem`;
 
+$ENV{APICAST_HTTPS_RANDOM_PORT} = Test::APIcast::get_random_port();
+
 run_tests();
 
 __DATA__
@@ -479,7 +481,7 @@ yay, api backend
       },
       "keys": {
         "somekid": {
-          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----"
+          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----", "alg": "RS256"
         }
       }
     }
@@ -576,7 +578,7 @@ yay, api backend
       },
       "keys": {
         "somekid": {
-          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----"
+          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----", "alg": "RS256"
         }
       }
     }
@@ -673,7 +675,7 @@ yay, api backend
       },
       "keys": {
         "somekid": {
-          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----"
+          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----", "alg": "RS256"
         }
       }
     }
@@ -887,7 +889,7 @@ does not raise any errors and rules do not match.
       },
       "keys": {
         "somekid": {
-          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----"
+          "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----", "alg": "RS256"
         }
       }
     }
@@ -2123,5 +2125,464 @@ GET /?user_key=value
 --- error_code: 404
 --- error_log
 could not find upstream for service: 42
+--- no_error_log
+[error]
+
+
+=== TEST 32: URL is not double encoded.
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version": 1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/second/",
+                  "owner_id": 4,
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "liquid",
+                        "liquid_value": "test",
+                        "op": "==",
+                        "value": "test"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "apicast.policy.apicast"
+          }
+        ],
+        "proxy_rules": [
+          {
+            "pattern": "/foo",
+            "http_method": "GET",
+            "metric_system_name": "test",
+            "delta": 1
+          }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.say("OK")
+    }
+  }
+--- upstream
+  location / {
+    content_by_lua_block {
+      ngx.say(ngx.var.uri);
+    }
+  }
+--- request
+GET /foo/test%20space?user_key=foo
+--- response_body
+/second/foo/test space
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+=== TEST 33: value of hostname_rewrite is honored
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "==",
+                        "value": "/a_path"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "apicast.policy.echo"
+          }
+        ],
+        "hostname_rewrite": "hostname_rewrite_value"
+      }
+    }
+  ]
+}
+--- upstream
+  server_name hostname_rewrite_value;
+
+  location /a_path {
+     content_by_lua_block {
+       local host_header = ngx.req.get_headers()['Host']
+       require('luassert').equals('hostname_rewrite_value', host_header)
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /a_path
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+=== TEST 34: value of host_header takes precedence over hostname_rewrite
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT",
+                  "host_header": "routing_host_value",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "==",
+                        "value": "/a_path"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "apicast.policy.echo"
+          }
+        ],
+        "hostname_rewrite": "hostname_rewrite_value"
+      }
+    }
+  ]
+}
+--- upstream
+  server_name routing_host_value;
+
+  location /a_path {
+     content_by_lua_block {
+       local host_header = ngx.req.get_headers()['Host']
+       require('luassert').equals('routing_host_value', host_header)
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /a_path
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+=== TEST 34: Match all conditions working as expected
+Context: https://issues.redhat.com/browse/THREESCALE-6415
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "==",
+                        "value": "/a_path"
+                      }
+                    ]
+                  }
+                },
+
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "condition": {}
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location ~ / {
+     content_by_lua_block {
+       ngx.say(ngx.var.uri)
+     }
+  }
+--- request eval
+["GET /a_path", "GET /"]
+--- response_body eval
+["/a_path\n", "/\n"]
+--- error_code eval
+[200, 200]
+--- no_error_log
+[error]
+
+
+=== TEST 35: Match all conditions working as expected
+Context: https://issues.redhat.com/browse/THREESCALE-6415
+operations is an empty array instead of nil
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "==",
+                        "value": "/a_path"
+                      }
+                    ]
+                  }
+                },
+
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "condition": {
+                    "operations": []
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location ~ / {
+     content_by_lua_block {
+       ngx.say(ngx.var.uri)
+     }
+  }
+--- request eval
+["GET /a_path", "GET /"]
+--- response_body eval
+["/a_path\n", "/\n"]
+--- error_code eval
+[200, 200]
+--- no_error_log
+[error]
+
+
+=== TEST 35: Path encoding
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "replace_path": "{{uri | remove_first: '/test'}}",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "matches",
+                        "value": "^(/test/.*|/test/?)"
+                      }
+                    ]
+                  }
+                },
+
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/",
+                  "condition": {
+                    "operations": []
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location ~ / {
+     content_by_lua_block {
+       ngx.say(ngx.var.request_uri)
+     }
+  }
+--- request eval
+["GET /test/foo+foo", "GET /test/foo%2Bfoo", "GET /test/foo%2Ffoo", "GET /test/foo%20foo" ]
+--- response_body eval
+["/foo+foo\n", "/foo+foo\n", "/foo/foo\n", "/foo%20foo\n"]
+--- error_code eval
+[200, 200, 200, 200]
+--- no_error_log
+[error]
+
+
+=== TEST 36: Routing policy must choose correct backend 
+based on current configuration & request parameters
+--- env eval
+(
+    'APICAST_HTTPS_PORT' => $ENV{APICAST_HTTPS_RANDOM_PORT},
+    'HTTP_KEEPALIVE_TIMEOUT' => '5'
+)
+--- backend
+location /transactions/authrep.xml {
+  content_by_lua_block {
+    ngx.exit(200)
+  }
+}
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version": 1,
+      "proxy": {
+        "hosts": [
+          "127.0.0.1"
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/foo/",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "==",
+                        "value": "/one"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/bar/",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "==",
+                        "value": "/two"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "apicast.policy.echo"
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+location ~ /api-backend(/.+) {
+  echo 'yay, api backend: $1';
+}
+--- test
+content_by_lua_block {
+  local http = require "resty.http"
+  local resty_env = require 'resty.env'
+
+  local https_port = resty_env.get('APICAST_HTTPS_PORT')
+  local httpc = http.new()
+  httpc:connect("127.0.0.1", https_port)
+  httpc:ssl_handshake(nil, "127.0.0.1", false)
+
+  local responses, err = httpc:request_pipeline({
+    {
+      method = "GET",
+      path = "/one",
+      version = 1.1,
+      ssl_verify = false,
+      query = "?user_key=foo"
+    },
+    {
+      method = "GET",
+      path = "/two",
+      version = 1.1,
+      ssl_verify = false,
+      query = "?user_key=foo"
+    }
+  })
+
+  local res1 = responses[1]
+  res1.body = responses[1]:read_body()
+  local res2 = responses[2]
+  res2.body = responses[2]:read_body()
+
+  assert(res1, "Request failed"..(err or ""))
+  assert(string.find(res1.body, "/foo/one"), "Expected: /foo/one, got: "..(res1.body or ""))
+
+  assert(res2, "Request failed"..(err or ""))
+  --Check if incorrect routing as reported in THREESCALE-8007 is happening:
+  assert(not string.find(res2.body, "/foo/two"), "Expected != .*/foo/two, got: "..(res2.body or "")) 
+  assert(string.find(res2.body, "/bar/two"), "Expected: /bar/two, got: "..(res2.body or ""))
+  httpc:close()
+}
 --- no_error_log
 [error]

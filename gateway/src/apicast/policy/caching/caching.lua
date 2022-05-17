@@ -73,7 +73,8 @@ local function allow_handler(cache, cached_key, response, ttl)
   end
 end
 
-local function disabled_cache_handler()
+local function disabled_cache_handler(cache, cached_key)
+  cache:delete(cached_key)
   ngx.log(ngx.DEBUG, 'Caching is disabled. Skipping cache handler.')
 end
 
@@ -100,17 +101,26 @@ local function handler(config)
   return res
 end
 
+local function is_disabled(config)
+  return config.caching_type and config.caching_type == "none"
+end
+
 --- Initialize a Caching policy.
 -- @tparam[opt] table config
 -- @field caching_type Caching type (strict, resilient, allow, none)
 function _M.new(config)
   local self = new(config)
   self.cache_handler = handler(config or {})
+  self.is_disabled = is_disabled(config or {})
   return self
 end
 
+
 function _M:export()
-  return { cache_handler = self.cache_handler }
+  return {
+    cache_handler = self.cache_handler,
+    cache_is_disabled = self.is_disabled
+  }
 end
 
 return _M

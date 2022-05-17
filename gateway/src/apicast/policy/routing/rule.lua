@@ -44,6 +44,9 @@ local function init_operation(config_operation)
 end
 
 local function init_condition(config_condition)
+  if not config_condition.operations then
+    config_condition.operations = {}
+  end
   local operations = tab_new(#config_condition.operations, 0)
 
   for _, operation in ipairs(config_condition.operations) do

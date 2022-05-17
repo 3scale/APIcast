@@ -29,6 +29,23 @@ describe('request', function()
     assert.equal('example.com',req.headers.Host)
   end)
 
+  it('correct host heder format', function()
+    results = {
+      ['http://foo.com'] = "foo.com",
+      ['http://foo.com:80'] = "foo.com",
+      ['http://foo.com:80/test'] = "foo.com",
+      ['http://foo.com:8080/test'] = "foo.com:8080",
+      ['https://foo.com/'] = "foo.com",
+      ['https://foo.com:8043/'] = "foo.com:8043",
+      ['https://foo.com:8043/test'] = "foo.com:8043",
+    }
+    for key, val in pairs(results) do
+      local req = request.new{url = key, method = 'GET' }
+      assert.equal(val, req.headers.Host)
+    end
+
+  end)
+
   it('has version', function()
     local req = request.new{url = 'http://example.com/path', method = 'GET' }
 

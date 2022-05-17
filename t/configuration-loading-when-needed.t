@@ -1,6 +1,8 @@
 use lib 't';
 use Test::APIcast::Blackbox 'no_plan';
 
+require("policies.pl");
+
 run_tests();
 
 __DATA__
@@ -18,7 +20,7 @@ not defined in this test.
   'APICAST_LOAD_SERVICES_WHEN_NEEDED' => 'true',
 )
 --- upstream env
-location = /admin/api/services/proxy/configs/production.json {
+location = /admin/api/account/proxy_configs/production.json {
   content_by_lua_block {
     expected = "host=localhost"
     require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
@@ -42,12 +44,11 @@ location = /admin/api/services/proxy/configs/production.json {
 --- test
 content_by_lua_block {
   require('resty.env').set('APICAST_CONFIGURATION_LOADER', 'lazy')
-  local configuration = require('apicast.configuration_loader').load('localhost')
-  ngx.say(require('cjson').encode(configuration))
+  ngx.say(require('apicast.configuration_loader').load('localhost'))
 }
 
 --- error_code: 200
---- response_body
-"{\"services\":[{\"id\":42,\"backend_version\":1}],\"oidc\":[false]}"
+--- expected_json
+{"services":[{"id":42,"backend_version":1}],"oidc":[{"service_id": 42}]}
 --- no_error_log
 [error]

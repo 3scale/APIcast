@@ -221,10 +221,13 @@ rover: $(ROVER)
 $(S2I_CONTEXT)/Roverfile.lock : $(S2I_CONTEXT)/Roverfile $(S2I_CONTEXT)/apicast-scm-1.rockspec
 	$(ROVER) lock --roverfile=$(S2I_CONTEXT)/Roverfile
 
-lua_modules: $(ROVER) $(S2I_CONTEXT)/Roverfile.lock
-	# This variable is to skip issues with openssl 1.1.1
-	# https://github.com/wahern/luaossl/issues/175
-	EXTRA_CFLAGS="-DHAVE_EVP_KDF_CTX=1" $(ROVER) install --roverfile=$(S2I_CONTEXT)/Roverfile
+translate_git_protocol:
+	@git config --global url.https://github.com/.insteadOf git://github.com/
+
+lua_modules: $(ROVER) $(S2I_CONTEXT)/Roverfile.lock translate_git_protocol
+# This variable is to skip issues with openssl 1.1.1
+# https://github.com/wahern/luaossl/issues/175
+	EXTRA_CFLAGS="-DHAVE_EVP_KDF_CTX=1" $(ROVER) install --roverfile=$(S2I_CONTEXT)/Roverfile > /dev/null
 
 lua_modules/bin/rover:
 	@LUAROCKS_CONFIG=$(S2I_CONTEXT)/config-5.1.lua luarocks install --server=http://luarocks.org/dev lua-rover --tree=lua_modules 1>&2
@@ -253,7 +256,7 @@ node_modules/.bin/markdown-link-check:
 	yarn install
 
 test-doc: node_modules/.bin/markdown-link-check
-	@find . \( -name node_modules -o -name .git -o -name t \) -prune -o -name "*.md" -print0 | xargs -0 -n1  -I % sh -c 'echo; echo ====================; echo Checking: %; node_modules/.bin/markdown-link-check  %' \;
+	@find . \( -name node_modules -o -name .git -o -name t \) -prune -o -name "*.md" -print0 | xargs -0 -n1  -I % sh -c 'echo; echo ====================; echo Checking: %; node_modules/.bin/markdown-link-check -q --config travis/config.json  %' \;
 
 benchmark: export IMAGE_TAG ?= master
 benchmark: export COMPOSE_FILE ?= docker-compose.benchmark.yml

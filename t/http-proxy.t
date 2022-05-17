@@ -3,6 +3,18 @@ use Test::APIcast::Blackbox 'no_plan';
 
 require("http_proxy.pl");
 
+sub large_body {
+  my $res = "";
+  for (my $i=0; $i <= 1024; $i++) {
+    $res = $res . "1111111 1111111 1111111 1111111\n";
+  }
+  return $res;
+}
+
+$ENV{'LARGE_BODY'} = large_body();
+
+require("policies.pl");
+
 repeat_each(3);
 
 run_tests();
@@ -53,15 +65,17 @@ yay, api backend: test:$TEST_NGINX_SERVER_PORT
 
 
 
-=== TEST 2: Downloading configuration uses http proxy + TLS
+=== TEST 2: Downloading configuration uses http proxy
 --- env eval
 (
   "http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY},
-  'APICAST_CONFIGURATION' => "http://test:$ENV{TEST_NGINX_SERVER_PORT}",
+  'APICAST_CONFIGURATION' => "http://test.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}",
   'APICAST_CONFIGURATION_LOADER' => 'lazy',
   'THREESCALE_DEPLOYMENT_ENV' => 'production',
 )
 --- upstream env
+
+server_name test.lvh.me;
 location = /admin/api/services.json {
   content_by_lua_block {
     ngx.say([[{ "services": [ { "service": { "id": 1337 } } ] }]])
@@ -82,8 +96,8 @@ content_by_lua_block {
 
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/admin/api/services.json HTTP/1.1
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/admin/api/services/1337/proxy/configs/production/latest.json HTTP/1.1
+proxy request: GET http://test.lvh.me:$TEST_NGINX_SERVER_PORT/admin/api/services.json HTTP/1.1
+proxy request: GET http://test.lvh.me:$TEST_NGINX_SERVER_PORT/admin/api/services/1337/proxy/configs/production/latest.json HTTP/1.1
 --- no_error_log
 [error]
 
@@ -93,11 +107,12 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/admin/api/services/1
 --- env random_port eval
 (
   "https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY},
-  'APICAST_CONFIGURATION' => "https://test:$ENV{TEST_NGINX_RANDOM_PORT}",
+  'APICAST_CONFIGURATION' => "https://test.lvh.me:$ENV{TEST_NGINX_RANDOM_PORT}",
   'APICAST_CONFIGURATION_LOADER' => 'lazy',
   'THREESCALE_DEPLOYMENT_ENV' => 'production',
 )
 --- upstream env
+server_name test.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -122,13 +137,16 @@ content_by_lua_block {
 }
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT
+proxy request: CONNECT test.lvh.me:$TEST_NGINX_RANDOM_PORT
 --- no_error_log
 [error]
 
 === TEST 4: 3scale backend connection uses proxy
 --- env eval
-("http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY})
+(
+  "http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}"
+)
 --- configuration
 {
   "services": [
@@ -138,7 +156,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -147,6 +165,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT
   ]
 }
 --- backend
+server_name test_backend.lvh.me;
   location /transactions/authrep.xml {
     content_by_lua_block {
       local expected = "service_token=token-value&service_id=42&usage%5Bhits%5D=2&user_key=value"
@@ -154,16 +173,17 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT
     }
   }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
      echo 'yay, api backend: $http_host';
   }
 --- request
 GET /?user_key=value
 --- response_body_like
-yay, api backend: test:.*
+yay, api backend: test-upstream.lvh.me:.*
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/transactions/authrep.xml?service_token=token-value&service_id=42&usage%5Bhits%5D=2&user_key=value HTTP/1.1
+proxy request: GET http://test_backend.lvh.me:$TEST_NGINX_SERVER_PORT/transactions/authrep.xml?
 --- no_error_log
 [error]
 
@@ -173,7 +193,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/transactions/authrep
 --- env random_port eval
 (
   'https_proxy' => $ENV{TEST_NGINX_HTTPS_PROXY},
-  'BACKEND_ENDPOINT_OVERRIDE' => "https://test_backend:$ENV{TEST_NGINX_RANDOM_PORT}"
+  'BACKEND_ENDPOINT_OVERRIDE' => "https://test_backend.lvh.me:$ENV{TEST_NGINX_RANDOM_PORT}"
 )
 --- configuration env
 {
@@ -184,7 +204,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/transactions/authrep
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -193,6 +213,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/transactions/authrep
   ]
 }
 --- backend env
+server_name test_backend.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -203,7 +224,7 @@ location /transactions/authrep.xml {
     assert = require('luassert')
     assert.equal('https', ngx.var.scheme)
     assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-    assert.equal('test_backend', ngx.var.ssl_server_name)
+    assert.equal('test_backend.lvh.me', ngx.var.ssl_server_name)
   }
 
   content_by_lua_block {
@@ -212,16 +233,18 @@ location /transactions/authrep.xml {
   }
 }
 --- upstream
+server_name test-upstream.lvh.me;
+
   location / {
      echo 'yay, api backend: $http_host';
   }
 --- request
 GET /?user_key=value
 --- response_body env
-yay, api backend: test:$TEST_NGINX_SERVER_PORT
+yay, api backend: test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test_backend.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval
@@ -232,7 +255,8 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- env eval
 (
   'http_proxy' => $ENV{TEST_NGINX_HTTP_PROXY},
-  'APICAST_REPORTING_THREADS' => '1'
+  'APICAST_REPORTING_THREADS' => '1',
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}"
 )
 --- configuration
 {
@@ -243,7 +267,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -252,6 +276,8 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
   ]
 }
 --- backend
+server_name test_backend.lvh.me;
+
   location /transactions/authrep.xml {
     content_by_lua_block {
       local expected = "service_token=token-value&service_id=42&usage%5Bhits%5D=2&user_key=value"
@@ -259,6 +285,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
     }
   }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
      echo 'yay, api backend: $http_host';
   }
@@ -283,10 +310,10 @@ location /apicast {
   proxy_pass http://$server_addr:$apicast_port;
 }
 --- response_body_like
-yay, api backend: test:.*
+yay, api backend: test-upstream.lvh.me:.*
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/transactions/authrep.xml?service_token=token-value&service_id=42&usage%5Bhits%5D=2&user_key=value HTTP/1.1
+proxy request: GET http://test_backend.lvh.me:$TEST_NGINX_SERVER_PORT/transactions/authrep.xml?
 apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.timer
 --- no_error_log
 [error]
@@ -298,7 +325,7 @@ apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.time
 (
   'https_proxy' => $ENV{TEST_NGINX_HTTP_PROXY},
   'APICAST_REPORTING_THREADS' => '1',
-  'BACKEND_ENDPOINT_OVERRIDE' => "https://test_backend:$ENV{TEST_NGINX_RANDOM_PORT}"
+  'BACKEND_ENDPOINT_OVERRIDE' => "https://test_backend.lvh.me:$ENV{TEST_NGINX_RANDOM_PORT}"
 )
 --- configuration  env
 {
@@ -309,7 +336,7 @@ apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.time
       "backend_authentication_type": "service_token",
       "backend_authentication_value": "token-value",
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
         "proxy_rules": [
           { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -318,6 +345,7 @@ apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.time
   ]
 }
 --- backend env
+server_name test_backend.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -328,7 +356,7 @@ location /transactions/authrep.xml {
     assert = require('luassert')
     assert.equal('https', ngx.var.scheme)
     assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-    assert.equal('test_backend', ngx.var.ssl_server_name)
+    assert.equal('test_backend.lvh.me', ngx.var.ssl_server_name)
   }
 
   content_by_lua_block {
@@ -337,6 +365,7 @@ location /transactions/authrep.xml {
   }
 }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
      echo 'yay, api backend: $http_host';
   }
@@ -361,10 +390,10 @@ location /apicast {
   proxy_pass http://$server_addr:$apicast_port;
 }
 --- response_body env
-yay, api backend: test:$TEST_NGINX_SERVER_PORT
+yay, api backend: test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT
+proxy request: CONNECT test_backend.lvh.me:$TEST_NGINX_RANDOM_PORT
 apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.timer
 --- no_error_log
 [error]
@@ -374,14 +403,17 @@ apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.time
 
 === TEST 8: upstream API connection uses proxy
 --- env eval
-("http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY})
+(
+  "http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}"
+)
 --- configuration
 {
   "services": [
     {
       "backend_version":  1,
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -390,24 +422,25 @@ apicast cache write key: 42:value:usage%5Bhits%5D=2, ttl: nil, context: ngx.time
   ]
 }
 --- backend
+server_name test_backend.lvh.me;
   location /transactions/authrep.xml {
     content_by_lua_block {
       ngx.exit(ngx.OK)
     }
   }
 --- upstream
+server_name test-upstream.lvh.me;
   location /test {
      echo 'yay, api backend: $http_host, uri: $uri, is_args: $is_args, args: $args';
      # echo 'yay, api backend: $http_host, uri:';
   }
 --- request
 GET /test?user_key=value
-
 --- response_body_like eval
 qw/yay, api backend: test:ooo\d+, uri: \/test, is_args: \?, args: user_key=value/
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=value HTTP/1.1
+proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/test?user_key=value HTTP/1.1
 --- no_error_log
 [error]
 
@@ -415,14 +448,17 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=value 
 
 === TEST 9: upstream API connection uses proxy for https
 --- env eval
-("https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY})
+(
+  "https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}"
+)
 --- configuration random_port env
 {
   "services": [
     {
       "backend_version":  1,
       "proxy": {
-        "api_backend": "https://test:$TEST_NGINX_RANDOM_PORT",
+        "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -431,27 +467,28 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=value 
   ]
 }
 --- backend
+server_name test_backend.lvh.me;
+
   location /transactions/authrep.xml {
     content_by_lua_block {
       ngx.exit(ngx.OK)
     }
   }
 --- upstream env
-listen $TEST_NGINX_RANDOM_PORT ssl;
+server_name test-upstream.lvh.me;
 
+listen $TEST_NGINX_RANDOM_PORT ssl;
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
 ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-
 location /test {
     echo_foreach_split '\r\n' $echo_client_request_headers;
     echo $echo_it;
     echo_end;
-
     access_by_lua_block {
        assert = require('luassert')
        assert.equal('https', ngx.var.scheme)
        assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-       assert.equal('test', ngx.var.ssl_server_name)
+       assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
     }
 }
 --- request
@@ -459,29 +496,34 @@ GET /test?user_key=test3
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
---- response_body env
-GET /test?user_key=test3 HTTP/1.1
-User-Agent: Test::APIcast::Blackbox
-ETag: foobar
-Connection: close
-Host: test:$TEST_NGINX_RANDOM_PORT
+--- expected_response_body_like_multiple eval
+[[
+    qr{GET \/test\?user_key=test3 HTTP\/1\.1},
+    qr{ETag\: foobar},
+    qr{Connection\: close}, 
+    qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
+    qr{Host\: test-upstream.lvh.me\:\d+}
+]]
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval
 
 === TEST 10: Upstream API with HTTPS POST request, HTTPS_PROXY and HTTPS api_backend
---- env eval
-("https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY})
+--- env random_port eval
+(
+  'https_proxy' => $ENV{TEST_NGINX_HTTPS_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "https://test-backend.lvh.me:$ENV{TEST_NGINX_RANDOM_PORT}"
+)
 --- configuration random_port env
 {
   "services": [
     {
       "backend_version":  1,
       "proxy": {
-        "api_backend": "https://test:$TEST_NGINX_RANDOM_PORT",
+        "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "POST", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -489,13 +531,19 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
     }
   ]
 }
---- backend
+--- backend env
+  server_name test-backend.lvh.me;
+  listen $TEST_NGINX_RANDOM_PORT ssl;
+  ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
+  ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+
   location /transactions/authrep.xml {
     content_by_lua_block {
       ngx.exit(ngx.OK)
     }
   }
 --- upstream env
+server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -512,13 +560,13 @@ POST https://localhost/test?user_key=test3
 { "some_param": "some_value" }
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval
 
 === TEST 11: Upstream Policy connection uses proxy
---- env eval
+--- env random_port eval
 ("http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY})
 --- configuration
 {
@@ -529,7 +577,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "http://test" } ]
+                "rules": [ { "regex": "/test", "url": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT" } ]
               }
           }
         ]
@@ -538,6 +586,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
   ]
 }
 --- upstream
+server_name test-upstream.lvh.me;
   location /test {
     echo_foreach_split '\r\n' $echo_client_request_headers;
     echo $echo_it;
@@ -548,19 +597,17 @@ GET /test?user_key=test3
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
---- response_body
+--- response_body env
 GET /test?user_key=test3 HTTP/1.1
 X-Real-IP: 127.0.0.1
-Host: test
+Host: test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=test3 HTTP/1.1
+proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/test?user_key=test3 HTTP/1.1
 --- no_error_log
 [error]
-
-
 
 === TEST 12: Upstream Policy connection uses proxy for https
 --- env eval
@@ -574,7 +621,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=test3 
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "https://test:$TEST_NGINX_RANDOM_PORT" } ]
+                "rules": [ { "regex": "/test", "url": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT" } ]
               }
           }
         ]
@@ -583,6 +630,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=test3 
   ]
 }
 --- upstream env
+server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -597,7 +645,7 @@ location /test {
        assert = require('luassert')
        assert.equal('https', ngx.var.scheme)
        assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-       assert.equal('test', ngx.var.ssl_server_name)
+       assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
     }
 }
 --- request
@@ -605,19 +653,20 @@ GET /test?user_key=test3
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
---- response_body env
-GET /test?user_key=test3 HTTP/1.1
-User-Agent: Test::APIcast::Blackbox
-ETag: foobar
-Connection: close
-Host: test:$TEST_NGINX_RANDOM_PORT
+--- expected_response_body_like_multiple eval
+[[
+    qr{GET \/test\?user_key=test3 HTTP\/1\.1},
+    qr{ETag\: foobar},
+    qr{Connection\: close}, 
+    qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
+    qr{Host\: test-upstream\.lvh\.me\:\d+}
+]]
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval
-
 
 === TEST 13: Upstream Policy connection uses proxy
 --- env eval
@@ -631,7 +680,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "http://test" } ]
+                "rules": [ { "regex": "/test", "url": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT" } ]
               }
           }
         ]
@@ -640,6 +689,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
   ]
 }
 --- upstream
+server_name test-upstream.lvh.me;
   location /test {
     echo_foreach_split '\r\n' $echo_client_request_headers;
     echo $echo_it;
@@ -653,20 +703,19 @@ POST /test?user_key=test3
 this-is-some-request-body
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
---- response_body
+--- response_body env
 POST /test?user_key=test3 HTTP/1.1
 X-Real-IP: 127.0.0.1
-Host: test
+Host: test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT
 Content-Length: 25
 User-Agent: Test::APIcast::Blackbox
 
 this-is-some-request-body
 --- error_code: 200
 --- error_log env
-proxy request: POST http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=test3 HTTP/1.1
+proxy request: POST http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/test?user_key=test3 HTTP/1.1
 --- no_error_log
 [error]
-
 
 === TEST 14: Upstream Policy connection uses proxy for https and forwards request body
 --- env eval
@@ -680,7 +729,7 @@ proxy request: POST http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=test3
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "https://test:$TEST_NGINX_RANDOM_PORT" } ]
+                "rules": [ { "regex": "/test", "url": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT" } ]
               }
           }
         ]
@@ -689,6 +738,7 @@ proxy request: POST http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test?user_key=test3
   ]
 }
 --- upstream env
+server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -706,7 +756,7 @@ location /test {
        assert = require('luassert')
        assert.equal('https', ngx.var.scheme)
        assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-       assert.equal('test', ngx.var.ssl_server_name)
+       assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
     }
 }
 --- request
@@ -714,32 +764,35 @@ POST /test?user_key=test3
 this-is-some-request-body
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
---- response_body env
-POST /test?user_key=test3 HTTP/1.1
-User-Agent: Test::APIcast::Blackbox
-Content-Length: 25
-Connection: close
-Host: test:$TEST_NGINX_RANDOM_PORT
-
-this-is-some-request-body
+--- expected_response_body_like_multiple eval
+[[
+    qr{POST \/test\?user_key=test3 HTTP\/1\.1},
+    qr{Connection\: close}, 
+    qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
+    qr{Host\: test-upstream\.lvh\.me\:\d+},
+    qr{Content\-Length\: 25},
+    qr{this\-is\-some\-request\-body},
+]]
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval
 
-
 === TEST 15: upstream API connection uses proxy and correctly routes to a path.
 --- env eval
-("http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY})
+(
+  "http_proxy" => $ENV{TEST_NGINX_HTTP_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test-backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}"
+)
 --- configuration
 {
   "services": [
     {
       "backend_version":  1,
       "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/foo",
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/foo",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
         ]
@@ -747,13 +800,16 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
     }
   ]
 }
---- backend
+--- backend env
+  server_name test-backend.lvh.me;
+
   location /transactions/authrep.xml {
     content_by_lua_block {
       ngx.exit(ngx.OK)
     }
   }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
      echo $request;
   }
@@ -763,10 +819,9 @@ GET /test?user_key=value
 GET /foo/test?user_key=value HTTP/1.1
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/foo/test?user_key=value HTTP/1.1
+proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/foo/test?user_key=value HTTP/1.1
 --- no_error_log
 [error]
-
 
 === TEST 16: Upstream Policy connection uses proxy and correctly routes to a path.
 --- env eval
@@ -780,7 +835,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/foo/test?user_key=va
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "http://test/foo" } ]
+                "rules": [ { "regex": "/test", "url": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/foo" } ]
               }
           }
         ]
@@ -789,6 +844,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/foo/test?user_key=va
   ]
 }
 --- upstream
+server_name test-upstream.lvh.me;
   location / {
     echo $request;
   }
@@ -798,20 +854,23 @@ GET /test?user_key=value
 GET /foo/test?user_key=value HTTP/1.1
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/foo/test?user_key=value HTTP/1.1
+proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/foo/test?user_key=value HTTP/1.1
 --- no_error_log
 [error]
 
 === TEST 17: Upstream policy with HTTPS POST request, HTTPS_PROXY and HTTPS backend
---- env eval
-("https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY})
+--- env random_port eval
+(
+  'https_proxy' => $ENV{TEST_NGINX_HTTPS_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "https://test-backend.lvh.me:$ENV{TEST_NGINX_RANDOM_PORT}"
+)
 --- configuration random_port env
 {
   "services": [
     {
       "backend_version":  1,
       "proxy": {
-        "api_backend": "https://test:$TEST_NGINX_RANDOM_PORT",
+        "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "POST", "metric_system_name": "hits", "delta": 2 }
         ],
@@ -819,7 +878,7 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/foo/test?user_key=va
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "https://test:$TEST_NGINX_RANDOM_PORT" } ]
+                "rules": [ { "regex": "/test", "url": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT" } ]
               }
           },
           {
@@ -830,13 +889,19 @@ proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/foo/test?user_key=va
     }
   ]
 }
---- backend
+--- backend env
+  server_name test-backend.lvh.me;
+  listen $TEST_NGINX_RANDOM_PORT ssl;
+  ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
+  ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+
   location /transactions/authrep.xml {
     content_by_lua_block {
       ngx.exit(ngx.OK)
     }
   }
 --- upstream env
+server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -853,7 +918,7 @@ POST https://localhost/test?user_key=test3
 { "some_param": "some_value" }
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval
@@ -870,7 +935,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "http://test" } ]
+                "rules": [ { "regex": "/test", "url": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT" } ]
               }
           }
         ]
@@ -879,6 +944,7 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
   ]
 }
 --- upstream
+server_name test-upstream.lvh.me;
   location /test {
     echo_foreach_split '\r\n' $echo_client_request_headers;
     echo $echo_it;
@@ -886,18 +952,18 @@ proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
   }
 --- request
 GET /test
---- response_body
+--- response_body env
 GET /test HTTP/1.1
 X-Real-IP: 127.0.0.1
-Host: test
+Host: test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT
 --- error_code: 200
 --- error_log env
-proxy request: GET http://127.0.0.1:$TEST_NGINX_SERVER_PORT/test HTTP/1.1
+proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/test HTTP/1.1
 --- no_error_log
 [error]
 
 === TEST 19: The path is set correctly when there are no args and proxied to an https upstream
-Regression test: the string 'nil' was appended to the path
+Regression test.lvh.me: the string 'nil' was appended to the path
 --- env eval
 ("https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY})
 --- configuration random_port env
@@ -909,7 +975,7 @@ Regression test: the string 'nil' was appended to the path
           { "name": "apicast.policy.upstream",
             "configuration":
               {
-                "rules": [ { "regex": "/test", "url": "https://test:$TEST_NGINX_RANDOM_PORT" } ]
+                "rules": [ { "regex": "/test", "url": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT" } ]
               }
           }
         ]
@@ -918,6 +984,7 @@ Regression test: the string 'nil' was appended to the path
   ]
 }
 --- upstream env
+server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
 
 ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
@@ -932,7 +999,7 @@ location /test {
        assert = require('luassert')
        assert.equal('https', ngx.var.scheme)
        assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
-       assert.equal('test', ngx.var.ssl_server_name)
+       assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
     }
 }
 --- request
@@ -940,15 +1007,71 @@ GET /test
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
---- response_body env
-GET /test HTTP/1.1
-User-Agent: Test::APIcast::Blackbox
-ETag: foobar
-Connection: close
-Host: test:$TEST_NGINX_RANDOM_PORT
+--- expected_response_body_like_multiple eval
+[[
+    qr{GET \/test HTTP\/1\.1},
+    qr{ETag\: foobar},
+    qr{Connection\: close}, 
+    qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
+    qr{Host\: test-upstream\.lvh\.me\:\d+}
+]]
 --- error_code: 200
 --- error_log env
-proxy request: CONNECT 127.0.0.1:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+--- no_error_log
+[error]
+--- user_files fixture=tls.pl eval
+
+=== TEST 20: Body is larger than client_body_buffer
+--- env eval
+("https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY})
+--- configuration random_port env
+{
+  "services": [
+    {
+      "proxy": {
+        "policy_chain": [
+          { "name": "apicast.policy.upstream",
+            "configuration":
+              {
+                "rules": [ { "regex": "/test", "url": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT" } ]
+              }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream env
+server_name test-upstream.lvh.me;
+listen $TEST_NGINX_RANDOM_PORT ssl;
+
+ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
+ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+
+location /test {
+    echo_foreach_split '\r\n' $echo_client_request_headers;
+    echo $echo_it;
+    echo_end;
+
+    access_by_lua_block {
+       assert = require('luassert')
+       assert.equal('https', ngx.var.scheme)
+       assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
+       assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
+
+      ngx.req.read_body()
+      local handle = io.open(ngx.req.get_body_file(), "r")
+      local body = handle:read("*a")
+      assert.equal(#body, 32799)
+    }
+}
+--- request eval
+"POST /test \n" . $ENV{LARGE_BODY}
+--- error_code: 200
+--- error_log env
+proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
+Request body is bigger than client_body_buffer_size
 --- no_error_log
 [error]
 --- user_files fixture=tls.pl eval

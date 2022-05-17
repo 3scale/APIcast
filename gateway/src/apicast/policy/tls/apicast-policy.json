@@ -17,7 +17,7 @@
           "type": "object",
           "anyOf": [
             {
-              "title": "Embedded certificate",
+              "title": "Certificate from local filesystem",
               "properties":  {
                 "certificate_path": {
                   "type": "string",
@@ -31,7 +31,7 @@
               "required": ["certificate_path", "certificate_key_path"]
             },
             {
-              "title": "Certificate from local filesystem",
+              "title": "Embedded certificate",
               "properties":  {
                 "certificate": {
                   "type": "string",

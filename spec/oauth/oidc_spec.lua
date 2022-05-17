@@ -42,8 +42,8 @@ describe('OIDC', function()
   describe(':transform_credentials', function()
     local oidc_config = {
       issuer = 'https://example.com/auth/realms/apicast',
-      config = { id_token_signing_alg_values_supported = { 'RS256' } },
-      keys = { somekid = { pem = rsa.pub } },
+      config = { id_token_signing_alg_values_supported = { 'RS256', 'HS256' } },
+      keys = { somekid = { pem = rsa.pub, alg = 'RS256' } },
     }
 
     before_each(function() jwt_validators.set_system_clock(function() return 0 end) end)
@@ -180,7 +180,7 @@ describe('OIDC', function()
     it('verifies alg', function()
       local oidc = _M.new(oidc_config)
       local access_token = jwt:sign(rsa.private, {
-        header = { typ = 'JWT', alg = 'HS256' },
+        header = { typ = 'JWT', alg = 'HS512' },
         payload = { },
       })
 
@@ -229,6 +229,45 @@ describe('OIDC', function()
       assert(credentials, err)
     end)
 
+    it('validation fails when jwk.alg does not match jwt.header.alg', function()
+      local oidc = _M.new(oidc_config)
+      local access_token = jwt:sign(rsa.private, {
+        header = { typ = 'JWT', alg = 'HS256', kid = 'somekid' },
+        payload = {
+          iss = oidc_config.issuer,
+          aud = 'notused',
+          azp = 'ce3b2e5e',
+          sub = 'someone',
+          nbf = 0,
+          exp = ngx.now() + 10,
+          typ = 'Bearer'
+        },
+      })
+
+      local credentials, _, _, err = oidc:transform_credentials({ access_token = access_token })
+      assert.same("[jwt] alg mismatch", err)
+      assert.falsy(credentials, err)
+    end)
+
+    it('validation passes when jwk.alg matches jwt.header.alg', function()
+      local oidc = _M.new(oidc_config)
+      local access_token = jwt:sign(rsa.private, {
+        header = { typ = 'JWT', alg = 'RS256', kid = 'somekid' },
+        payload = {
+          iss = oidc_config.issuer,
+          aud = 'notused',
+          azp = 'ce3b2e5e',
+          sub = 'someone',
+          nbf = 0,
+          exp = ngx.now() + 10,
+          typ = 'Bearer'
+        },
+      })
+
+      local credentials, _, _, err = oidc:transform_credentials({ access_token = access_token })
+      assert(credentials, err)
+    end)
+
     describe('getting client_id from any JWT claim', function()
 
       before_each(function()
@@ -251,7 +290,7 @@ describe('OIDC', function()
         local config = {
           issuer = 'https://example.com/auth/realms/apicast',
           config = { id_token_signing_alg_values_supported = { 'RS256' } },
-          keys = { somekid = { pem = rsa.pub } }}
+          keys = { somekid = { pem = rsa.pub, alg = 'RS256' } }}
 
         for key,value in pairs(params) do
           config[key] = value

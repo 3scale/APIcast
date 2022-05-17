@@ -185,7 +185,7 @@ describe('oidc_authentication policy', function()
       local oidc = OIDC.new{
         issuer = access_token.payload.iss,
         config = { id_token_signing_alg_values_supported = { access_token.header.alg } },
-        keys = { [access_token.header.kid] = { pem = rsa.pub } },
+        keys = { [access_token.header.kid] = { pem = rsa.pub, alg = access_token.header.alg }  },
       }
       local policy = _M.new{ oidc = oidc }
       local jwt = oidc:parse(access_token)

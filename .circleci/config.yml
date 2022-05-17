@@ -109,12 +109,12 @@ executors:
     environment:
       S2I_VERSION: "1.1.12-2a783420"
       DOCKER_COMPOSE_VERSION: "1.16.1"
-      OPENRESTY_VERSION: "1.17.4.1-0-centos8"
+      OPENRESTY_VERSION: "1.19.3.6-20-centos8"
 
   openresty:
     working_directory: /opt/app-root/apicast
     docker:
-    - image: quay.io/3scale/s2i-openresty-centos7:1.17.4.1-0-centos8
+    - image: quay.io/3scale/s2i-openresty-centos7:1.19.3.6-20-centos8
     - image: redis:3.2.8-alpine
     environment:
       TEST_NGINX_BINARY: openresty
@@ -146,7 +146,13 @@ jobs:
       - run: make test-runtime-image gateway-logs --keep-going
       - login-docker:
           command: |
-            IMAGE_NAME="apicast:${CIRCLE_TAG:-${CIRCLE_BRANCH}}"
+            CIRCLE_BRANCH_LOWER=`echo $CIRCLE_BRANCH | tr '[:upper:]' '[:lower:]'`
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH_LOWER}}"
+            if [ "${IMAGE_TAG}" == "master" ]
+            then
+              IMAGE_TAG="latest"
+            fi
+            IMAGE_NAME="apicast:${IMAGE_TAG}"
             docker tag apicast-runtime-image ${IMAGE_NAME}
             make push
       - cleanup-docker
@@ -174,7 +180,13 @@ jobs:
 
       - login-docker:
           command: |
-            IMAGE_NAME="apicast:${CIRCLE_TAG:-${CIRCLE_BRANCH}}-builder"
+            CIRCLE_BRANCH_LOWER=`echo $CIRCLE_BRANCH | tr '[:upper:]' '[:lower:]'`
+            IMAGE_TAG="${CIRCLE_TAG:-${CIRCLE_BRANCH_LOWER}}-builder"
+            if [ "${IMAGE_TAG}" == "master-builder" ]
+            then
+              IMAGE_TAG="latest-builder"
+            fi
+            IMAGE_NAME="apicast:${IMAGE_TAG}"
             docker tag apicast-builder-image ${IMAGE_NAME}
             make push
 
@@ -249,7 +261,7 @@ jobs:
 
   prove:
     executor: openresty
-
+    resource_class: medium+
     parallelism: 3
     steps:
       - attach-workspace
@@ -271,7 +283,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: IMAGE_TAG=${CIRCLE_TAG:-${CIRCLE_BRANCH}} make benchmark
+      - run: IMAGE_TAG=`echo $CIRCLE_BRANCH | tr '[:upper:]' '[:lower:]'` make benchmark
       - run: IMAGE_TAG=master make benchmark
       - store_artifacts:
           path: tmp/benchmark

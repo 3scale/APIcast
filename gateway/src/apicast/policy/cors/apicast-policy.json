@@ -46,12 +46,16 @@
         }
       },
       "allow_origin": {
-        "description": "Origin allowed for CORS requests. The field expects only one origin (e.g. https://example.com) or '*'. If left blank, the value of the 'Origin' request header will be used.",
+        "description": "Origin allowed for CORS requests. The field expects only one origin (e.g. 'https://example.com') or '*'. If left blank, the value of the 'Origin' request header will be used. In order to allow more than one origin it is possible to use a regular expression, if it matches with Origin header value, the value will be set to the Origin Value. In case it does not match, the header will not set at all. Example: '(api|web).test.com' wil match both 'api.test.com' and 'web.test.com'.",
         "type": "string"
       },
       "allow_credentials": {
         "description": "Whether the request can be made using credentials",
         "type": "boolean"
+      },
+      "max_age": {
+        "description": "The ttl of the preflight response (default: 600)",
+        "type": "integer"
       }
     }
   }

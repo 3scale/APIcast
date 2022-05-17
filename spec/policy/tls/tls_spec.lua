@@ -5,6 +5,7 @@ local function assert_certificate_set()
     assert.spy(ssl.clear_certs).was_called()
     assert.spy(ssl.set_cert).was_called()
     assert.spy(ssl.set_priv_key).was_called()
+    assert.spy(ngx.exit).was_not_called()
 end
 
 describe('tls policy', function()
@@ -13,6 +14,7 @@ describe('tls policy', function()
     stub.new(ssl, 'clear_certs', function() return true, nil end)
     stub.new(ssl, 'set_cert', function() return true, nil end)
     stub.new(ssl, 'set_priv_key', function() return true, nil end)
+    stub.new(ngx, 'exit', function() return true end)
   end)
 
   describe('.new', function()

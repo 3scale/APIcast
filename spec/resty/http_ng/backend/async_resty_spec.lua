@@ -6,7 +6,7 @@ describe('resty backend', function()
     local method = 'GET'
 
     it('accesses the url', function()
-      local response = backend:send{method = method, url = 'http://example.com/'}
+      local response = backend:send{method = method, url = 'http://httpbin.org/get'}
       assert.truthy(response)
       assert.falsy(response.error)
       assert.truthy(response.ok)
@@ -31,7 +31,7 @@ describe('resty backend', function()
     end)
 
     it('returns proper error on connect timeout', function()
-      local req = { method = method, url = 'http://example.com:81/', timeout = { connect = 1 } }
+      local req = { method = method, url = 'http://httpbin.org:81/', timeout = { connect = 1 } }
 
       local response = backend:send(req)
 

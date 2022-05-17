@@ -65,19 +65,14 @@ end
 local function build_policy_chain(policies)
   if not value(policies) then return nil, 'no policy chain' end
 
-  local chain = tab_new(#policies, 0)
-
+  local built_chain = policy_chain.new()
   for i=1, #policies do
-      local policy, err = policy_chain.load_policy(policies[i].name, policies[i].version, policies[i].configuration)
-
-      if policy then
-        insert(chain, policy)
-      elseif err then
-        ngx.log(ngx.WARN, 'failed to load policy: ', policies[i].name, ' version: ', policies[i].version, ' err: ', err)
-      end
+    local ok, err = built_chain:add_policy(policies[i].name, policies[i].version, policies[i].configuration)
+    if err then
+      ngx.log(ngx.WARN, 'failed to load policy: ', policies[i].name, ' version: ', policies[i].version, ' err: ', err)
+    end
   end
 
-  local built_chain = policy_chain.new(chain)
   built_chain:check_order()
   return built_chain
 end
@@ -107,7 +102,6 @@ function _M.parse_service(service)
       auth_failed_status = proxy.error_status_auth_failed or 403,
       limits_exceeded_status = proxy.error_status_limits_exceeded or 429,
       auth_missing_status = proxy.error_status_auth_missing or 401,
-      oauth_login_url = type(proxy.oauth_login_url) == 'string' and len(proxy.oauth_login_url) > 0 and proxy.oauth_login_url or nil,
       secret_token = proxy.secret_token,
       hostname_rewrite = type(proxy.hostname_rewrite) == 'string' and len(proxy.hostname_rewrite) > 0 and proxy.hostname_rewrite,
       backend_authentication = {
@@ -176,14 +170,37 @@ function _M.filter_services(services, subset)
   return selected_services
 end
 
+function _M.filter_oidc_config(services, oidc)
+  local services_ids = {}
+  for _,service in ipairs(services or {}) do
+    services_ids[service.id] = 1
+  end
+
+  local oidc_final_config={}
+
+  -- If the oidc config comes from remote_v2, will have the service_id, if not
+  -- the config should be skipped to make sure that we don't break anything
+  for _,oidc_config in ipairs(oidc or {}) do
+    if oidc_config then
+      if not oidc_config.service_id or services_ids[tostring(oidc_config.service_id)] then
+        table.insert(oidc_final_config, oidc_config)
+      end
+    else
+      table.insert(oidc_final_config, {})
+    end
+  end
+  return oidc_final_config
+end
+
 function _M.new(configuration)
   configuration = configuration or {}
   local services = (configuration or {}).services or {}
+  local final_services = _M.filter_services(map(_M.parse_service, services))
 
   return setmetatable({
     version = configuration.timestamp,
-    services = _M.filter_services(map(_M.parse_service, services)),
-    oidc = configuration.oidc or {}
+    services = final_services,
+    oidc = _M.filter_oidc_config(final_services, configuration.oidc or {})
   }, mt)
 end
 

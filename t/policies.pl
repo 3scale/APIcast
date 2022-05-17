@@ -6,6 +6,7 @@ use File::Slurp qw(read_file);
 use JSON qw(from_json);
 use Test::Deep;
 
+
 our $policies = sub ($) {
     my $path = shift;
 
@@ -54,15 +55,27 @@ our $policies = sub ($) {
 };
 
 our $expect_json = sub ($) {
-    my ($block, $body) = @_;
+    use Data::Dumper;
+    my ($block, $body, $req_idx, $repeated_req_idx, $dry_run) = @_;
 
-    use JSON;
+    if (!$block->expected_json) {
+        return "";
+    }
 
-    my $expected_json = $block->expected_json;
+    my @asserts = @{$block->{expected_json}};
+    my @val = shift @asserts;
+    my $expected_json = "";
+    if (ref(${val}[0]) eq 'ARRAY') {
+      $expected_json = ${val}[0]->[$req_idx];
+    }else{
+      $expected_json = ${val}[0];
+    }
 
-    my $got = from_json($body);
-    my $expected = from_json($expected_json);
 
+    # Because from_json can croak on invalid json, this will enable undef value
+    # on invalid body
+    my $got = eval { from_json($body) };
+    my $expected = eval {from_json($expected_json)};
     cmp_deeply(
         $got,
         $expected,
@@ -71,6 +84,8 @@ our $expect_json = sub ($) {
 };
 
 add_response_body_check($expect_json);
+
+
 
 # This response body helper function check is like a response_body_like but it
 # can be used with multiple values for a single request.
@@ -92,7 +107,6 @@ add_response_body_check(sub {
     if (!$block->expected_response_body_like_multiple) {
         return "";
     }
-
     my @asserts = @{$block->{expected_response_body_like_multiple}};
     my $assertValues = ${asserts}[0][$req_idx];
     if (ref(${assertValues}) eq 'ARRAY') {
@@ -107,3 +121,55 @@ add_response_body_check(sub {
         }
     }
 });
+
+
+
+our $json_keys = sub ($) {
+    my ($block, $body, $req_idx, $repeated_req_idx, $dry_run) = @_;
+
+    use JSON;
+    use Data::Dumper;
+
+    my $expected_keys = $block->json_keys;
+
+    if (!$expected_keys) {
+      return
+    }
+
+    my $parsed_body = eval {from_json($body)};
+    if (!$parsed_body) {
+      fail(sprintf("INVALID response body json: %s", $body))
+    }
+
+    my $expected_keys_matches  = eval {from_json($expected_keys)};
+    if (!$expected_keys_matches) {
+      fail(sprintf("INVALID json: %s", $expected_keys))
+    }
+
+    if (! ref($expected_keys_matches) eq 'ARRAY') {
+      fail(sprintf("INVALID json, need to be an array: %s", $expected_keys))
+    }
+
+    foreach my $matcher(@{$expected_keys_matches}) {
+      my $key_to_check = $matcher->{'key'};
+      my $expected_val = $matcher->{'val'};
+      my $expected_operation = $matcher->{'op'} || '==';
+      my $val = $parsed_body->{$key_to_check};
+      # print(Dumper($matcher, $val, $expected_val));
+      if ( $expected_operation eq '==' ) {
+          cmp_deeply(
+              $val,
+              $expected_val,
+              sprintf("JsonResponse: Value for key '%s' matches correctly", $key_to_check)
+          );
+      } elsif ($expected_operation eq 'regexp' ) {
+          if (!($val =~ m/$expected_val/)) {
+              fail(sprintf("Regular expression: '%s' does not match with the value: \n %s", $expected_val, $val));
+          }
+      } else {
+          fail(sprintf("No valid matching operation: '%s'", $expected_operation));
+      }
+    }
+};
+
+add_response_body_check($json_keys);

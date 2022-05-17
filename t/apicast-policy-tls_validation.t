@@ -20,6 +20,7 @@ use File::Slurp qw(read_file);
 to_json({
   services => [{
     proxy => {
+        hosts => ['test'],
         policy_chain => [
           { name => 'apicast.policy.tls_validation',
             configuration => {
@@ -39,7 +40,7 @@ proxy_ssl_trusted_certificate $TEST_NGINX_SERVER_ROOT/html/ca.crt;
 proxy_ssl_certificate $TEST_NGINX_SERVER_ROOT/html/client.crt;
 proxy_ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/client.key;
 proxy_pass https://$server_addr:$apicast_port/t;
-proxy_set_header Host localhost;
+proxy_set_header Host test;
 log_by_lua_block { collectgarbage() }
 --- response_body
 GET /t HTTP/1.0
@@ -58,6 +59,7 @@ use File::Slurp qw(read_file);
 to_json({
   services => [{
     proxy => {
+        hosts => ['test'],
         policy_chain => [
           { name => 'apicast.policy.tls_validation',
             configuration => {
@@ -77,7 +79,7 @@ proxy_ssl_trusted_certificate $TEST_NGINX_SERVER_ROOT/html/ca.crt;
 proxy_ssl_certificate $TEST_NGINX_SERVER_ROOT/html/client.crt;
 proxy_ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/client.key;
 proxy_pass https://$server_addr:$apicast_port/t;
-proxy_set_header Host localhost;
+proxy_set_header Host test;
 log_by_lua_block { collectgarbage() }
 --- response_body
 GET /t HTTP/1.0
@@ -96,6 +98,7 @@ use File::Slurp qw(read_file);
 to_json({
   services => [{
     proxy => {
+        hosts => ['test'],
         policy_chain => [
           { name => 'apicast.policy.tls_validation',
             configuration => {
@@ -113,7 +116,7 @@ proxy_ssl_trusted_certificate $TEST_NGINX_SERVER_ROOT/html/ca.crt;
 proxy_ssl_certificate $TEST_NGINX_SERVER_ROOT/html/client.crt;
 proxy_ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/client.key;
 proxy_pass https://$server_addr:$apicast_port/t;
-proxy_set_header Host localhost;
+proxy_set_header Host test;
 log_by_lua_block { collectgarbage() }
 --- response_body
 unable to get local issuer certificate
@@ -132,6 +135,7 @@ use File::Slurp qw(read_file);
 to_json({
   services => [{
     proxy => {
+        hosts => ['test'],
         policy_chain => [
           { name => 'apicast.policy.tls_validation',
             configuration => {
@@ -147,7 +151,7 @@ to_json({
 proxy_ssl_verify on;
 proxy_ssl_trusted_certificate $TEST_NGINX_SERVER_ROOT/html/ca.crt;
 proxy_pass https://$server_addr:$apicast_port/t;
-proxy_set_header Host localhost;
+proxy_set_header Host test;
 log_by_lua_block { collectgarbage() }
 --- response_body
 Invalid certificate verification context
@@ -169,6 +173,7 @@ use File::Slurp qw(read_file);
 to_json({
   services => [{
     proxy => {
+        hosts => ['test'],
         policy_chain => [
           { name => 'apicast.policy.tls_validation',
             configuration => {
@@ -188,7 +193,7 @@ proxy_ssl_trusted_certificate $TEST_NGINX_SERVER_ROOT/html/ca.crt;
 proxy_ssl_certificate $TEST_NGINX_SERVER_ROOT/html/client-bundle.crt;
 proxy_ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/client.key;
 proxy_pass https://$server_addr:$apicast_port/t;
-proxy_set_header Host localhost;
+proxy_set_header Host test;
 log_by_lua_block { collectgarbage() }
 --- response_body
 GET /t HTTP/1.0

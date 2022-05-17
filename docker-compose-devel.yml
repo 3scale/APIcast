@@ -1,7 +1,7 @@
 version: '2.2'
 services:
   development:
-    image: ${IMAGE:-quay.io/3scale/s2i-openresty-centos7:master}
+    image: ${IMAGE:-quay.io/3scale/s2i-openresty-centos7:1.19.3.6-20-centos8}
     depends_on:
       - redis
     working_dir: /home/centos/

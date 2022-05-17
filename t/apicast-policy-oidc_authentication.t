@@ -53,7 +53,8 @@ location = /jwks {
     ngx.say([[
         { "keys": [
             { "kty":"RSA","kid":"somekid",
-              "n":"sKXP3pwND3rkQ1gx9nMb4By7bmWnHYo2kAAsFD5xq0IDn26zv64tjmuNBHpI6BmkLPk8mIo0B1E8MkxdKZeozQ","e":"AQAB" }
+              "n":"sKXP3pwND3rkQ1gx9nMb4By7bmWnHYo2kAAsFD5xq0IDn26zv64tjmuNBHpI6BmkLPk8mIo0B1E8MkxdKZeozQ","e":"AQAB",
+              "alg":"RS256" }
         ] }
     ]])
   }

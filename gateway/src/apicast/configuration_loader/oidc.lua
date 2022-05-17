@@ -21,8 +21,13 @@ _M.discovery = require('resty.oidc.discovery').new()
 
 local function load_service(service)
     if not service or not service.proxy then return nil end
+    local result = _M.discovery:call(service.proxy.oidc_issuer_endpoint)
 
-    return _M.discovery:call(service.proxy.oidc_issuer_endpoint)
+    if result and service.id then
+      result.service_id = service.id
+    end
+
+    return result
 end
 
 function _M.call(...)
@@ -35,7 +40,8 @@ function _M.call(...)
         for i,service in ipairs(config.services or empty) do
             -- Assign false instead of nil to avoid sparse arrays. cjson raises
             -- an error by default when converting sparse arrays.
-            oidc[i] = oidc[i] or load_service(service) or false
+            oidc[i] = oidc[i] or load_service(service) or { service_id = service.id}
+            -- oidc[i] = oidc[i] or load_service(service) or false
         end
 
         config.oidc = oidc

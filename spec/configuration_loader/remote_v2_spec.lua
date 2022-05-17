@@ -345,7 +345,7 @@ UwIDAQAB
         -- The important thing for this test is that it sends the request to
         -- the endpoint that returns services by host
         local endpoint = format(
-            "http://example.com/admin/api/services/proxy/configs/staging.json?%s",
+            "http://example.com/admin/api/account/proxy_configs/staging.json?%s",
             encode_args({ host = host })
         )
 
@@ -398,6 +398,124 @@ UwIDAQAB
         assert.same(proxy_config_response.content, cjson.decode(config).services[1])
       end)
     end)
+
+    describe("When using APICAST_SERVICES_FILTER_BY_URL", function()
+      before_each(function()
+        test_backend.expect{ url = 'http://example.com/admin/api/services.json' }.
+          respond_with{ status = 200, body = cjson.encode({ services = {
+              { service = { id = 1 }},
+              { service = { id = 2 }}
+            }})
+          }
+
+        test_backend.expect{ url = 'http://example.com/admin/api/services/1/proxy/configs/staging/latest.json' }.
+          respond_with{ status = 200, body = cjson.encode(
+            {
+              proxy_config = {
+                version = 13,
+                environment = 'staging',
+                content = {
+                  id = 1,
+                  backend_version = 1,
+                  proxy = {
+                    hosts = {"one.com", "first.dev"}
+                  }
+                }
+              }
+            }
+          )}
+
+        test_backend.expect{ url = 'http://example.com/admin/api/services/2/proxy/configs/staging/latest.json' }.
+          respond_with{ status = 200, body = cjson.encode(
+            {
+              proxy_config = {
+                version = 42,
+                environment = 'staging',
+                content = {
+                  id = 2,
+                  backend_version = 1,
+                  proxy = {
+                    hosts = {"two.com", "second.dev"}
+                  }
+                }
+              }
+            }
+          )}
+      end)
+
+      it("Filter it out correctly", function()
+        env.set('APICAST_SERVICES_FILTER_BY_URL','one.*')
+
+        local config = assert(loader:call('staging'))
+
+        assert.truthy(config)
+        assert.equals('string', type(config))
+
+        local res_services = cjson.decode(config).services
+        assert.equals(1, #res_services)
+        assert.equals(1, res_services[1].id)
+      end)
+
+      it("Filter it out correctly by prod host", function()
+        env.set('APICAST_SERVICES_FILTER_BY_URL','*dev')
+
+        local config = assert(loader:call('staging'))
+
+        assert.truthy(config)
+        assert.equals('string', type(config))
+
+        local res_services = cjson.decode(config).services
+        assert.equals(2, #res_services)
+        assert.equals(1, res_services[1].id)
+        assert.equals(2, res_services[2].id)
+      end)
+
+      it("Filter it out correctly multiple", function()
+
+        env.set('APICAST_SERVICES_FILTER_BY_URL','*.com')
+
+        local config = assert(loader:call('staging'))
+
+        assert.truthy(config)
+        assert.equals('string', type(config))
+
+        local res_services = cjson.decode(config).services
+        assert.equals(2, #res_services)
+        assert.equals(1, res_services[1].id)
+        assert.equals(2, res_services[2].id)
+      end)
+
+      it("NIL return all services", function()
+
+        env.set('APICAST_SERVICES_FILTER_BY_URL','')
+
+        local config = assert(loader:call('staging'))
+
+        assert.truthy(config)
+        assert.equals('string', type(config))
+
+        local res_services = cjson.decode(config).services
+        assert.equals(2, #res_services)
+        assert.equals(1, res_services[1].id)
+        assert.equals(2, res_services[2].id)
+      end)
+
+      it("invalid regexp return all", function()
+        env.set('APICAST_SERVICES_FILTER_BY_URL','[')
+
+        local config = assert(loader:call('staging'))
+
+        assert.truthy(config)
+        assert.equals('string', type(config))
+
+        local res_services = cjson.decode(config).services
+        assert.equals(2, #res_services)
+        assert.equals(1, res_services[1].id)
+        assert.equals(2, res_services[2].id)
+      end)
+
+    end)
+
   end)
 
   describe(':oidc_issuer_configuration', function()
@@ -431,7 +549,10 @@ UwIDAQAB
       assert.truthy(config)
       assert.equals('string', type(config))
 
-      assert.equals(1, #(cjson.decode(config).services))
+      result_config = cjson.decode(config)
+      assert.equals(1, #result_config.services)
+      assert.equals(1, #result_config.oidc)
+      assert.same('2', result_config.oidc[1].service_id)
     end)
 
     it('returns nil and an error if the config is not a valid', function()
@@ -443,6 +564,63 @@ UwIDAQAB
 
       assert.is_nil(config)
       assert.equals('Expected object key string but found invalid token at character 3', err)
+    end)
+
+    it('returns configuration with oidc config complete', function()
+
+      env.set('THREESCALE_DEPLOYMENT_ENV', 'production')
+      test_backend.expect{ url = 'http://example.com/something/with/path/production.json?host=foobar.example.com' }.
+        respond_with{ status = 200, body = cjson.encode({ proxy_configs = {
+          {
+            proxy_config = {
+              version = 42,
+              environment = 'staging',
+              content = { 
+                id = 2, 
+                backend_version = 1,
+                proxy = { oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/' }
+              }
+            }
+          }
+        }})}
+
+      test_backend.expect{ url = "http://idp.example.com/auth/realms/foo/.well-known/openid-configuration" }.
+      respond_with{
+        status = 200,
+        headers = { content_type = 'application/json' },
+        body = [[
+            {
+              "issuer": "https://idp.example.com/auth/realms/foo",
+              "jwks_uri": "https://idp.example.com/auth/realms/foo/jwks",
+              "id_token_signing_alg_values_supported": [ "RS256" ]
+            }
+          ]]
+      }
+
+      test_backend.expect{ url = "https://idp.example.com/auth/realms/foo/jwks" }.
+      respond_with{
+        status = 200,
+        headers = { content_type = 'application/json' },
+        body =  [[
+            { "keys": [{
+                "kid": "3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y",
+                "kty": "RSA",
+                "n": "iqXwBiZgN2q1dCKU1P_vzyiGacdQhfqgxQST7GFlWU_PUljV9uHrLOadWadpxRAuskNpXWsrKoU_hDxtSpUIRJj6hL5YTlrvv-IbFwPNtD8LnOfKL043_ZdSOe3aT4R4NrBxUomndILUESlhqddylVMCGXQ81OB73muc9ovR68Ajzn8KzpU_qegh8iHwk-SQvJxIIvgNJCJTC6BWnwS9Bw2ns0fQOZZRjWFRVh8BjkVdqa4vCAb6zw8hpR1y9uSNG-fqUAPHy5IYQaD8k8QX0obxJ0fld61fH-Wr3ENpn9YZWYBcKvnwLm2bvxqmNVBzW4rhGEZb9mf-KrSagD5GUw",
+                "e": "AQAB"
+            }] }
+        ]]
+      }
+
+      local config = assert(loader:index('foobar.example.com'))
+
+      assert.truthy(config)
+      assert.equals('string', type(config))
+
+      result_config = cjson.decode(config)
+      assert.equals(1, #result_config.services)
+      assert.equals(1, #result_config.oidc)
+      assert.same('2', result_config.oidc[1].service_id)
+      assert.same('https://idp.example.com/auth/realms/foo', result_config.oidc[1].config.issuer)
     end)
   end)
 end)

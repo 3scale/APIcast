@@ -1,7 +1,10 @@
 version: '2.2'
 services:
   development:
+    privileged: true
+    pid: "host"
     volumes:
       - .:/home/centos/
       - .docker/cpanm:/home/centos/.cpanm
-
+      - /sys/kernel/debug:/sys/kernel/debug
+      - /lib/modules:/lib/module

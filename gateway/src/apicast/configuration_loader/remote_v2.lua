@@ -18,6 +18,7 @@ local resty_env = require 'resty.env'
 local re = require 'ngx.re'
 local configuration = require 'apicast.configuration'
 local oidc_discovery = require('resty.oidc.discovery')
+local match = ngx.re.match
 
 local _M = {
   _VERSION = '0.1',
@@ -103,7 +104,7 @@ local function endpoint_for_services_with_host(portal_endpoint, env, host)
   local query_args = encode_args({ host = host })
 
   return format(
-      "%s/admin/api/services/proxy/configs/%s.json?%s",
+      "%s/admin/api/account/proxy_configs/%s.json?%s",
       portal_endpoint,
       env,
       query_args
@@ -128,15 +129,22 @@ local function parse_resp_body(self, resp_body)
     local original_proxy_config = deepcopy(proxy_config)
 
     local service = configuration.parse_service(proxy_config.content)
+
+    -- We always assign a oidc to the service, even an empty one with the
+    -- service_id, if not on APICAST_SERVICES_LIST will fail on filtering
     local oidc = self:oidc_issuer_configuration(service)
+    if not oidc then
+      oidc = {}
+    end
 
-    -- Assign false instead of nil to avoid sparse arrays. cjson raises an
-    -- error by default when converting sparse arrays.
-    config.oidc[i] = oidc or false
+    -- deepcopy because this can be cached, and we want to have a deepcopy to
+    -- avoid issues with service_id
+    local oidc_copy = deepcopy(oidc)
+    oidc_copy.service_id = service.id
 
+    config.oidc[i] = oidc_copy
     config.services[i] = original_proxy_config.content
   end
-
   return cjson.encode(config)
 end
 
@@ -206,6 +214,15 @@ end
 function _M:call(environment)
   local load_just_for_host = load_just_the_services_needed()
 
+  local service_regexp_filter  = resty_env.value("APICAST_SERVICES_FILTER_BY_URL")
+  if service_regexp_filter then
+    local _, err = match("", service_regexp_filter, 'oj')
+    if err then
+      ngx.log(ngx.ERR, "APICAST_SERVICES_FILTER_BY_URL cannot compile, all services will be used: ", err)
+      service_regexp_filter = nil
+    end
+  end
+
   if self == _M  or not self then
     local host = environment
     local m = _M.new()
@@ -253,7 +270,7 @@ function _M:call(environment)
 
   local config
   for _, object in ipairs(res) do
-    config, err = self:config(object.service, env, 'latest')
+    config, err = self:config(object.service, env, 'latest', service_regexp_filter)
 
     if config then
       insert(configs, config)
@@ -338,7 +355,7 @@ function _M:oidc_issuer_configuration(service)
   return self.oidc:call(service.oidc.issuer_endpoint, self.ttl)
 end
 
-function _M:config(service, environment, version)
+function _M:config(service, environment, version, service_regexp_filter)
   local http_client = self.http_client
 
   if not http_client then return nil, 'not initialized' end
@@ -372,6 +389,10 @@ function _M:config(service, environment, version)
     local original_proxy_config = deepcopy(proxy_config)
 
     local config_service = configuration.parse_service(proxy_config.content)
+    if service_regexp_filter and not config_service:match_host(service_regexp_filter) then
+      return nil, "Service filtered out because APICAST_SERVICES_FILTER_BY_URL"
+    end
+
     original_proxy_config.oidc = self:oidc_issuer_configuration(config_service)
 
     return original_proxy_config
