@@ -29,7 +29,7 @@ service not found for host localhost
 using lazy configuration loader
 
 === TEST 2: load invalid configuration
-should fail with server error
+should just say service is not found
 --- env eval
 (
   'APICAST_CONFIGURATION_LOADER' => 'lazy',
