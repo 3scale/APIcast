@@ -129,6 +129,10 @@ bx0wVEzbYK5wRb7UiWhvvvYDltIzsD75vg==
 
 === TEST 3: uses endpoint host as Host header
 when connecting to the backend
+--- env eval
+(
+  'BACKEND_ENDPOINT_OVERRIDE' => ''
+)
 --- configuration
 {
     "services": [
@@ -139,6 +143,9 @@ when connecting to the backend
         "backend_authentication_value": "token-value",
         "proxy": {
             "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/",
+            "backend":{
+                "endpoint": "http://test_backend:$TEST_NGINX_SERVER_PORT"
+            },
             "proxy_rules": [
                 { "pattern" : "/", "http_method" : "GET", "metric_system_name" : "hits", "delta" : 2 }
             ]
@@ -178,4 +185,3 @@ location /api-backend/ {
 --- wait: 3
 --- no_error_log
 [error]
-
