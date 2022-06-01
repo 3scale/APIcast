@@ -487,50 +487,7 @@ X-3scale-usage: usage%5Bhits%5D=2
 [error]
 
 
-=== TEST 16: uses endpoint host as Host header
-when connecting to the backend
---- configuration
-{
-  "services" : [
-    {
-      "id": 42,
-      "backend_version": 1,
-      "backend_authentication_type": "service_token",
-      "backend_authentication_value" : "service-token",
-      "proxy": {
-        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/",
-        "proxy_rules": [
-            { "pattern" : "/", "http_method" : "GET", "metric_system_name" : "hits", "delta" : 2} 
-        ]
-      }
-    }
-  ]
-}
---- upstream
-  location / {
-     echo 'yay, api backend!';
-  }
---- backend
-  location /transactions/authrep.xml {
-     content_by_lua_block {
-       if ngx.var.host == 'test_backend' then
-         ngx.exit(200)
-       else
-         ngx.log(ngx.ERR, 'invalid host: ', ngx.var.host)
-         ngx.exit(404)
-       end
-     }
-  }
---- request
-GET /?user_key=somekey
---- response_body
-yay, api backend!
---- error_code: 200
---- no_error_log
-[error]
-
-
-=== TEST 17: invalid service
+=== TEST 16: invalid service
 The message is configurable and default status is 404.
 --- configuration
 {}
@@ -541,7 +498,7 @@ GET /?user_key=value
 [error]
 
 
-=== TEST 18: default limits exceeded error
+=== TEST 17: default limits exceeded error
 There are defaults defined for the error message, the content-type, and the status code (429).
 --- configuration
 {
@@ -582,7 +539,7 @@ Limits exceeded
 [error]
 
 
-=== TEST 19: configurable limits exceeded error
+=== TEST 18: configurable limits exceeded error
 --- configuration
 {
   "services" : [
@@ -622,7 +579,7 @@ limits exceeded!
 [error]
 
 
-=== TEST 20: Credentials in large POST body
+=== TEST 19: Credentials in large POST body
 POST bodies larger than 'client_body_buffer_size' are written to a temp file,
 and we ignore them. That means that credentials stored in the body are not
 taken into account.
@@ -663,7 +620,7 @@ credentials missing!
 [error]
 
 
-=== TEST 21: returns 'Retry-After' header when rate-limited by 3scale backend
+=== TEST 20: returns 'Retry-After' header when rate-limited by 3scale backend
 --- configuration
 {
   "services" : [
@@ -705,7 +662,7 @@ Limits exceeded
 [error]
 
 
-=== TEST 22: APIcast placed after a policy that denies the request in rewrite()
+=== TEST 21: APIcast placed after a policy that denies the request in rewrite()
 This test checks that APIcast does not call authrep.
 --- configuration
 {
@@ -746,7 +703,7 @@ GET /?user_key=value
 [error]
 
 
-=== TEST 23: APIcast placed after a policy that denies the request in access()
+=== TEST 22: APIcast placed after a policy that denies the request in access()
 This test checks that APIcast does not call authrep.
 --- configuration
 {
@@ -787,7 +744,7 @@ GET /?user_key=value
 [error]
 
 
-=== TEST 24: returns "authorization failed" instead of "limits exceeded" for disabled metrics
+=== TEST 23: returns "authorization failed" instead of "limits exceeded" for disabled metrics
 "Disabled metrics" are those that have a limit of 0 in the 3scale backend.
 --- configuration
 {
