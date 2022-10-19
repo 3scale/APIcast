@@ -1,6 +1,7 @@
 FROM registry.access.redhat.com/ubi8:8.5 AS opentelemetry-builder
 
 ARG OPENRESTY_RPM_VERSION="1.19.3"
+ARG OTHER="1.19.3"
 
 RUN sed -i s/enabled=./enabled=0/g /etc/yum/pluginconf.d/subscription-manager.conf
 
@@ -25,7 +26,7 @@ RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.36.4 \
     -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
     -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
     ../.. \
-  && make -j2 \
+  && make -j8 \
   && make install
 
 RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.6.1 \
@@ -43,7 +44,7 @@ RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.6.1 \
     -DWITH_EXAMPLES=OFF \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     .. \
-  && make -j2 \
+  && make -j8 \
   && make install
 
 ADD https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/refs/tags/webserver/v1.0.1.tar.gz ./
@@ -59,7 +60,7 @@ RUN cd otel-nginx/build \
     -DCMAKE_INSTALL_PREFIX=/usr/share/nginx/modules \
     -DNGINX_VERSION=1.19.3 \
     .. \
-  && make -j2 \
+  && make -j8 VERBOSE=1 \
   && make install
 
 FROM registry.access.redhat.com/ubi8:8.5
