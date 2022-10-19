@@ -25,7 +25,7 @@ RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.36.4 \
     -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
     -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
     ../.. \
-  && make -j8 \
+  && make -j8 VERBOSE=1 \
   && make install
 
 RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.6.1 \
@@ -43,7 +43,7 @@ RUN git clone --shallow-submodules --depth 1 --recurse-submodules -b v1.6.1 \
     -DWITH_EXAMPLES=OFF \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     .. \
-  && make -j8 \
+  && make -j8 VERBOSE=1 \
   && make install
 
 ADD https://github.com/open-telemetry/opentelemetry-cpp-contrib/archive/refs/tags/webserver/v1.0.1.tar.gz ./
