@@ -1,7 +1,6 @@
 FROM registry.access.redhat.com/ubi8:8.5 AS opentelemetry-builder
 
 ARG OPENRESTY_RPM_VERSION="1.19.3"
-ARG OTHER="1.19.3"
 
 RUN sed -i s/enabled=./enabled=0/g /etc/yum/pluginconf.d/subscription-manager.conf
 
