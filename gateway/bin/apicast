@@ -129,7 +129,7 @@ local function resty(code)
 
     if not cmd then return nil, 'could not find resty' end
 
-    local handle = io.popen(([[/usr/bin/env -i %q -e %q]]):format(cmd, code))
+    local handle = io.popen(([[/usr/bin/env -i %q -e %q 2>/dev/null]]):format(cmd, code))
     local result = handle:read("*l")
 
     handle:close()
