@@ -118,6 +118,11 @@ local function forward_https_request(proxy_uri, uri, skip_https_connect)
         end
     end
 
+    -- The whole request is buffered in the memory so remove the Transfer-Encoding: chunked
+    if request.headers["Transfer-Encoding"] == "chunked" then
+        request.headers["Transfer-Encoding"] = nil
+    end
+
     local httpc, err = http_proxy.new(request, skip_https_connect)
 
     if not httpc then
