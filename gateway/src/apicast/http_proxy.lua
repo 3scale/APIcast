@@ -1,5 +1,7 @@
 local format = string.format
 
+local open = io.open
+local close = io.close
 local resty_url = require "resty.url"
 local resty_resolver = require 'resty.resolver'
 local round_robin = require 'resty.balancer.round_robin'
@@ -81,6 +83,20 @@ local function absolute_url(uri)
     )
 end
 
+function fsize (path)
+  local file, err = open(path)
+
+  if err or not file then
+    return nil, err
+  end
+
+  local current = file:seek()      -- get current position
+  local size = file:seek("end")    -- get file size
+  file:seek("set", current)        -- restore position
+  close(file)
+  return size
+end
+
 local function forward_https_request(proxy_uri, uri, skip_https_connect)
     -- This is needed to call ngx.req.get_body_data() below.
     ngx.req.read_body()
@@ -109,6 +125,12 @@ local function forward_https_request(proxy_uri, uri, skip_https_connect)
         ngx.log(ngx.INFO, "HTTPS Proxy: Request body is bigger than client_body_buffer_size, read the content from path='", temp_file_path, "'")
 
         if temp_file_path then
+          -- Set Content-Length only if none exist
+          if not request.headers["Content-Length"] then
+              local size, err = fsize(temp_file_path)
+              request.headers["Content-Length"] = size
+          end
+
           local body, err = file_reader(temp_file_path)
           if err then
             ngx.log(ngx.ERR, "HTTPS proxy: Failed to read temp body file, err: ", err)
