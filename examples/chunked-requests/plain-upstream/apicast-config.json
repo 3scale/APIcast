@@ -1,0 +1,30 @@
+{
+    "services": [
+        {
+            "backend_version": "1",
+            "proxy": {    
+                "hosts": ["one"],
+                "api_backend": "http://one.upstream/post",
+                "backend": {
+                    "endpoint": "http://127.0.0.1:8081",
+                    "host": "backend"
+                },
+                "proxy_rules": [ 
+                    {                                         
+                        "http_method": "POST",                
+                        "pattern": "/",                       
+                        "metric_system_name": "hits",         
+                        "delta": 1,                           
+                        "parameters": [],                     
+                        "querystring_parameters": {}          
+                    } 
+                ],
+                "policy_chain": [
+                    {                                         
+                        "name": "apicast.policy.apicast"      
+                    }
+                ]
+            }
+        }
+    ]
+}

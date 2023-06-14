@@ -1,0 +1,25 @@
+---
+version: '3.8'
+services:
+  gateway-plain-upstream:
+    container_name: gateway-plain-upstream
+    image: ${IMAGE_NAME:-apicast-test}
+    depends_on:
+    - one.upstream
+    environment:
+      THREESCALE_CONFIG_FILE: /tmp/config.json
+      THREESCALE_DEPLOYMENT_ENV: staging
+      APICAST_CONFIGURATION_LOADER: lazy
+      APICAST_WORKERS: 1
+      APICAST_LOG_LEVEL: debug
+      APICAST_CONFIGURATION_CACHE: "0"
+    expose:
+      - "8080"
+      - "8090"
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    volumes:
+      - ./examples/chunked-requests/plain-upstream/apicast-config.json:/tmp/config.json
+  one.upstream:
+    image: kennethreitz/httpbin
