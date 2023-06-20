@@ -23,3 +23,5 @@ services:
       GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL:-""}
   redis:
     image: redis
+  one.upstream:
+    image: kennethreitz/httpbin
