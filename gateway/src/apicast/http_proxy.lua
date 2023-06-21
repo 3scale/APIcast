@@ -83,8 +83,10 @@ end
 
 local function forward_https_request(proxy_uri, uri, skip_https_connect)
     -- This is needed to call ngx.req.get_body_data() below.
+    ngx.log(ngx.DEBUG, '=== Eguzki READ BODY')
     ngx.req.read_body()
 
+    ngx.log(ngx.DEBUG, '=== Eguzki READ BODY')
     local request = {
         uri = uri,
         method = ngx.req.get_method(),

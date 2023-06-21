@@ -7,6 +7,9 @@ local tostring = tostring
 local rawget = rawget
 local lower = string.lower
 local gsub = string.gsub
+local str_find = string.find
+local type = type
+local tbl_concat = table.concat
 local select = select
 
 local re = require 'ngx.re'
@@ -37,6 +40,7 @@ local function read_body_args(...)
     return {}, 'not supported'
   end
 
+  ngx.log(ngx.DEBUG, '=== Eguzki READ BODY')
   ngx.req.read_body()
 
   local args, err = ngx.req.get_post_args()
@@ -164,6 +168,21 @@ function backend_version_credentials.version_oauth(config)
   return setmetatable({ access_token, access_token = access_token }, credentials_oauth_mt)
 end
 
+local function content_type_is_urlencoded(headers)
+    local te = headers["Content-Type"]
+    if not te then
+        return false
+    end
+
+    -- Handle duplicate headers
+    -- This shouldn't happen but can in the real world
+    if type(te) ~= "string" then
+        te = tbl_concat(te, ",")
+    end
+
+    return str_find(lower(te), "application/x-www-form-urlencoded", 1, true) ~= nil
+end
+
 -- Returns a table with the args included in the request. If it's a GET, it
 -- returns the args in the URI. Otherwise, it returns the args in the body.
 -- According to the specs, it's possible to define mapping rules like:
@@ -174,9 +193,8 @@ end
 local function get_request_params(method)
   local params = ngx.req.get_uri_args()
 
-  if method == "GET" then
-    return params
-  else
+  if http_methods_with_body[method] and content_type_is_urlencoded(ngx.req.get_headers()) then
+    ngx.log(ngx.DEBUG, '=== Eguzki READ BODY')
     ngx.req.read_body()
     local body_params, err = ngx.req.get_post_args()
 
@@ -192,6 +210,9 @@ local function get_request_params(method)
 
     return body_params
   end
+
+  ngx.log(ngx.DEBUG, '=== Eguzki SKIPPING BODY READING')
+  return params
 end
 
 -- This table can be used with `table.concat` to serialize

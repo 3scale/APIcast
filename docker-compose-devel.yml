@@ -23,5 +23,12 @@ services:
       GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL:-""}
   redis:
     image: redis
+  upstream-rely:
+    image: bpack/socat
+    container_name: upstream-rely
+    command: "-v TCP-LISTEN:8080,fork TCP:one.upstream:80"
+    expose:
+      - "8080"
+    restart: unless-stopped
   one.upstream:
     image: kennethreitz/httpbin

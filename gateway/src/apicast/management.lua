@@ -59,6 +59,7 @@ function _M.config()
 end
 
 function _M.update_config()
+  ngx.log(ngx.DEBUG, '=== Eguzki READ BODY')
   ngx.req.read_body()
 
   ngx.log(ngx.DEBUG, 'management config update')
