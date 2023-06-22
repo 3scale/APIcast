@@ -1,0 +1,32 @@
+---
+version: '3.8'
+services:
+  gateway:
+    image: ${IMAGE_NAME:-apicast-test}
+    depends_on:
+    - one.upstream
+    - upstream-rely
+    environment:
+      THREESCALE_CONFIG_FILE: /tmp/config.json
+      THREESCALE_DEPLOYMENT_ENV: staging
+      APICAST_CONFIGURATION_LOADER: lazy
+      APICAST_WORKERS: 1
+      APICAST_LOG_LEVEL: debug
+      APICAST_CONFIGURATION_CACHE: "0"
+    expose:
+      - "8080"
+      - "8090"
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    volumes:
+      - ./examples/plain-upstream/apicast-config.json:/tmp/config.json
+  upstream-rely:
+    image: bpack/socat
+    container_name: upstream-rely
+    command: "-v TCP-LISTEN:8080,fork TCP:one.upstream:80"
+    expose:
+      - "8080"
+    restart: unless-stopped
+  one.upstream:
+    image: kennethreitz/httpbin

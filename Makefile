@@ -25,6 +25,7 @@ DEVEL_DOCKER_COMPOSE_VOLMOUNT_DEFAULT_FILE ?= docker-compose-devel-volmount-defa
 PROVE_DOCKER_COMPOSE_FILE ?= docker-compose.prove.yml
 FORWARD_PROXY_DOCKER_COMPOSE_FILE ?= docker-compose.forward-proxy.yml
 UPSTREAM_TLS_DOCKER_COMPOSE_FILE ?= docker-compose.upstream-tls.yml
+PLAIN_UPSTREAM_DOCKER_COMPOSE_FILE ?= docker-compose.plain-upstream.yaml
 
 DOCKER_VOLUME_NAME ?= apicast-local-volume
 
@@ -249,6 +250,7 @@ clean-containers:
 	$(DOCKER) compose -f $(DEVEL_DOCKER_COMPOSE_FILE) -f $(DEVEL_DOCKER_COMPOSE_VOLMOUNT_FILE) down --volumes --remove-orphans
 	$(DOCKER) compose -f $(FORWARD_PROXY_DOCKER_COMPOSE_FILE) down --volumes --remove-orphans
 	$(DOCKER) compose -f $(UPSTREAM_TLS_DOCKER_COMPOSE_FILE) down --volumes --remove-orphans
+	$(DOCKER) compose -f $(PLAIN_UPSTREAM_DOCKER_COMPOSE_FILE) down --volumes --remove-orphans
 
 clean-deps: ## Remove all local dependency folders
 	- rm -rf $(PROJECT_PATH)/lua_modules $(PROJECT_PATH)/local $(PROJECT_PATH)/.cpanm $(PROJECT_PATH)/vendor/cache $(PROJECT_PATH)/.cache :
@@ -289,6 +291,9 @@ benchmark:
 	DURATION=$$(( $(DURATION) / 10 )) $(DOCKER) compose run wrk
 	## run the real benchmark for $(DURATION) seconds
 	$(DOCKER) compose run wrk
+
+plain-upstream-gateway: ## Run gateway configured with plain HTTP 1.1 upstream server equipped with traffic rely agent (socat)
+	$(DOCKER) compose -f $(PLAIN_UPSTREAM_DOCKER_COMPOSE_FILE) run gateway
 
 # Check http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## Print this help
