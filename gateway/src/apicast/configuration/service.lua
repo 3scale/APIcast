@@ -7,6 +7,9 @@ local tostring = tostring
 local rawget = rawget
 local lower = string.lower
 local gsub = string.gsub
+local str_find = string.find
+local type = type
+local tbl_concat = table.concat
 local select = select
 
 local re = require 'ngx.re'
@@ -30,10 +33,29 @@ local http_methods_with_body = {
   PATCH = true
 }
 
+local function content_type_is_urlencoded(headers)
+    local ct = headers["Content-Type"]
+    if not ct then
+        return false
+    end
+
+    -- Handle duplicate headers
+    -- This shouldn't happen but can in the real world
+    if type(ct) ~= "string" then
+        ct = tbl_concat(ct, ",")
+    end
+
+    return str_find(lower(ct), "application/x-www-form-urlencoded", 1, true) ~= nil
+end
+
 local function read_body_args(...)
   local method = ngx.req.get_method()
 
   if not http_methods_with_body[method] then
+    return {}, 'not supported'
+  end
+
+  if not content_type_is_urlencoded(ngx.req.get_headers()) then
     return {}, 'not supported'
   end
 
@@ -87,6 +109,7 @@ function backend_version_credentials.version_1(config)
   else
     return nil, 'invalid credentials location'
   end
+
   ------
   -- user_key credentials.
   -- @field 1 User Key
@@ -174,9 +197,8 @@ end
 local function get_request_params(method)
   local params = ngx.req.get_uri_args()
 
-  if method == "GET" then
-    return params
-  else
+  -- Only read request body when POST query arguments (of the MIME type application/x-www-form-urlencoded)
+  if http_methods_with_body[method] and content_type_is_urlencoded(ngx.req.get_headers()) then
     ngx.req.read_body()
     local body_params, err = ngx.req.get_post_args()
 
@@ -192,6 +214,8 @@ local function get_request_params(method)
 
     return body_params
   end
+
+  return params
 end
 
 -- This table can be used with `table.concat` to serialize
