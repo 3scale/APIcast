@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Upstream TLS v1.3 [PR #1400](https://github.com/3scale/APIcast/pull/1400) [THREESCALE-9193](https://issues.redhat.com/browse/THREESCALE-9193)
 - Updated policy list for v3.13.2 [PR #1404](https://github.com/3scale/APIcast/pull/1404)
 
+### CHANGED
+
+-[*BREAKING CHANGE*] Support chunked requests when APIcast talks directly to upstream (not proxy in the middle). Request body was always buffered before this change. [PR #1405](https://github.com/3scale/APIcast/pull/1405)
+
 ### Removed
 
 - `APICAST_LOAD_SERVICES_WHEN_NEEDED` is dropped and the configuration is fetched "when needed" by default [PR #1352](https://github.com/3scale/APIcast/pull/1352) [THREESCALE-8508](https://issues.redhat.com/browse/THREESCALE-8508)
