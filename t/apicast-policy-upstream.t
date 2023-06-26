@@ -277,6 +277,8 @@ GET /path_in_the_rule/some_path?user_key=uk&a_param=a_value HTTP/1.1
 --- request
 POST /a_path
 user_key=uk&a_param=a_value
+--- more_headers
+Content-Type: application/x-www-form-urlencoded
 --- response_body
 yay, api backend
 --- error_code: 200

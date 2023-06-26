@@ -141,6 +141,7 @@ request body params in a POST call are taken into account when matching mapping 
 POST /foo?user_key=somekey
 bar=baz
 --- more_headers
+Content-Type: application/x-www-form-urlencoded
 X-3scale-Debug: my-token
 --- response_body
 api response
@@ -193,6 +194,7 @@ precedence.
 POST /foo?a_param=val3&another_param=val2&user_key=somekey
 a_param=val1
 --- more_headers
+Content-Type: application/x-www-form-urlencoded
 X-3scale-Debug: my-token
 --- response_body
 api response
