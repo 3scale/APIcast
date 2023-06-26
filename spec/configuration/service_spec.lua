@@ -23,6 +23,51 @@ describe('Service object', function()
 
         ngx.var = {}
         stub(ngx.req, 'get_method', function() return 'POST' end)
+        stub(ngx.req, 'get_headers', function() return {["Content-Type"] = 'application/x-www-form-urlencoded' } end)
+        stub(ngx.req, 'read_body')
+        stub(ngx.req, 'get_post_args', function() return { user_key = 'post' } end)
+
+        assert.same({ 'post', user_key = 'post' }, assert(service:extract_credentials()))
+      end)
+
+      it('unknown POST request returns empty', function()
+        local service = Service.new({
+          backend_version = 1,
+          credentials = { location = 'query' }
+        })
+
+        ngx.var = {}
+        stub(ngx.req, 'get_method', function() return 'POST' end)
+        -- No Content-Type header
+        stub(ngx.req, 'get_headers', function() return {} end)
+
+        assert.same({}, assert(service:extract_credentials()))
+      end)
+
+      it('urlencoded POST request without credentials', function()
+        local service = Service.new({
+          backend_version = 1,
+          credentials = { location = 'query' }
+        })
+
+        ngx.var = {}
+        stub(ngx.req, 'get_method', function() return 'POST' end)
+        stub(ngx.req, 'get_headers', function() return {["Content-Type"] = 'application/x-www-form-urlencoded' } end)
+        stub(ngx.req, 'read_body')
+        stub(ngx.req, 'get_post_args', function() return {} end)
+
+        assert.same({}, assert(service:extract_credentials()))
+      end)
+
+      it('urlencoded POST request with multiple Content-Type headers', function()
+        local service = Service.new({
+          backend_version = 1,
+          credentials = { location = 'query' }
+        })
+
+        ngx.var = {}
+        stub(ngx.req, 'get_method', function() return 'POST' end)
+        stub(ngx.req, 'get_headers', function() return {["Content-Type"] = {'other', 'application/x-www-form-urlencoded'} } end)
         stub(ngx.req, 'read_body')
         stub(ngx.req, 'get_post_args', function() return { user_key = 'post' } end)
 
@@ -74,6 +119,7 @@ describe('Service object', function()
 
         ngx.var = {}
         stub(ngx.req, 'get_method', function() return 'POST' end)
+        stub(ngx.req, 'get_headers', function() return {["Content-Type"] = 'application/x-www-form-urlencoded' } end)
         stub(ngx.req, 'read_body')
         stub(ngx.req, 'get_post_args', function() return { app_id = 'post' } end)
 
@@ -128,6 +174,7 @@ describe('Service object', function()
 
         ngx.var = {}
         stub(ngx.req, 'get_method', function() return 'POST' end)
+        stub(ngx.req, 'get_headers', function() return {["Content-Type"] = 'application/x-www-form-urlencoded' } end)
         stub(ngx.req, 'read_body')
         stub(ngx.req, 'get_post_args', function() return { access_token = 'post' } end)
 
