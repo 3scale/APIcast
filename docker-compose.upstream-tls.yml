@@ -5,6 +5,7 @@ services:
     image: ${IMAGE_NAME:-apicast-test}
     depends_on:
     - one.upstream
+    - two.upstream
     environment:
       THREESCALE_CONFIG_FILE: /tmp/config.json
       THREESCALE_DEPLOYMENT_ENV: staging
@@ -21,10 +22,13 @@ services:
     volumes:
       - ./examples/tlsv1.3-upstream/apicast-config.json:/tmp/config.json
   one.upstream:
-    image: nginx:1.23.4
+    image: alpine/socat:1.7.4.4
+    container_name: one.upstream
+    command: "-v openssl-listen:443,reuseaddr,fork,cert=/etc/pki/tls.pem,verify=0,openssl-min-proto-version=TLS1.3,openssl-max-proto-version=TLS1.3 TCP:two.upstream:80"
     expose:
       - "443"
+    restart: unless-stopped
     volumes:
-      - ./examples/tlsv1.3-upstream/proxy-nginx.conf:/etc/nginx/nginx.conf
-      - ./examples/tlsv1.3-upstream/upstream-cert/one.upstream.key:/etc/pki/tls.key
-      - ./examples/tlsv1.3-upstream/upstream-cert/one.upstream.crt:/etc/pki/tls.crt
+      - ./examples/tlsv1.3-upstream/upstream-cert/one.upstream.pem:/etc/pki/tls.pem
+  two.upstream:
+    image: kennethreitz/httpbin
