@@ -25,3 +25,13 @@ curl -v -H "Host: one" http://${APICAST_IP}:8080/?user_key=foo
 ```
 
 NOTE: using `one.upstream` as upstream hostname becase when APIcast resolves `upstream` it returns `0.0.0.1`
+NOTE: pem file creation
+```
+// generate a private key;
+$ openssl genrsa -out server.key 1024
+// generate a self signed cert:
+$ openssl req -new -key server.key -x509 -days 3653 -out server.crt
+//     enter fields... (may all be empty when cert is only used privately)
+// generate the pem file:
+$ cat server.key server.crt >server.pem
+```
