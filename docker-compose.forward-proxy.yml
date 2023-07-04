@@ -5,7 +5,8 @@ services:
     image: ${IMAGE_NAME:-apicast-test}
     depends_on:
     - proxy
-    - upstream
+    - tls.termination
+    - actual.upstream
     environment:
       THREESCALE_CONFIG_FILE: /tmp/config.json
       THREESCALE_DEPLOYMENT_ENV: staging
@@ -21,14 +22,17 @@ services:
       - "8090:8090"
     volumes:
       - ./examples/forward-proxy/apicast-config.json:/tmp/config.json
-  upstream:
-    image: nginx:1.23.4
+  tls.termination:
+    image: alpine/socat:1.7.4.4
+    container_name: tls.termination
+    command: "-v openssl-listen:443,reuseaddr,fork,cert=/etc/pki/tls.pem,verify=0,openssl-min-proto-version=TLS1.3,openssl-max-proto-version=TLS1.3 TCP:actual.upstream:80"
     expose:
       - "443"
+    restart: unless-stopped
     volumes:
-      - ./examples/forward-proxy/proxy-nginx.conf:/etc/nginx/nginx.conf
-      - ./examples/forward-proxy/upstream-cert/upstream.key:/etc/pki/tls.key
-      - ./examples/forward-proxy/upstream-cert/upstream.crt:/etc/pki/tls.crt
+      - ./examples/forward-proxy/upstream-cert/upstream.pem:/etc/pki/tls.pem
+  actual.upstream:
+    image: kennethreitz/httpbin
   proxy:
     build:
       dockerfile: ./examples/forward-proxy/tinyproxy.Dockerfile

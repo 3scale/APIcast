@@ -1,36 +1,70 @@
 {
-    "services": [
-        {
-            "backend_version": "1",
-            "proxy": {
-                "hosts": ["one"],
-                "api_backend": "https://upstream:443/",
-                "backend": {
-                    "endpoint": "http://127.0.0.1:8081",
-                    "host": "backend"
-                },
-                "policy_chain": [
-                    {
-                        "name": "apicast.policy.apicast"
-                    },
-                    {
-                        "name": "apicast.policy.http_proxy",
-                        "configuration": {
-                            "https_proxy": "http://proxy:443/"
-                        }
-                    }
-                ],
-                "proxy_rules": [
-                    {
-                        "http_method": "GET",
-                        "pattern": "/",
-                        "metric_system_name": "hits",
-                        "delta": 1,
-                        "parameters": [],
-                        "querystring_parameters": {}
-                    }
-                ]
+  "services": [
+    {
+      "id": "1",
+      "backend_version": "1",
+      "proxy": {
+        "hosts": ["get"],
+        "api_backend": "https://tls.termination:443/get",
+        "backend": {
+          "endpoint": "http://127.0.0.1:8081",
+          "host": "backend"
+        },
+        "policy_chain": [
+          {
+            "name": "apicast.policy.apicast"
+          },
+          {
+            "name": "apicast.policy.http_proxy",
+            "configuration": {
+              "https_proxy": "http://proxy:443/"
             }
-        }
-    ]
+          }
+        ],
+        "proxy_rules": [
+          {
+            "http_method": "GET",
+            "pattern": "/",
+            "metric_system_name": "hits",
+            "delta": 1,
+            "parameters": [],
+            "querystring_parameters": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "2",
+      "backend_version": "1",
+      "proxy": {
+        "hosts": ["post"],
+        "api_backend": "https://tls.termination:443/post",
+        "backend": {
+          "endpoint": "http://127.0.0.1:8081",
+          "host": "backend"
+        },
+        "policy_chain": [
+          {
+            "name": "apicast.policy.apicast"
+          },
+          {
+            "name": "apicast.policy.http_proxy",
+            "configuration": {
+              "https_proxy": "http://proxy:443/"
+            }
+          }
+        ],
+        "proxy_rules": [
+          {
+            "http_method": "POST",
+            "pattern": "/",
+            "metric_system_name": "hits",
+            "delta": 1,
+            "parameters": [],
+            "querystring_parameters": {}
+          }
+        ]
+      }
+    }
+  ]
 }
