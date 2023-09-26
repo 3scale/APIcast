@@ -10,7 +10,7 @@ You can use APIcast hosted or self-managed, in both cases, it needs connection t
 - **Embedded APIcast**: A 3scale API Management installation includes two default APIcast gateways, staging and production. These gateways come preconfigured and ready for immediate use.
 
 - **Self-managed APIcast**: You can deploy APIcast where you prefer. Here are some recommended deployment options:
-  - 'Local' deploy: Install dependencies (check out the [Tools and dependencies info](https://github.com/3scale/apicast#tools-and-dependencies) and get the any version of APIcast (or latest release published).
+  - 'Local' deploy: Install dependencies - refer to [Development](https://github.com/3scale/apicast#development) and get any version of APIcast, including the latest release.
   - Docker: To avoid having to install APIcast dependencies, you can [download a ready to use dockerized image](https://github.com/3scale/apicast#docker) form our repository.
   - Running APIcast on Red Hat OpenShift: Run APIcast on a supported version of OpenShift. You can connect self-managed APIcasts to a 3scale On-premises installation or to a 3scale Hosted (SaaS) account.
 
