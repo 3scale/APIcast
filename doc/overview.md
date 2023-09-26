@@ -7,11 +7,11 @@ Here you’ll learn more about deployment options, environments provided, and ho
 ## Deployment options
 
 You can use APIcast hosted or self-managed, in both cases, it needs connection to the rest of the 3scale API management platform:
-- **<a href="https://support.3scale.net/docs/deployment-options/apicast-cloud-gateway">APIcast hosted</a>**: 3scale hosts the gateway in the cloud. The API gateway is already deployed for you and it's limited to 50,000 calls per day.
-- **APIcast self-managed**: You can deploy APIcast wherever you want. To do so, download the json configuration file from API > Integration > Production or fetch it using the Account management API. The self-managed mode is the intended mode of operation for production environments. Here are a few recommended options to deploy your API gateway:
-  - 'Local' deploy: Install dependencies (check out the [Tools and dependencies info](https://github.com/3scale/apicast#tools-and-dependencies) and get the 'v2.0.0-rc1' tagged version of APIcast (or latest release published).
+- **Embedded APIcast**: Two APIcast gateways (staging and production) come by default with the 3scale API Management installation. They come pre-configured and ready to use out-of-the-box.
+- **Self-managed APIcast**: You can deploy APIcast wherever you want. Here are a few recommended options to deploy APIcast:
+  - 'Local' deploy: Install dependencies (check out the [Tools and dependencies info](https://github.com/3scale/apicast#tools-and-dependencies) and get the any version of APIcast (or latest release published).
   - Docker: To avoid having to install APIcast dependencies, you can [download a ready to use dockerized image](https://github.com/3scale/apicast#docker) form our repository.
-  - <a href="openshift-guide.md">OpenShift</a>: APIcast v2.0.0-rc1 runs on top of OpenShift 3.3.
+  - Running APIcast on Red Hat OpenShift: Run APIcast on a supported version of OpenShift. You can connect self-managed APIcasts to a 3scale On-premises installation or to a 3scale Hosted (SaaS) account.
 
 ## Environments
 
