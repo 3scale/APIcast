@@ -7,7 +7,8 @@ Here you’ll learn more about deployment options, environments provided, and ho
 ## Deployment options
 
 You can use APIcast hosted or self-managed, in both cases, it needs connection to the rest of the 3scale API management platform:
-- **Embedded APIcast**: Two APIcast gateways (staging and production) come by default with the 3scale API Management installation. They come pre-configured and ready to use out-of-the-box.
+- **Embedded APIcast**: A 3scale API Management installation includes two default APIcast gateways, staging and production. These gateways come preconfigured and ready for immediate use.
+
 - **Self-managed APIcast**: You can deploy APIcast wherever you want. Here are a few recommended options to deploy APIcast:
   - 'Local' deploy: Install dependencies (check out the [Tools and dependencies info](https://github.com/3scale/apicast#tools-and-dependencies) and get the any version of APIcast (or latest release published).
   - Docker: To avoid having to install APIcast dependencies, you can [download a ready to use dockerized image](https://github.com/3scale/apicast#docker) form our repository.
