@@ -43,14 +43,6 @@ local function parse_nameservers()
     end
 end
 
-local function detect_kubernetes()
-  local secrets = open('/run/secrets/kubernetes.io')
-
-  if secrets then secrets:close() end
-
-  return secrets or resty_env.value('KUBERNETES_PORT')
-end
-
 -- CPU shares in Cgroups v1 or converted from weight in Cgroups v2 in millicores
 local function cpu_shares()
   local shares
@@ -66,9 +58,9 @@ local function cpu_shares()
 
     if file then
       local weight = file:read('*n')
-      shares = (((weight - 1) * 262142) / 9999) + 2
-
       file:close()
+
+      shares = (((weight - 1) * 262142) / 9999) + 2
     end
   else
     -- Cgroups v1
