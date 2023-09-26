@@ -12,7 +12,8 @@ You can use APIcast hosted or self-managed, in both cases, it needs connection t
 - **Self-managed APIcast**: You can deploy APIcast where you prefer. Here are some recommended deployment options:
   - 'Local' deploy: Install dependencies - refer to [Development](https://github.com/3scale/apicast#development) and get any version of APIcast, including the latest release.
   - Docker: To avoid having to install APIcast dependencies, you can [download a ready to use dockerized image](https://github.com/3scale/apicast#docker) form our repository.
-  - Running APIcast on Red Hat OpenShift: Run APIcast on a supported version of OpenShift. You can connect self-managed APIcasts to a 3scale On-premises installation or to a 3scale Hosted (SaaS) account.
+  - Running APIcast on Red Hat OpenShift: Run APIcast on a supported version of OpenShift. You can connect self-managed APIcasts to a 3scale On-Premises installation or to a 3scale Hosted (SaaS) account.
+
 
 ## Environments
 
