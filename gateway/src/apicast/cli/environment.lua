@@ -43,24 +43,35 @@ local function parse_nameservers()
     end
 end
 
-local function detect_kubernetes()
-  local secrets = open('/run/secrets/kubernetes.io')
-
-  if secrets then secrets:close() end
-
-  return secrets or resty_env.value('KUBERNETES_PORT')
-end
-
+-- CPU shares in Cgroups v1 or converted from weight in Cgroups v2 in millicores
 local function cpu_shares()
-  if not detect_kubernetes() then return end
-
   local shares
-  local file = open('/sys/fs/cgroup/cpu/cpu.shares')
 
-  if file then
-    shares = file:read('*n')
+  -- This check is from https://github.com/kubernetes/kubernetes/blob/release-1.27/test/e2e/node/pod_resize.go#L305-L314
+  -- alternatively, this method can be used: https://kubernetes.io/docs/concepts/architecture/cgroups/#check-cgroup-version
+  -- (`stat -fc %T /sys/fs/cgroup/` returns `cgroup2fs` or `tmpfs`)
+  if pl_path.exists("/sys/fs/cgroup/cgroup.controllers") then
+    -- Cgroups v2
+    ngx.log(ngx.DEBUG, "detecting cpus in Cgroups v2")
+    -- Using the formula from https://github.com/kubernetes/kubernetes/blob/release-1.27/pkg/kubelet/cm/cgroup_manager_linux.go#L570-L574
+    local file = open('/sys/fs/cgroup/cpu.weight')
 
-    file:close()
+    if file then
+      local weight = file:read('*n')
+      file:close()
+
+      shares = (((weight - 1) * 262142) / 9999) + 2
+    end
+  else
+    -- Cgroups v1
+    ngx.log(ngx.DEBUG, "detecting cpus in Cgroups v1")
+    local file = open('/sys/fs/cgroup/cpu/cpu.shares')
+
+    if file then
+      shares = file:read('*n')
+
+      file:close()
+    end
   end
 
   return shares
@@ -68,11 +79,16 @@ end
 
 local function cpus()
     local shares = cpu_shares()
-    if shares then return ceil(shares / 1024) end
+    if shares then
+      local res = ceil(shares / 1024)
+      ngx.log(ngx.DEBUG, "cpu_shares = "..res)
+      return res
+    end
 
     -- TODO: support /sys/fs/cgroup/cpuset/cpuset.cpus
     -- see https://github.com/sclorg/rhscl-dockerfiles/blob/ff912d8764af9a41096e63064bbc325395afa608/rhel7.sti-base/bin/cgroup-limits#L55-L75
     local nproc = util.system('nproc')
+    ngx.log(ngx.DEBUG, "cpus from nproc = "..nproc)
     return tonumber(nproc)
 end
 

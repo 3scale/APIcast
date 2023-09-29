@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Detect number of CPU shares when running on Cgroups V2 [PR #1410](https://github.com/3scale/apicast/pull/1410) [THREESCALE-10167](https://issues.redhat.com/browse/THREESCALE-10167)
+
+## [3.14.0] 2023-07-25
+
 ### Fixed
 
 - In boot mode on `init_worker` check configuration expiration [PR #1399](https://github.com/3scale/APIcast/pull/1399) [THREESCALE-9003](https://issues.redhat.com/browse/THREESCALE-9003)
