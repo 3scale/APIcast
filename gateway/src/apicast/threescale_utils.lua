@@ -1,7 +1,7 @@
 local sub = string.sub
 local tonumber = tonumber
 
-local redis = require 'resty.redis'
+local redis = require 'resty.redis.connector'
 local env = require 'resty.env'
 
 local resty_resolver = require 'resty.resolver'
@@ -120,6 +120,7 @@ function _M.resolve(host, port)
   return ip, port
 end
 
+
 function _M.connect_redis(options)
   local opts = {}
 
@@ -141,34 +142,24 @@ function _M.connect_redis(options)
     opts.password = options.password
   end
 
-  opts.timeout = options and options.timeout or redis_conf.timeout
+  opts.connect_timeout = options and options.timeout or redis_conf.timeout
 
   local host = opts.host or env.get('REDIS_HOST') or "127.0.0.1"
   local port = opts.port or env.get('REDIS_PORT') or 6379
+  host, port = _M.resolve(host, port)
 
-  local red = redis:new()
+  local rc = redis.new({
+      connect_timeout = opts.timeout,
 
-  red:set_timeout(opts.timeout)
+      host = host,
+      port = port,
+      db = opts.db,
+      password = opts.password,
+  })
 
-  local ok, err = red:connect(_M.resolve(host, port))
-  if not ok then
+  local red, err = rc:connect()
+  if not red then
     return nil, _M.error("failed to connect to redis on ", host, ":", port, ": ", err)
-  end
-
-  if opts.password then
-    ok = red:auth(opts.password)
-
-    if not ok then
-      return nil, _M.error("failed to auth on redis ", host, ":", port)
-    end
-  end
-
-  if opts.db then
-    ok = red:select(opts.db)
-
-    if not ok then
-      return nil, _M.error("failed to select db ", opts.db, " on redis ", host, ":", port)
-    end
   end
 
   return red
