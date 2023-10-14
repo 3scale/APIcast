@@ -23,6 +23,7 @@ dependencies = {
    'penlight',
    'nginx-lua-prometheus == 0.20181120',
    'lua-resty-jit-uuid',
+   'lua-resty-redis-connector',
 }
 build = {
    type = "make",
