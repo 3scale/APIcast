@@ -13,6 +13,11 @@ services:
     environment:
       EDITOR: vi
       TEST_NGINX_REDIS_HOST: redis
+      TEST_NGINX_REDIS_MASTER: redismaster
+      TEST_NGINX_REDIS_SENTINEL_1_HOST: sentinel-1
+      TEST_NGINX_REDIS_SENTINEL_2_HOST: sentinel-2
+      TEST_NGINX_REDIS_SENTINEL_3_HOST: sentinel-3
+      TEST_NGINX_REDIS_SENTINEL_PORT: 5000
       TEST_NGINX_BINARY: openresty
       PROJECT_PATH: /opt/app-root/src
       TEST_NGINX_APICAST_PATH: /opt/app-root/src/gateway
@@ -23,3 +28,32 @@ services:
       GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL:-""}
   redis:
     image: redis
+  redis-master:
+    image: redis
+  redis-slave-1:
+    image: redis
+    command: redis-server --slaveof redis-master 6379
+  redis-slave-2:
+    image: redis
+    command: redis-server --slaveof redis-master 6379
+  sentinel-1:
+    build:
+      context: ./redis-sentinel
+    depends_on:
+        - redis-master
+        - redis-slave-1
+        - redis-slave-2
+  sentinel-2:
+    build:
+      context: ./redis-sentinel
+    depends_on:
+        - redis-master
+        - redis-slave-1
+        - redis-slave-2
+  sentinel-3:
+    build:
+      context: ./redis-sentinel
+    depends_on:
+        - redis-master
+        - redis-slave-1
+        - redis-slave-2
