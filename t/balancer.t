@@ -1,27 +1,35 @@
 use lib 't';
-use Test::APIcast 'no_plan';
+use Test::APIcast::Blackbox 'no_plan';
 
-$ENV{TEST_NGINX_HTTP_CONFIG} = "$Test::APIcast::path/http.d/*.conf";
-$ENV{RESOLVER} = '127.0.1.1:5353';
-
-env_to_nginx(
-    'RESOLVER'
-);
-master_on();
+repeat_each(1);
 run_tests();
 
 __DATA__
 
 === TEST 1: round robin does not leak memory
 Balancing different hosts does not leak memory.
---- http_config
-  lua_package_path "$TEST_NGINX_LUA_PATH";
-  init_by_lua_block {
-    require('resty.balancer.round_robin').cache_size = 1
+--- configuration
+  {
+      "services": [
+      {
+          "proxy": {
+            "policy_chain": [
+            { "name": "apicast.policy.upstream",
+              "configuration":
+              {
+                "rules": [ { "regex": "/", "http_method": "GET",
+                             "url": "http://test:$TEST_NGINX_SERVER_PORT" } ]
+              }
+            }
+            ]
+        }
+      }
+    ]
   }
---- config
+--- upstream
   location = /t {
     content_by_lua_block {
+      require('resty.balancer.round_robin').cache_size = 1
       local round_robin = require('resty.balancer.round_robin')
       local balancer = round_robin.new()
 
