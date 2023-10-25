@@ -1,7 +1,6 @@
 use lib 't';
 use Test::APIcast::Blackbox 'no_plan';
 
-repeat_each(1);
 run_tests();
 
 __DATA__
@@ -9,22 +8,26 @@ __DATA__
 === TEST 1: round robin does not leak memory
 Balancing different hosts does not leak memory.
 --- configuration
-  {
-      "services": [
-      {
-          "proxy": {
-            "policy_chain": [
-            { "name": "apicast.policy.upstream",
-              "configuration":
-              {
-                "rules": [ { "regex": "/", "http_method": "GET",
-                             "url": "http://test:$TEST_NGINX_SERVER_PORT" } ]
-              }
-            }
-            ]
+{
+    "services": [
+     {
+        "id": 42,
+        "backend_version": 1,
+        "backend_authentication_type": "service_token",
+        "backend_authentication_value": "token-value",
+        "proxy": { 
+          "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+          "proxy_rules": [ { "pattern" : "/", "http_method" : "GET",
+              "metric_system_name" : "hits", "delta" : 2 } ]
         }
-      }
-    ]
+     }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.exit(200)
+    }
   }
 --- upstream
   location = /t {
@@ -40,6 +43,6 @@ Balancing different hosts does not leak memory.
     }
   }
 --- pipelined_requests eval
-[ "GET /t", "GET /t" ]
+[ "GET /t?user_key=value", "GET /t?user_key=value" ]
 --- response_body eval
 [ "1", "1" ]
