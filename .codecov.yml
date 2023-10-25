@@ -6,3 +6,14 @@ ignore:
   - t
   - bin/busted.lua
   - examples
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 3%
+    patch:
+      default:
+        target: auto
+        threshold: 3%
