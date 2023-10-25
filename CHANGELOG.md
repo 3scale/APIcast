@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed CVE-2023-44487 (HTTP/2 Rapid Reset) [PR #393](https://github.com/3scale/apicast/pull/392) [THREESCALE-10224](https://issues.redhat.com/browse/THREESCALE-10224)
+
 ### Added
 
 - Detect number of CPU shares when running on Cgroups V2 [PR #1410](https://github.com/3scale/apicast/pull/1410) [THREESCALE-10167](https://issues.redhat.com/browse/THREESCALE-10167)

@@ -2,7 +2,7 @@
 version: '2.2'
 services:
   development:
-    image: ${IMAGE:-quay.io/3scale/apicast-ci:openresty-1.19.3-pr1379}
+    image: ${IMAGE:-quay.io/3scale/apicast-ci:openresty-1.19.3-23}
     platform: "linux/amd64"
     depends_on:
       - redis
