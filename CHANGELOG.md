@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- Fixed CVE-2023-44487 (HTTP/2 Rapid Reset) [PR #393](https://github.com/3scale/apicast/pull/392) [THREESCALE-10224](https://issues.redhat.com/browse/THREESCALE-10224)
+- Fixed CVE-2023-44487 (HTTP/2 Rapid Reset) [PR #1417](https://github.com/3scale/apicast/pull/1417) [THREESCALE-10224](https://issues.redhat.com/browse/THREESCALE-10224)
 
 ### Added
 
