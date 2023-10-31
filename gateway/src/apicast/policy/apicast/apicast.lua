@@ -30,11 +30,17 @@ end
 
 function _M.cleanup()
   -- now abort all the "light threads" running in the current request handler
+  ngx.log(ngx.INFO, "client closed the (downstream) connection prematurely.")
   ngx.exit(499)
 end
 
 function _M:rewrite(context)
-  ngx.on_abort(self.cleanup)
+  ngx.log(ngx.INFO, "registering on abort")
+  local ok, err = ngx.on_abort(self.cleanup)
+  if not ok then
+    ngx.log(ngx.ERR, "failed to register the on_abort callback: ", err)
+    ngx.exit(500)
+  end
 
   -- load configuration if not configured
   -- that is useful when lua_code_cache is off
@@ -87,6 +93,13 @@ function _M:post_action(context)
 end
 
 function _M:access(context)
+  ngx.log(ngx.INFO, "registering on abort")
+  local ok, err = ngx.on_abort(self.cleanup)
+  if not ok then
+    ngx.log(ngx.ERR, "failed to register the on_abort callback: ", err)
+    ngx.exit(500)
+  end
+
   if context.skip_apicast_access then return end
 
   -- Flag to run post_action() only when access() was executed.
@@ -108,6 +121,13 @@ function _M:access(context)
 end
 
 function _M:content(context)
+  ngx.log(ngx.INFO, "registering on abort")
+  local ok, err = ngx.on_abort(self.cleanup)
+  if not ok then
+    ngx.log(ngx.ERR, "failed to register the on_abort callback: ", err)
+    ngx.exit(500)
+  end
+
   if not context[self].upstream then
     ngx.log(ngx.WARN, "Upstream server not found for this request")
     return errors.upstream_not_found(context.service)
