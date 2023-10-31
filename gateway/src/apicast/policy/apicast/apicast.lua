@@ -35,7 +35,6 @@ function _M.cleanup()
 end
 
 function _M:rewrite(context)
-  ngx.log(ngx.INFO, "registering on abort")
   local ok, err = ngx.on_abort(self.cleanup)
   if not ok then
     ngx.log(ngx.ERR, "failed to register the on_abort callback: ", err)
@@ -93,7 +92,6 @@ function _M:post_action(context)
 end
 
 function _M:access(context)
-  ngx.log(ngx.INFO, "registering on abort")
   local ok, err = ngx.on_abort(self.cleanup)
   if not ok then
     ngx.log(ngx.ERR, "failed to register the on_abort callback: ", err)
@@ -121,7 +119,6 @@ function _M:access(context)
 end
 
 function _M:content(context)
-  ngx.log(ngx.INFO, "registering on abort")
   local ok, err = ngx.on_abort(self.cleanup)
   if not ok then
     ngx.log(ngx.ERR, "failed to register the on_abort callback: ", err)
