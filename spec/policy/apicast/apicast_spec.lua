@@ -1,6 +1,16 @@
 local _M = require 'apicast.policy.apicast'
 
 describe('APIcast policy', function()
+  local ngx_on_abort_stub
+
+  before_each(function()
+      -- .access calls ngx.on_abort
+      -- busted tests are called in the context of ngx.timer
+      -- and that API ngx.on_abort is disabled in that context.
+      -- this stub is mocking the call
+      -- to prevent the internal error: API disabled in the context of ngx.timer
+      ngx_on_abort_stub = stub(ngx, 'on_abort')
+  end)
 
   it('has a name', function()
     assert.truthy(_M._NAME)
