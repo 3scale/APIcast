@@ -1,20 +1,25 @@
 use lib 't';
-use Test::APIcast 'no_plan';
+use Test::APIcast::Blackbox 'no_plan';
 
+repeat_each(1);
 run_tests();
 
 __DATA__
 
 === TEST 1: get context reference
 get context reference number
---- http_config
-  lua_package_path "$TEST_NGINX_LUA_PATH";
---- config
-  location = /t {
-    content_by_lua_block {
-      ngx.say(require('resty.ctx').ref())
-    }
+--- configuration
+{}
+--- upstream
+location = /t {
+  content_by_lua_block {
+    ngx.say(require('resty.ctx').ref())
   }
+}
+--- upstream_name
+ctx
+--- more_headers
+Host: ctx
 --- request
 GET /t
 --- response_body
@@ -25,9 +30,9 @@ GET /t
 
 
 === TEST 2: stash context reference
---- http_config
-  lua_package_path "$TEST_NGINX_LUA_PATH";
---- config
+--- configuration
+{}
+--- upstream
   set $ctx_ref -1;
 
   location = /t {
@@ -39,6 +44,10 @@ GET /t
       ngx.say(ngx.var.ctx_ref)
     }
   }
+--- upstream_name
+ctx
+--- more_headers
+Host: ctx
 --- request
 GET /t
 --- response_body
@@ -49,9 +58,9 @@ GET /t
 
 
 === TEST 3: apply context reference
---- http_config
-  lua_package_path "$TEST_NGINX_LUA_PATH";
---- config
+--- configuration
+{}
+--- upstream
   set $ctx_ref -1;
 
   location = /t {
@@ -73,6 +82,10 @@ GET /t
       ngx.say(ngx.ctx.foo)
     }
   }
+--- upstream_name
+ctx
+--- more_headers
+Host: ctx
 --- request
 GET /t
 --- response_body
@@ -83,9 +96,9 @@ bar
 
 
 === TEST 4: context is not garbage collected
---- http_config
-  lua_package_path "$TEST_NGINX_LUA_PATH";
---- config
+--- configuration
+{}
+--- upstream
   set $ctx_ref -1;
 
   location = /t {
@@ -126,6 +139,10 @@ bar
       ngx.say(ngx.ctx.foo)
     }
   }
+--- upstream_name
+ctx
+--- more_headers
+Host: ctx
 --- request
 GET /t
 --- response_body
