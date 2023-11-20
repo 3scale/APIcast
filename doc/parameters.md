@@ -478,6 +478,13 @@ connections.
 By default Gateway does not enable it, and the keepalive timeout on nginx is set
 to [75 seconds](http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout)
 
+### `LARGE_CLIENT_HEADER_BUFFERS`
+
+**Default:** 4 8k
+**Value:** string
+
+Sets the maximum number and size of buffers used for reading large client request header. A request line cannot exceed the size of one buffer, or the 414 (Request-URI Too Large) error is returned to the client. A request header field cannot exceed the size of one buffer as well, or the 400 (Bad Request) error is returned to the client. Buffers are allocated only on demand. By default, the buffer size is equal to [8K](http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers) bytes. If after the end of request processing a connection is transitioned into the keep-alive state, these buffers are released.
+
 
 ### `APICAST_CACHE_STATUS_CODES`
 

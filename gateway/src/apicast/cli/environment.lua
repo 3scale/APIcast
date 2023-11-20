@@ -129,6 +129,7 @@ _M.default_environment = 'production'
 -- @tfield ?string opentelemetry_config_file opentelemetry config file to load
 -- @tfield ?string upstream_retry_cases error cases where the call to the upstream should be retried
 --         follows the same format as https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream
+-- @tfield ?string large_client_header_buffers sets the maximum number and size of buffers used for reading large client request header
 -- @tfield ?policy_chain policy_chain @{policy_chain} instance
 -- @tfield ?{string,...} nameservers list of nameservers
 -- @tfield ?string package.path path to load Lua files
@@ -149,6 +150,7 @@ _M.default_config = {
     opentelemetry_config_file = env_value_ref('OPENTELEMETRY_CONFIG'),
     upstream_retry_cases = env_value_ref('APICAST_UPSTREAM_RETRY_CASES'),
     http_keepalive_timeout = env_value_ref('HTTP_KEEPALIVE_TIMEOUT'),
+    large_client_header_buffers = env_value_ref('LARGE_CLIENT_HEADER_BUFFERS'),
     policy_chain = require('apicast.policy_chain').default(),
     nameservers = parse_nameservers(),
     worker_processes = cpus() or 'auto',
