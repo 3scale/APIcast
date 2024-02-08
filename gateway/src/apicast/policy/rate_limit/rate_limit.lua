@@ -179,6 +179,7 @@ function _M.new(config)
   self.leaky_bucket_limiters = config.leaky_bucket_limiters or {}
   self.fixed_window_limiters = config.fixed_window_limiters or {}
   self.redis_url = config.redis_url
+  self.redis_sentinels = config.redis_sentinels or {}
   self.error_settings = init_error_settings(
     config.limits_exceeded_error, config.configuration_error)
 
@@ -193,7 +194,7 @@ function _M:access(context)
   local red
   if self.redis_url and self.redis_url ~= '' then
     local rederr
-    red, rederr = redis_shdict.new{ url = self.redis_url }
+    red, rederr = redis_shdict.new{ url = self.redis_url , sentinels = self.redis_sentinels }
     if not red then
       ngx.log(ngx.ERR, "failed to connect Redis: ", rederr)
       error(self.error_settings, "configuration_issue")
@@ -252,14 +253,14 @@ function _M:access(context)
   return true, delay
 end
 
-local function checkin(_, ctx, time, semaphore, redis_url, error_settings)
+local function checkin(_, ctx, time, semaphore, redis_url, redis_sentinels, error_settings)
   local limiters = ctx.limiters
   local keys = ctx.keys
   local latency = tonumber(time)
   local red
   if redis_url and redis_url ~= '' then
     local rederr
-    red, rederr = redis_shdict.new{ url = redis_url }
+    red, rederr = redis_shdict.new{ url = redis_url , sentinels = redis_sentinels }
     if not red then
       ngx.log(ngx.ERR, "failed to connect Redis: ", rederr)
       error(error_settings, "configuration_issue")
@@ -297,7 +298,7 @@ function _M:log()
     --   lua_max_running_timers
     -- Also, we need to check that the each timer is a new fake-request, and it
     -- also consumes  memory
-    local ok, err = ngx.timer.at(0, checkin, ngx.ctx, ngx.var.request_time, semaphore, self.redis_url, self.error_settings)
+    local ok, err = ngx.timer.at(0, checkin, ngx.ctx, ngx.var.request_time, semaphore, self.redis_url, self.redis_sentinels, self.error_settings)
     if not ok then
       ngx.log(ngx.ERR, "Failed to create timer for checkin limits, err='", err, "'")
     end

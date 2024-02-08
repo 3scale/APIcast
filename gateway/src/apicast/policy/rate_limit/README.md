@@ -139,8 +139,43 @@ regardless of the number of APIcasts deployed, the policy provides the option
 of using a shared storage. For now, it only supports Redis.
 
 To use Redis, we just need to provide the `redis_url` attribute in the config
-of the policy: `"redis_url": "redis://a_host:6379"`
+of the policy:
 
+The format for connecting directly to Redis is:
+
+```
+redis://USERNAME:PASSWORD@HOST:PORT/DB
+```
+
+The USERNAME, PASSWORD and DB fields are optional, all other components are required.
+
+To connect using Sentinel, use:
+
+```
+sentinel://USERNAME:PASSWORD@MASTER_NAME:ROLE/DB`
+```
+
+* USERNAME, PASSWORD and DB are optional.
+* MASTER_NAME identifies a group of Redis instance composed of a master and one or more slaves
+* ROLE must be either `m` or `s` for master / slave respectively, if ROLE is not specified, the
+client will connect to the master
+
+A table of sentinels must also be supplied
+
+```
+"redis_url": "sentinel://mymaster:m/1"
+"redis_sentinels": [
+    {
+        "url": "redis://10.7.0.1:16379"
+    },
+    {
+        "url": "redis://10.7.0.2:16379"
+    },
+    {
+        "url": "redis://10.7.0.3:16379"
+    },
+]
+```
 
 ## Limits with conditions
 

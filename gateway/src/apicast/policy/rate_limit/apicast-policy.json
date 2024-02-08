@@ -207,6 +207,19 @@
         "description": "URL of Redis",
         "type": "string"
       },
+      "redis_sentiels": {
+        "type": "array",
+        "description": "Specify a list of sentinels to connect to",
+        "items": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL of sentinel "
+            }
+          }
+        }
+      },
       "limits_exceeded_error": {
         "type": "object",
         "properties": {

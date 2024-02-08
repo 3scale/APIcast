@@ -24,9 +24,23 @@ local ts = require ('apicast.threescale_utils')
 
 local redis_host = env.get('TEST_NGINX_REDIS_HOST') or '127.0.0.1'
 local redis_port = env.get('TEST_NGINX_REDIS_PORT') or 6379
+local redis_master = env.get('TEST_NGINX_REDIS_MASTER')
+local redis_sentinel1_host = env.get('TEST_NGINX_REDIS_SENTINEL_1_HOST')
+local redis_sentinel2_host = env.get('TEST_NGINX_REDIS_SENTINEL_2_HOST')
+local redis_sentinel3_host = env.get('TEST_NGINX_REDIS_SENTINEL_3_HOST')
+local redis_sentinel_port = env.get('TEST_NGINX_REDIS_SENTINEL_PORT')
 
 local redis_url = 'redis://'..redis_host..':'..redis_port..'/1'
 local redis = ts.connect_redis{ url = redis_url }
+
+
+local redis_sentinel_url = "sentinel://"..redis_master..":a/2"
+local sentinels = {
+    {url="redis://"..redis_sentinel1_host..":"..redis_sentinel_port},
+    {url="redis://"..redis_sentinel2_host..":"..redis_sentinel_port},
+    {url="redis://"..redis_sentinel3_host..":"..redis_sentinel_port},
+}
+local redis_sentinel = ts.connect_redis({url=redis_sentinel_url, sentinels=sentinels})
 
 describe('Rate limit policy', function()
   local context
@@ -113,6 +127,10 @@ describe('Rate limit policy', function()
     end)
 
     describe('using #redis', function()
+      before_each(function()
+        redis_sentinel:flushdb()
+      end)
+
       it('works with multiple limiters', function()
         local rate_limit_policy = RateLimitPolicy.new({
           connection_limiters = {
@@ -154,174 +172,397 @@ describe('Rate limit policy', function()
         assert(rate_limit_policy:access(context))
       end)
 
+      it('invalid redis sentinel', function()
+        local rate_limit_policy = RateLimitPolicy.new({
+          connection_limiters = {
+            { key = { name = 'test1', scope = 'global' }, conn = 20, burst = 10, delay = 0.5 }
+          },
+          redis_url = 'sentinel://invalidhost.master:a/2',
+          redis_sentinels={
+            {url="redis://"..redis_sentinel1_host..":"..redis_sentinel_port},
+            {url="redis://"..redis_sentinel2_host..":"..redis_sentinel_port},
+            {url="redis://"..redis_sentinel3_host..":"..redis_sentinel_port},
+          }
+        })
+
+        assert.returns_error('failed to connect to redis on 127.0.0.1:6379: invalid master name', rate_limit_policy:access(context))
+
+        assert.spy(ngx.exit).was_called_with(500)
+      end)
+
+      it('redis sentinel with empty redis url', function()
+        local rate_limit_policy = RateLimitPolicy.new({
+          connection_limiters = {
+            { key = { name = 'test1', scope = 'global' }, conn = 20, burst = 10, delay = 0.5 }
+          },
+          redis_url = '',
+          redis_sentinels={
+            {url="redis://"..redis_sentinel1_host..":"..redis_sentinel_port},
+            {url="redis://"..redis_sentinel2_host..":"..redis_sentinel_port},
+            {url="redis://"..redis_sentinel3_host..":"..redis_sentinel_port},
+          }
+        })
+        assert(rate_limit_policy:access(context))
+      end)
+
+      it('redis sentinel with no valid sentinel url', function()
+        local rate_limit_policy = RateLimitPolicy.new({
+          connection_limiters = {
+            { key = { name = 'test1', scope = 'global' }, conn = 20, burst = 10, delay = 0.5 }
+          },
+          redis_url="sentinel://"..redis_master..":a/2",
+          redis_sentinels={
+            {url="redis://invalid.sentinel-1:5000"},
+            {url="redis://invalid.sentinel-2:5000"},
+            {url="redis://invalid.sentinel-3:5000"},
+          }
+        })
+        assert.returns_error('failed to connect to redis on 127.0.0.1:6379: no hosts available', rate_limit_policy:access(context))
+
+        assert.spy(ngx.exit).was_called_with(500)
+      end)
+
+      it('mix of normal redis url and sentinel', function()
+        local rate_limit_policy = RateLimitPolicy.new({
+          connection_limiters = {
+            { key = { name = 'test1', scope = 'global' }, conn = 20, burst = 10, delay = 0.5 }
+          },
+          redis_url="sentinel://"..redis_master..":a/2",
+          redis_sentinels={
+            {url=redis_url},
+            {url=redis_url},
+            {url=redis_url}
+          }
+        })
+        assert.returns_error("failed to connect to redis on 127.0.0.1:6379: ERR unknown command 'sentinel', with args beginning with: 'get-master-addr-by-name' 'redismaster' ", rate_limit_policy:access(context))
+
+        assert.spy(ngx.exit).was_called_with(500)
+      end)
+
       describe('rejection', function()
         it('rejected (conn)', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            connection_limiters = {
-              { key = { name = 'test1', scope = 'global' }, conn = 1, burst = 0, delay = 0.5 }
-            },
-            redis_url = redis_url
-          })
+          local configs = {
+              redis = {
+                  connection_limiters = {
+                    { key = { name = 'test1', scope = 'global' }, conn = 1, burst = 0, delay = 0.5 }
+                  },
+                  redis_url = redis_url
+              },
+              redis_sentinel = {
+                  connection_limiters = {
+                    { key = { name = 'test1', scope = 'global' }, conn = 1, burst = 0, delay = 0.5 }
+                  },
+                  redis_url = redis_sentinel_url,
+                  redis_sentinels = sentinels
+              }
+          }
+          for _, conf in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(conf)
 
-          assert(rate_limit_policy:access(context))
-          assert.returns_error('limits exceeded', rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
+            assert.returns_error('limits exceeded', rate_limit_policy:access(context))
 
-          assert.spy(ngx.exit).was_called_with(429)
+            assert.spy(ngx.exit).was_called_with(429)
+          end
         end)
 
         it('rejected (req)', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            leaky_bucket_limiters = {
-              { key = { name = 'test2foofoo', scope = 'global' }, rate = 1, burst = 0 }
+          local configs = {
+            redis = {
+              leaky_bucket_limiters = {
+                { key = { name = 'test2foofoo', scope = 'global' }, rate = 1, burst = 0 }
+              },
+              redis_url = redis_url
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              leaky_bucket_limiters = {
+                { key = { name = 'test2foofoo', scope = 'global' }, rate = 1, burst = 0 }
+              },
+              redis_url = redis_sentinel_url,
+              redis_sentinels = sentinels
+            }
+          }
 
-          assert(rate_limit_policy:access(context))
-          assert.returns_error('limits exceeded', rate_limit_policy:access(context))
+          for _, conf in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(conf)
 
-          assert.spy(ngx.exit).was_called_with(429)
+            assert(rate_limit_policy:access(context))
+            assert.returns_error('limits exceeded', rate_limit_policy:access(context))
+
+            assert.spy(ngx.exit).was_called_with(429)
+          end
         end)
 
         it('rejected (count), name_type is plain', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            fixed_window_limiters = {
-              { key = { name = 'test3', name_type = 'plain', scope = 'global' }, count = 1, window = 10 }
+          local configs = {
+            redis = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = 'test3', name_type = 'plain', scope = 'global' }, count = 1, window = 10 }
+                },
+                redis_url = redis_url
+              },
+              redis_client = redis
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = 'test3', name_type = 'plain', scope = 'global' }, count = 1, window = 10 }
+                },
+                redis_url = redis_sentinel_url,
+                redis_sentinels = sentinels
+              },
+              redis_client = redis_sentinel
+            }
+          }
+          for _, config in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(config.conf)
 
-          assert(rate_limit_policy:access(context))
-          assert.returns_error('limits exceeded', rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
+            assert.returns_error('limits exceeded', rate_limit_policy:access(context))
 
-          assert.equal('1', redis:get('11110_fixed_window_test3'))
-          assert.spy(ngx.exit).was_called_with(429)
+            assert.equal('1', config.redis_client:get('11110_fixed_window_test3'))
+            assert.spy(ngx.exit).was_called_with(429)
+          end
         end)
 
         it('rejected (count), name_type is liquid', function()
-          local ctx = { service = { id = 5 }, var_in_context = 'test3' }
-          local rate_limit_policy = RateLimitPolicy.new({
-            fixed_window_limiters = {
-              { key = { name = '{{ var_in_context }}', name_type = 'liquid', scope = 'global' },
-                count = 1, window = 10 }
+          local configs = {
+            redis = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = '{{ var_in_context }}', name_type = 'liquid', scope = 'global' },
+                    count = 1, window = 10 }
+                },
+                redis_url = redis_url
+              },
+              redis_client = redis
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = '{{ var_in_context }}', name_type = 'liquid', scope = 'global' },
+                    count = 1, window = 10 }
+                },
+                redis_url = redis_sentinel_url,
+                redis_sentinels = sentinels
+              },
+              redis_client = redis_sentinel
+            }
+          }
+          for _, config in pairs(configs) do
+            local ctx = { service = { id = 5 }, var_in_context = 'test3' }
+            local rate_limit_policy = RateLimitPolicy.new(config.conf)
 
-          assert(rate_limit_policy:access(ctx))
-          assert.returns_error('limits exceeded', rate_limit_policy:access(ctx))
+            assert(rate_limit_policy:access(ctx))
+            assert.returns_error('limits exceeded', rate_limit_policy:access(ctx))
 
-          assert.equal('1', redis:get('11110_fixed_window_test3'))
-          assert.spy(ngx.exit).was_called_with(429)
+            assert.equal('1', config.redis_client:get('11110_fixed_window_test3'))
+            assert.spy(ngx.exit).was_called_with(429)
+          end
         end)
 
         it('rejected (count), name_type is liquid and refers to var in the context', function()
-          local test_host = 'some_host'
-          ngx_variable.available_context:revert()
-          stub(ngx_variable, 'available_context', function()
-            return { host = test_host }
-          end)
-
-          local rate_limit_policy = RateLimitPolicy.new({
-            fixed_window_limiters = {
-              { key = { name = '{{ host }}', name_type = 'liquid', scope = 'global' }, count = 1, window = 10 }
+          local configs = {
+            redis = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = '{{ host }}', name_type = 'liquid', scope = 'global' }, count = 1, window = 10 }
+                },
+                redis_url = redis_url
+              },
+              redis_client = redis
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = '{{ host }}', name_type = 'liquid', scope = 'global' }, count = 1, window = 10 }
+                },
+                redis_url = redis_sentinel_url,
+                redis_sentinels = sentinels
+              },
+              redis_client = redis_sentinel
+            }
+          }
+          for _, config in pairs(configs) do
+            local test_host = 'some_host'
+            ngx_variable.available_context:revert()
+            stub(ngx_variable, 'available_context', function()
+              return { host = test_host }
+            end)
 
-          assert(rate_limit_policy:access(context))
-          assert.returns_error('limits exceeded', rate_limit_policy:access(context))
+            local rate_limit_policy = RateLimitPolicy.new(config.conf)
 
-          assert.equal('1', redis:get('11110_fixed_window_' .. test_host))
-          assert.spy(ngx.exit).was_called_with(429)
+            assert(rate_limit_policy:access(context))
+            assert.returns_error('limits exceeded', rate_limit_policy:access(context))
+
+            assert.equal('1', config.redis_client:get('11110_fixed_window_' .. test_host))
+            assert.spy(ngx.exit).was_called_with(429)
+          end
         end)
 
         it('rejected (count), multi limiters', function()
-          local ctx = {
-            service = { id = 5 }, var1 = 'test3_1', var2 = 'test3_2', var3 = 'test3_3' }
-          local rate_limit_policy = RateLimitPolicy.new({
-            fixed_window_limiters = {
-              { key = { name = '{{ var1 }}', name_type = 'liquid' }, count = 1, window = 10 },
-              { key = { name = '{{ var2 }}', name_type = 'liquid' }, count = 2, window = 10 },
-              { key = { name = '{{ var3 }}', name_type = 'liquid' }, count = 3, window = 10 }
+          local configs = {
+            redis = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = '{{ var1 }}', name_type = 'liquid' }, count = 1, window = 10 },
+                  { key = { name = '{{ var2 }}', name_type = 'liquid' }, count = 2, window = 10 },
+                  { key = { name = '{{ var3 }}', name_type = 'liquid' }, count = 3, window = 10 }
+                },
+                redis_url = redis_url
+              },
+              redis_client = redis
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              conf = {
+                fixed_window_limiters = {
+                  { key = { name = '{{ var1 }}', name_type = 'liquid' }, count = 1, window = 10 },
+                  { key = { name = '{{ var2 }}', name_type = 'liquid' }, count = 2, window = 10 },
+                  { key = { name = '{{ var3 }}', name_type = 'liquid' }, count = 3, window = 10 }
+                },
+                redis_url = redis_sentinel_url,
+                redis_sentinels = sentinels
+              },
+              redis_client = redis_sentinel
+            }
+          }
+          for _, config in pairs(configs) do
+              local ctx = {
+                service = { id = 5 }, var1 = 'test3_1', var2 = 'test3_2', var3 = 'test3_3' }
+              local rate_limit_policy = RateLimitPolicy.new(config.conf)
 
-          assert(rate_limit_policy:access(ctx))
-          assert.returns_error('limits exceeded', rate_limit_policy:access(ctx))
+              assert(rate_limit_policy:access(ctx))
+              assert.returns_error('limits exceeded', rate_limit_policy:access(ctx))
 
-          assert.equal('1', redis:get('11110_5_fixed_window_test3_1'))
-          assert.equal('1', redis:get('11110_5_fixed_window_test3_2'))
-          assert.equal('1', redis:get('11110_5_fixed_window_test3_3'))
-          assert.spy(ngx.exit).was_called_with(429)
+              assert.equal('1', config.redis_client:get('11110_5_fixed_window_test3_1'))
+              assert.equal('1', config.redis_client:get('11110_5_fixed_window_test3_2'))
+              assert.equal('1', config.redis_client:get('11110_5_fixed_window_test3_3'))
+              assert.spy(ngx.exit).was_called_with(429)
+          end
         end)
 
       end)
 
       describe('delay', function()
         it('delay (conn)', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            connection_limiters = {
-              { key = { name = 'test1', scope = 'global' }, conn = 1, burst = 1, delay = 2 }
+          local configs = {
+            redis = {
+              connection_limiters = {
+                { key = { name = 'test1', scope = 'global' }, conn = 1, burst = 1, delay = 2 }
+              },
+              redis_url = redis_url
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              connection_limiters = {
+                { key = { name = 'test1', scope = 'global' }, conn = 1, burst = 1, delay = 2 }
+              },
+              redis_url = redis_sentinel_url,
+              redis_sentinels = sentinels
+            }
+          }
+          for _, config in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(config)
 
-          assert(rate_limit_policy:access(context))
-          assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
 
-          assert.spy(ngx.sleep).was_called_with(match.is_gt(0.000))
+            assert.spy(ngx.sleep).was_called_with(match.is_gt(0.000))
+          end
         end)
 
         it('delay (req)', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            leaky_bucket_limiters = {
-              { key = { name = 'test2', scope = 'global' }, rate = 1, burst = 1 }
+          local configs = {
+            redis = {
+              leaky_bucket_limiters = {
+                { key = { name = 'test2', scope = 'global' }, rate = 1, burst = 1 }
+              },
+              redis_url = redis_url
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              leaky_bucket_limiters = {
+                { key = { name = 'test2', scope = 'global' }, rate = 1, burst = 1 }
+              },
+              redis_url = redis_sentinel_url,
+              redis_sentinels = sentinels
+            }
+          }
+          for _, config in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(config)
 
-          assert(rate_limit_policy:access(context))
-          assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
 
-          assert.spy(ngx.sleep).was_called_with(match.is_gt(0.000))
+            assert.spy(ngx.sleep).was_called_with(match.is_gt(0.000))
+          end
         end)
 
         it('delay (req) service scope', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            leaky_bucket_limiters = {
-              {
-                key = { name = 'test4', scope = 'service' },
-                rate = 1,
-                burst = 1
-              }
+          local configs = {
+            redis = {
+              leaky_bucket_limiters = {
+                {
+                  key = { name = 'test4', scope = 'service' },
+                  rate = 1,
+                  burst = 1
+                }
+              },
+              redis_url = redis_url
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              leaky_bucket_limiters = {
+                {
+                  key = { name = 'test4', scope = 'service' },
+                  rate = 1,
+                  burst = 1
+                }
+              },
+              redis_url = redis_sentinel_url,
+              redis_sentinels = sentinels
+            }
+          }
+          for _, config in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(config)
 
-          assert(rate_limit_policy:access(context))
-          assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
 
-          assert.spy(ngx.sleep).was_called_with(match.is_gt(0.001))
+            assert.spy(ngx.sleep).was_called_with(match.is_gt(0.001))
+          end
         end)
 
         it('delay (req) default service scope', function()
-          local rate_limit_policy = RateLimitPolicy.new({
-            leaky_bucket_limiters = {
-              {
-                key = { name = 'test4' },
-                rate = 1,
-                burst = 1
-              }
+          local configs = {
+            redis = {
+              leaky_bucket_limiters = {
+                {
+                  key = { name = 'test4' },
+                  rate = 1,
+                  burst = 1
+                }
+              },
+              redis_url = redis_url
             },
-            redis_url = redis_url
-          })
+            redis_sentinel = {
+              leaky_bucket_limiters = {
+                {
+                  key = { name = 'test4' },
+                  rate = 1,
+                  burst = 1
+                }
+              },
+              redis_url = redis_sentinel_url,
+              redis_sentinels = sentinels
+            }
+          }
+          for _, config in pairs(configs) do
+            local rate_limit_policy = RateLimitPolicy.new(config)
 
-          assert(rate_limit_policy:access(context))
-          assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
+            assert(rate_limit_policy:access(context))
 
-          assert.spy(ngx.sleep).was_called_with(match.is_gt(0.001))
+            assert.spy(ngx.sleep).was_called_with(match.is_gt(0.001))
+          end
         end)
       end)
     end)

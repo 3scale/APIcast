@@ -1,13 +1,8 @@
-local sub = string.sub
-local tonumber = tonumber
-
-local redis = require 'resty.redis'
+local redis = require 'resty.redis.connector'
 local env = require 'resty.env'
 
 local resty_resolver = require 'resty.resolver'
 local resty_balancer = require 'resty.balancer'
-
-local resty_url = require 'resty.url'
 
 local _M = {} -- public interface
 
@@ -120,55 +115,56 @@ function _M.resolve(host, port)
   return ip, port
 end
 
+
 function _M.connect_redis(options)
   local opts = {}
 
   local url = options and options.url or env.get('REDIS_URL')
 
-
   if url then
-    url = resty_url.split(url, 'redis')
-    if url then
-      opts.host = url[4]
-      opts.port = url[5]
-      opts.db = url[6] and tonumber(sub(url[6], 2))
-      opts.password = url[3] or url[2]
+    local params, err = redis.parse_dsn({url=url})
+    if err then
+      return nil, _M.error("invalid redis url ", err)
     end
+    opts = params or {}
   elseif options then
     opts.host = options.host
     opts.port = options.port
     opts.db = options.db
     opts.password = options.password
+    opts.master_name= options.master_name
+    opts.role = options.role
   end
 
-  opts.timeout = options and options.timeout or redis_conf.timeout
+  opts.connect_timeout = options and options.timeout or redis_conf.timeout
+  opts.keepalive_timeout = options and options.keepalive_timeout or redis_conf.keepalive
+  opts.keepalive_poolsize = options and options.keepalive_poolsize or redis_conf.keepalive_poolsize
 
   local host = opts.host or env.get('REDIS_HOST') or "127.0.0.1"
   local port = opts.port or env.get('REDIS_PORT') or 6379
+  opts.host, opts.port = _M.resolve(host, port)
 
-  local red = redis:new()
+  if options.sentinels and #options.sentinels > 0 then
+    local sentinels = {}
 
-  red:set_timeout(opts.timeout)
+    for i, sentinel in ipairs(options.sentinels) do
+      local params, err = redis.parse_dsn({url=sentinel.url})
+      if err then
+        return nil, _M.error("invalid redis url ", err)
+      end
 
-  local ok, err = red:connect(_M.resolve(host, port))
-  if not ok then
+      params.host, params.port = _M.resolve(params.host, params.port)
+      sentinels[i] = params
+    end
+
+    opts.sentinels = sentinels
+  end
+
+  local rc = redis.new(opts)
+
+  local red, err = rc:connect()
+  if not red then
     return nil, _M.error("failed to connect to redis on ", host, ":", port, ": ", err)
-  end
-
-  if opts.password then
-    ok = red:auth(opts.password)
-
-    if not ok then
-      return nil, _M.error("failed to auth on redis ", host, ":", port)
-    end
-  end
-
-  if opts.db then
-    ok = red:select(opts.db)
-
-    if not ok then
-      return nil, _M.error("failed to select db ", opts.db, " on redis ", host, ":", port)
-    end
   end
 
   return red
@@ -176,7 +172,7 @@ end
 
 -- return ownership of this connection to the pool
 function _M.release_redis(red)
-  red:set_keepalive(redis_conf.keepalive, redis_conf.poolsize)
+  redis:set_keepalive(red)
 end
 
 local xml_header_len = string.len('<?xml version="1.0" encoding="UTF-8"?>')
