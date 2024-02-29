@@ -127,20 +127,12 @@ local function update_downtime_cache(cache, transaction, backend_status, cache_h
   cache_handler(cache, key, { status = backend_status })
 end
 
-local function handle_backend_ok(self, transaction, cache_handler)
-  if cache_handler then
-    update_downtime_cache(self.backend_downtime_cache, transaction, 200, cache_handler)
-  end
-
+local function handle_backend_ok(self, transaction)
   self.auths_cache:set(transaction, 200)
   self.reports_batcher:add(transaction)
 end
 
-local function handle_backend_denied(self, service, transaction, status, headers, cache_handler)
-  if cache_handler then
-    update_downtime_cache(self.backend_downtime_cache, transaction, status, cache_handler)
-  end
-
+local function handle_backend_denied(self, service, transaction, status, headers)
   local rejection_reason = rejection_reason_from_headers(headers)
   self.auths_cache:set(transaction, status, rejection_reason)
   return error(service, rejection_reason)
@@ -182,7 +174,7 @@ end
 -- might want to introduce a mechanism to avoid this and reduce the number of
 -- calls to backend.
 function _M:access(context)
-  local backend = backend_client:new(context.service, http_ng_resty)
+  local backend = assert(backend_client:new(context.service, http_ng_resty), 'missing backend')
   local usage = context.usage or {}
   local service = context.service
   local service_id = service.id
@@ -216,17 +208,20 @@ function _M:access(context)
     local formatted_usage = usage:format()
     local backend_res = backend:authorize(formatted_usage, credentials)
     context:publish_backend_auth(backend_res)
-    local backend_status = backend_res.status
+    local backend_status = backend_res and backend_res.status
     local cache_handler = context.cache_handler -- Set by Caching policy
     -- this is needed, because in allow mode, the status maybe is always 200, so
     -- Request need to go to the Upstream API
-    update_downtime_cache(self.backend_downtime_cache, transaction, backend_status, cache_handler)
+    if cache_handler then
+      update_downtime_cache(
+        self.backend_downtime_cache, transaction, backend_status, cache_handler)
+    end
 
     if backend_status == 200 then
-      handle_backend_ok(self, transaction, cache_handler)
+      handle_backend_ok(self, transaction)
     elseif backend_status >= 400 and backend_status < 500 then
       handle_backend_denied(
-        self, service, transaction, backend_status, backend_res.headers, cache_handler)
+        self, service, transaction, backend_status, backend_res.headers)
     else
       handle_backend_error(self, service, transaction, cache_handler)
     end
