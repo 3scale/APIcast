@@ -55,6 +55,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Added `APICAST_CLIENT_REQUEST_HEADER_BUFFERS` variable to allow configure of the NGINX `client_request_header_buffers` directive: [PR #1446](https://github.com/3scale/APIcast/pull/1446), [THREESCALE-10164](https://issues.redhat.com/browse/THREESCALE-10164)
 
+Added `APICAST_POLICY_BATCHER_SHARED_MEMORY_SIZE` variable to allow configure batcher policy share memory size. [PR #1452](https://github.com/3scale/APIcast/pull/1452), [THREESCALE-9537](https://issues.redhat.com/browse/THREESCALE-9537)
+
 ## [3.14.0] 2023-07-25
 
 ### Fixed
