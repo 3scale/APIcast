@@ -19,7 +19,7 @@
           },
           "op": {
             "type": "string",
-            "enum": ["==", "!="]
+            "enum": ["==", "!=", "matches"]
           },
           "right": {
             "type": "string"
