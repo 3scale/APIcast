@@ -522,7 +522,7 @@ directive](https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client
 **Default:** 20m
 **Value:** string
 
-Sets the maximum size of shared memory used by batcher policy.
+Sets the maximum size of shared memory used by batcher policy. The accepted [size units](https://github.com/openresty/lua-nginx-module?tab=readme-ov-file#lua_shared_dict) are k and m.
 
 ### `OPENTELEMETRY`
 
