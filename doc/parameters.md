@@ -517,6 +517,13 @@ Sets the maximum number and size of buffers used for reading large client reques
 The format for this value is defined by the [`large_client_header_buffers` NGINX
 directive](https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers)
 
+### `APICAST_POLICY_BATCHER_SHARED_MEMORY_SIZE`
+
+**Default:** 20m
+**Value:** string
+
+Sets the maximum size of shared memory used by batcher policy. The accepted [size units](https://github.com/openresty/lua-nginx-module?tab=readme-ov-file#lua_shared_dict) are k and m.
+
 ### `OPENTELEMETRY`
 
 This environment variable enables NGINX instrumentation using OpenTelemetry tracing library.

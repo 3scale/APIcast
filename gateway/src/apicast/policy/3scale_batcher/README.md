@@ -63,3 +63,29 @@ The effectiveness of this policy will depend on the cache hit ratio. For use
 cases where the variety of services, apps, metrics, etc. is relatively low,
 caching and batching will be very effective and will increase the throughput of
 the system significantly.
+
+### How many key/value pairs can be contained in 20m of shared memory.
+
+On my Linux x86_64 system `1m` can hold `4033 key/value pairs` with 64-byte keys and
+15-byte values. Changing the size of the shared storage to 10m gives `40673 key/value pairs`.
+It's a linear growth as expected.
+
+The following table shows the number of key/value pairs for different storage size:
+
+| Shared storage size | Key length | Value length | Key/value pairs |
+| ---- | ---- | ---- | ---- |
+| 10m | 64 | 15 | 40672 |
+|  | 128 | 15 | 40672 |
+|  | 256 | 15 | 20336 |
+|  | 512 | 15 | 10168 |
+| 20m | 64 | 15 | 81408 |
+|  | 128 | 15 | 81408 |
+|  | 256 | 15 | 40704 |
+|  | 512 | 15 | 20352 |
+| 40m | 64 | 15 | 162848 |
+|  | 128 | 15 | 162848 |
+|  | 256 | 15 | 81424 |
+|  | 512 | 15 | 40712 |
+
+In practice, the actual number will depend on the size of the key/value pair, the
+underlying OS architecture, memory segment sizes, etc... More details [here](https://blog.openresty.com/en/nginx-shm-frag/)
