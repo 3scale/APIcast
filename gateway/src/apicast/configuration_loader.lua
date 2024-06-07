@@ -209,7 +209,7 @@ function boot.init_worker(configuration)
   -- When a worker process is (re-)spawned,
   -- it will start working with fresh (according the ttl semantics) configuration
   local boot_reserved_hosts = configuration:find_by_host(boot_reserved_domain, false)
-  if(#boot_reserved_hosts == 0)
+  if(#boot_reserved_hosts == 0 and interval > 0)
   then
     -- the boot configuration has expired, load fresh config
     ngx.log(ngx.INFO, 'boot time configuration has expired')
