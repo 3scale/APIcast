@@ -1,4 +1,4 @@
-FROM alpine:3.17.3
+FROM alpine:3.18.6
 
 LABEL summary="Forward proxy based on tinyproxy for development purposes" \
       description="Forward proxy based on tinyproxy for development purposes" \
