@@ -204,22 +204,15 @@ function boot.init_worker(configuration)
     schedule(interval, handler, ...)
   end
 
-  -- Check whether the reserved boot configuration is fresh or stale.
-  -- If it is stale, refresh configuration
-  -- When a worker process is (re-)spawned,
-  -- it will start working with fresh (according the ttl semantics) configuration
-  local boot_reserved_hosts = configuration:find_by_host(boot_reserved_domain, false)
-  if(#boot_reserved_hosts == 0 and interval > 0)
-  then
-    -- the boot configuration has expired, load fresh config
-    ngx.log(ngx.INFO, 'boot time configuration has expired')
-    -- ngx.socket.tcp is not available at the init or init_worker phases,
-    -- it needs to be scheduled (with delay = 0)
-    schedule(0, handler, configuration)
-  elseif(interval > 0)
-  then
+  if interval > 0 then
+    -- Check whether the reserved boot configuration is fresh or stale.
+    -- If it is stale, refresh configuration
+    -- When a worker process is (re-)spawned,
+    -- it will start working with fresh (according the ttl semantics) configuration
+    local boot_reserved_hosts = configuration:find_by_host(boot_reserved_domain, false)
     ngx.log(ngx.DEBUG, 'schedule new configuration loading')
-    schedule(interval, handler, configuration)
+    local curr_interval = #boot_reserved_hosts == 0 and 0 or interval
+    schedule(curr_interval, handler, configuration)
   else
     ngx.log(ngx.DEBUG, 'no scheduling for configuration loading')
   end
