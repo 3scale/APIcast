@@ -2083,3 +2083,46 @@ qr/a client request body is buffered to a temporary file/
 --- grep_error_log_out
 a client request body is buffered to a temporary file
 --- user_files fixture=tls.pl eval
+
+
+
+=== TEST 36: APIcast should not ingore NO_PROXY, when HTTP_PROXY and HTTPS_PROXY are also set
+It connects directly to backened and forwards request to the upstream via proxy.
+--- env random_port eval
+(
+  'http_proxy' => $ENV{TEST_NGINX_HTTP_PROXY},
+  'no_proxy' => '127.0.0.1,localhost,test_backend',
+)
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "proxy": {
+        "api_backend": "http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  server_name test_backend.lvh.me;
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.exit(ngx.OK)
+    }
+  }
+--- upstream
+  server_name test-upstream.lvh.me;
+  location / {
+     echo 'yay, api backend: $http_host';
+  }
+--- request
+GET /?user_key=value
+--- response_body env
+yay, api backend: test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT
+--- error_code: 200
+--- no_error_log

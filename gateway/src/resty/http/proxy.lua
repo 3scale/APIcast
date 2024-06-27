@@ -57,10 +57,13 @@ local function connect(request)
     -- openresty treat nil as false, so we need to explicitly set ssl_verify to false if nil
     local ssl_verify = request.options and request.options.ssl and request.options.ssl.verify or false
 
+    -- We need to set proxy_opts to an empty table here otherwise, lua-resty-http will fallback
+    -- to the global proxy options
     local options = {
       scheme = scheme,
       host = host,
-      port = port
+      port = port,
+      proxy_opts = {}
     }
     if scheme == 'https' then
         options.ssl_server_name = host
