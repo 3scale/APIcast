@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fixed config reloading even when reloading is disabled [PR #1468](https://github.com/3scale/APIcast/pull/1468)
 
+- Fix APIcast using stale configuration for deleted products [PR #1488](https://github.com/3scale/APIcast/pull/1488) [THREESCALE-10130](https://issues.redhat.com/browse/THREESCALE-10130)
+
 ### Added
 
 - Bump openresty to 1.21.4.3 [PR #1461](https://github.com/3scale/APIcast/pull/1461) [THREESCALE-10601](https://issues.redhat.com/browse/THREESCALE-10601)

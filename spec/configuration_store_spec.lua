@@ -2,6 +2,35 @@ local configuration = require('apicast.configuration_store')
 local tablex = require("pl.tablex")
 
 describe('Configuration Store', function()
+  describe('.new', function()
+    it('should not store more than the size of the services cache', function()
+      local service1 = { id = '42', hosts = { 'example1.com' } }
+      local service2 = { id = '43', hosts = { 'example2.com' } }
+
+      local store = configuration.new(1)
+
+      -- Add 2, as size is 1 only the second will be kept.
+      store:add(service1)
+      store:add(service2)
+
+      assert.is_nil(store:find_by_id('42'))
+      assert.equal(service2, store:find_by_id('43'))
+    end)
+
+    it('should not store mote then the size of the hosts cache', function()
+      local service1 = { id = '42', hosts = { 'example1.com' } }
+      local service2 = { id = '43', hosts = { 'example2.com' } }
+
+      local store = configuration.new(1)
+
+      -- Add 2, as size is 1 only the second will be kept.
+      store:add(service1)
+      store:add(service2)
+
+      assert.same({}, store:find_by_host('example1.com'), false)
+      assert.same({ service2 }, store:find_by_host('example2.com'), false)
+    end)
+  end)
 
   describe('.store', function()
     it('stores configuration', function()
@@ -197,6 +226,21 @@ describe('Configuration Store', function()
         assert.same({}, store.cache.hasht)
       end)
 
+      it('should not serve old hosts', function()
+        local service1 = { id = '41', hosts = { 'example1.com' } }
+        local service2 = { id = '42', hosts = { 'example2.com' } }
+        local service3 = { id = '43', hosts = { 'example3.com' } }
+
+        store:add(service1)
+        store:add(service2)
+        store:reset()
+        store:add(service3)
+
+        assert.same({}, store:find_by_host('example1.com'), false)
+        assert.same({}, store:find_by_host('example2.com'), false)
+        assert.same({ service3 }, store:find_by_host('example3.com'), false)
+      end)
+
       it('deletes all services', function()
         store.services['42'] = {}
 
@@ -205,40 +249,27 @@ describe('Configuration Store', function()
         assert.same({}, store.services.hasht)
       end)
 
+      it('should not serve old services', function()
+        local service1 = { id = '41', hosts = { 'example1.com' } }
+        local service2 = { id = '42', hosts = { 'example2.com' } }
+        local service3 = { id = '43', hosts = { 'example3.com' } }
+
+        store:add(service1)
+        store:add(service2)
+        store:reset()
+        store:add(service3)
+
+        assert.is_nil(store:find_by_id('41'))
+        assert.is_nil(store:find_by_id('42'))
+        assert.equal(service3, store:find_by_id('43'))
+      end)
+
       it('sets configured flag', function()
         store.configured = true
 
         store:reset()
 
         assert.falsy(store.configured)
-      end)
-
-      it('resets de size of the services cache', function()
-        local service1 = { id = '42', hosts = { 'example1.com' } }
-        local service2 = { id = '43', hosts = { 'example2.com' } }
-
-        store:reset(1)
-
-        -- Add 2, as size is 1 only the second will be kept.
-        store:add(service1)
-        store:add(service2)
-
-        assert.is_nil(store:find_by_id('42'))
-        assert.equal(service2, store:find_by_id('43'))
-      end)
-
-      it('resets de size of the hosts cache', function()
-        local service1 = { id = '42', hosts = { 'example1.com' } }
-        local service2 = { id = '43', hosts = { 'example2.com' } }
-
-        store:reset(1)
-
-        -- Add 2, as size is 1 only the second will be kept.
-        store:add(service1)
-        store:add(service2)
-
-        assert.same({}, store:find_by_host('example1.com'), false)
-        assert.same({ service2 }, store:find_by_host('example2.com'), false)
       end)
     end)
   end)
