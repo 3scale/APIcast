@@ -90,6 +90,24 @@ insulate('Configuration object', function()
 
       assert.truthy(config:find_by_id('42'))
     end)
+
+    it('should reset cache', function()
+      local config = configuration_store.new()
+
+      assert.truthy(_M.configure(config, cjson.encode({ services = {
+        { id = 42, proxy = { hosts = { 'localhost' } } },
+        { id = 43, proxy = { hosts = { 'localhost' } } }
+      }})))
+
+      assert.truthy(config:find_by_id('42'))
+      assert.truthy(config:find_by_id('43'))
+
+      assert.truthy(_M.configure(config, cjson.encode({ services = {
+        { id = 42, proxy = { hosts = { 'localhost' } } },
+      }}), true))
+      assert.truthy(config:find_by_id('42'))
+      assert.falsy(config:find_by_id('43'))
+    end)
   end)
 
   describe('lazy loader', function()

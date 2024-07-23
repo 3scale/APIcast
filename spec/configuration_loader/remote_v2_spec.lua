@@ -3,7 +3,6 @@ local test_backend_client = require 'resty.http_ng.backend.test'
 local cjson = require 'cjson'
 local user_agent = require 'apicast.user_agent'
 local env = require 'resty.env'
-local format = string.format
 
 local service_generator = function(n)
   local services = {}

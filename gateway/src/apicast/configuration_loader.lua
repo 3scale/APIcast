@@ -1,4 +1,4 @@
-local configuration_store = require('apicast.configuration_store')
+local configuration_store = require 'apicast.configuration_store'
 local configuration_parser = require 'apicast.configuration_parser'
 local mock_loader = require 'apicast.configuration_loader.mock'
 local file_loader = require 'apicast.configuration_loader.file'
@@ -75,7 +75,7 @@ function _M.global(contents)
   return _M.configure(context.configuration, contents)
 end
 
-function _M.configure(configuration, contents)
+function _M.configure(configuration, contents, reset_cache)
   if not configuration then
     return nil, 'not initialized'
   end
@@ -90,6 +90,12 @@ function _M.configure(configuration, contents)
   end
 
   if config then
+    -- We have the configuration available at this point so it's safe to purge the
+    -- cache and remove old items (deleted services)
+    if reset_cache then
+      ngx.log(ngx.DEBUG, "flushing caches as part of the configuration reload")
+      configuration:reset()
+    end
     configuration:store(config, ttl())
     collectgarbage()
     return config
@@ -160,7 +166,7 @@ end
 
 local function refresh_configuration(configuration)
   local config = _M.load()
-  local init, err = _M.configure(configuration, config)
+  local init, err = _M.configure(configuration, config, true)
 
   if init then
     ngx.log(ngx.DEBUG, 'updated configuration via timer: ', config)
@@ -229,7 +235,7 @@ local function lazy_load_config(configuration, host)
     if not config then
       ngx.log(ngx.WARN, 'failed to get config for host: ', host)
     end
-    _M.configure(configuration, config)
+    _M.configure(configuration, config, host)
 end
 
 function lazy.rewrite(configuration, host)

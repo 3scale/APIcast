@@ -165,15 +165,17 @@ function _M.store(self, config, ttl)
   return config
 end
 
-function _M.reset(self, cache_size)
+--- Flush all LRU cache
+function _M.reset(self)
   if not self.services then
     return nil, 'not initialized'
   end
 
-  self.services = lrucache.new(cache_size or _M.cache_size)
-  self.cache = lrucache.new(cache_size or _M.cache_size)
+  self.services:flush_all()
+  self.cache:flush_all()
   self.configured = false
 end
+
 
 function _M.add(self, service, ttl)
   if not self.services then
