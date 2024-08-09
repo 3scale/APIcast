@@ -5,6 +5,7 @@ user=${SUDO_USER:-${CIRCLECI_USER:-vagrant}}
 
 # CircleCI forces use of SSH protocol everywhere, we need to reset it.
 export HOME="/tmp"
+export PATH=$PATH:/usr/local/bin
 
 # Clone various utilities
 git clone https://github.com/openresty/stapxx.git /usr/local/stapxx || (cd /usr/local/stapxx && git pull)
@@ -19,9 +20,9 @@ git clone https://github.com/lighttpd/weighttp.git /usr/local/weighttp || (cd /u
 ( cd /usr/local/weighttp && gcc -O2 -DPACKAGE_VERSION='"0.4"' src/*.c -o weighttp -lev -lpthread && ln -sf "$(pwd)/weighttp" /usr/local/bin/ )
 
 # Utility to resolve builtin functions
-echo '#!/usr/bin/env luajit' > /usr/local/bin/ljff
-curl -L https://raw.githubusercontent.com/openresty/openresty-devel-utils/master/ljff.lua >> /usr/local/bin/ljff
-chmod +x /usr/local/bin/ljff
+# echo '#!/usr/bin/env luajit' > /usr/local/bin/ljff
+# curl -L https://raw.githubusercontent.com/openresty/openresty-devel-utils/master/ljff.lua >> /usr/local/bin/ljff
+# chmod +x /usr/local/bin/ljff
 
 # Create stap++ executable always pointing to its proper location
 echo '#!/bin/sh' > /usr/local/bin/stap++
@@ -41,10 +42,6 @@ if [ -n "${CIRCLE_SHELL_ENV:-}" ]; then
     cat /etc/profile.d/perl.sh >> "${CIRCLE_SHELL_ENV}"
 fi
 
-mkdir -p /usr/share/lua/5.1/luarocks/ /usr/share/lua/5.3/luarocks/
-curl -L https://raw.githubusercontent.com/3scale/s2i-openresty/ffb1c55533be866a97466915d7ef31c12bae688c/site_config.lua > /usr/share/lua/5.1/luarocks/site_config.lua
-ln -sf /usr/share/lua/5.1/luarocks/site_config.lua /usr/share/lua/5.3/luarocks/site_config.lua
-
 # Add various utilites to the PATH
 ln -sf /usr/local/openresty/luajit/bin/luajit /usr/local/bin/luajit
 ln -sf /usr/local/flamegraph/*.pl /usr/local/bin/
@@ -53,7 +50,7 @@ ln -sf /usr/local/stapxx/samples/*.sxx /usr/local/bin/
 ln -sf $(find /usr/local/openresty-systemtap-toolkit/ -maxdepth 1 -type f -executable -print) /usr/local/bin/
 
 # Allow vagrant user to use systemtap
-usermod -a -G stapusr,stapdev "${user}"
+usermod -aG stapusr,stapdev "${user}"
 
 # Raise opened files limit for vagrant user
 # shellcheck disable=SC1117

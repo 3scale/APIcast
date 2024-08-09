@@ -1,5 +1,10 @@
 # Profiling
 
+## Prerequisite
+* Vagrant
+* QEMU or virtualbox
+* At least 20GB of free space
+
 There is a Vagrantfile with performance inspection tools like SystemTap.
 
 ```shell
@@ -7,10 +12,18 @@ vagrant up
 vagrant ssh
 ```
 
-APIcast is mounted into `/home/vagrant/app` so you can start it by:
+Install [vagrant-libvirt](https://github.com/vagrant-libvirt/vagrant-libvirt) plugin if using `libvirt`
+
+```
+vagrant plugin install vagrant-libvirt
+vagrant up --provider=libvirt
+vagrant ssh
+```
+
+APIcast is mounted into `/opt/app-src` so you can start it by:
 
 ```shell
-cd app
+cd /opt/app-src
 bin/apicast
 ```
 
