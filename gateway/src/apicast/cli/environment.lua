@@ -28,7 +28,7 @@ local function parse_nameservers()
     local resolver = require('resty.resolver')
     local nameservers = {}
 
-    for _,nameserver in ipairs(resolver.init_nameservers()) do
+    for _,nameserver in ipairs(resolver.init_nameservers(resty_env.value('TEST_NGINX_RESOLV_CONF'))) do
         -- resty.resolver returns nameservers as tables with __tostring metamethod
         -- unfortunately those objects can't be joined with table.concat
         -- and have to be converted to strings first
