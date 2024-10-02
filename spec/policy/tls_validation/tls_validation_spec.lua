@@ -33,7 +33,7 @@ describe('tls_validation policy', function()
       policy:access()
 
       assert.stub(ngx.exit).was_called_with(400)
-      assert.stub(ngx.say).was_called_with('unable to get local issuer certificate')
+      assert.stub(ngx.say).was_called_with([[TLS certificate validation failed]])
     end)
 
     it('rejects certificates that are not valid yet', function()
@@ -43,7 +43,8 @@ describe('tls_validation policy', function()
 
       policy:access()
 
-      assert.stub(ngx.say).was_called_with('certificate is not yet valid')
+      assert.stub(ngx.exit).was_called_with(400)
+      assert.stub(ngx.say).was_called_with([[TLS certificate validation failed]])
     end)
 
     it('rejects certificates that are not longer valid', function()
@@ -53,7 +54,8 @@ describe('tls_validation policy', function()
 
       policy:access()
 
-      assert.stub(ngx.say).was_called_with([[certificate has expired]])
+      assert.stub(ngx.exit).was_called_with(400)
+      assert.stub(ngx.say).was_called_with([[TLS certificate validation failed]])
     end)
 
     it('accepts whitelisted certificate', function()

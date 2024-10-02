@@ -402,6 +402,15 @@ Path to a file with the X.509 certificate secret key in the PEM format.
 Defines the maximum length of the client certificate chain.
 If this parameter has `1` as its value, it is possible to include an additional certificate in the client certificate chain. For example, root certificate authority.
 
+### `APICAST_HTTPS_VERIFY_CLIENT`
+
+**Default:** `optional_no_ca`
+**Values:**
+- `off`: Do not request client certificates or perform client certificate verification.
+- `optional_no_ca`: Requests the client certificate, but does not fail the request when the client certificate is not signed by a trusted CA certificate.
+
+Enables verification of client certificates. You can verify client certificates TLS Client Certificate Validation policy.
+
 ### `all_proxy`, `ALL_PROXY`
 
 **Default:** no value

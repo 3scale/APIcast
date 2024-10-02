@@ -4,6 +4,7 @@ local policy = require('apicast.policy')
 local _M = policy.new('tls_validation')
 local X509_STORE = require('resty.openssl.x509.store')
 local X509 = require('resty.openssl.x509')
+local ngx_ssl = require "ngx.ssl"
 
 local ipairs = ipairs
 local tostring = tostring
@@ -45,19 +46,40 @@ function _M.new(config)
   return self
 end
 
+function _M:ssl_certificate()
+  -- Request client certificate
+  --
+  -- We don't validate the certificate during the handshake, thus set `depth` to 0 (default is 1)
+  -- value here in order to save CPU cycles
+  --
+  -- TODO:
+  -- provide ca_certs: See https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/ssl.md#verify_client
+  -- handle verify_depth
+  --
+  return ngx_ssl.verify_client()
+end
+
 function _M:access()
   local cert = X509.parse_pem_cert(ngx.var.ssl_client_raw_cert)
-  local store = self.x509_store
-
-  local ok, err = store:validate_cert(cert)
-
-  if not ok then
+  if not cert then
     ngx.status = self.error_status
-    ngx.say(err)
+    ngx.say("No required TLS certificate was sent")
     return ngx.exit(ngx.status)
   end
 
-  return ok, err
+  local store = self.x509_store
+
+  -- err is printed inside validate_cert method
+  -- so no need capture the err here
+  local ok, _ = store:validate_cert(cert)
+
+  if not ok then
+    ngx.status = self.error_status
+    ngx.say("TLS certificate validation failed")
+    return ngx.exit(ngx.status)
+  end
+
+  return ok, nil
 end
 
 return _M

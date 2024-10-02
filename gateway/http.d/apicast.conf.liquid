@@ -110,7 +110,7 @@ server {
     {{ "conf/server.key" | filesystem | first }}
   {%- endif %};
 
-  ssl_verify_client optional_no_ca;
+  ssl_verify_client {{ env.APICAST_HTTPS_VERIFY_CLIENT | default: "optional_no_ca" }};
   ssl_certificate_by_lua_block { require('apicast.executor'):ssl_certificate() }
   ssl_verify_depth {{ env.APICAST_HTTPS_VERIFY_DEPTH | default: 1 }};
   {%- endif %}

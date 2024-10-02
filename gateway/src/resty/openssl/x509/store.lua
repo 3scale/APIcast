@@ -1,6 +1,7 @@
 local base = require('resty.openssl.base')
 local X509_STORE_CTX = require('resty.openssl.x509.store.ctx')
 local ffi = require('ffi')
+local ffi_gc = ffi.gc
 
 ffi.cdef([[
 // https://www.openssl.org/docs/man1.1.0/crypto/X509_STORE_new.html
@@ -45,7 +46,7 @@ local function X509_VERIFY_PARAM(flags)
   -- https://www.openssl.org/docs/man1.1.0/crypto/X509_VERIFY_PARAM_get_depth.html#example
   ffi_assert(C.X509_VERIFY_PARAM_set_flags(verify_param, flags))
 
-  return ffi.gc(verify_param, C.X509_VERIFY_PARAM_free)
+  return ffi_gc(verify_param, C.X509_VERIFY_PARAM_free)
 end
 
 local _M = {}
@@ -73,9 +74,8 @@ end
 
 function _M.new()
   local store = ffi_assert(C.X509_STORE_new())
+  ffi_gc(store, C.X509_STORE_free)
 
-  -- @TODO cleanup here
-  -- ffi_gc(store, C.X509_STORE_free)
   -- enabling partial chains allows us to trust leaf certificates
   local verify_param = X509_VERIFY_PARAM(X509_V_FLAG_PARTIAL_CHAIN)
 
