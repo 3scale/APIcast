@@ -32,9 +32,10 @@ end
 local function connect(request)
     request = request or { }
     local httpc = http.new()
+    local proxy_options = request.proxy_options or {}
 
-    if request.upstream_connection_opts then
-      local con_opts = request.upstream_connection_opts
+    if proxy_options.upstream_connection_opts then
+      local con_opts = request.proxy_options.upstream_connection_opts
       ngx.log(ngx.DEBUG, 'setting timeouts (secs), connect_timeout: ', con_opts.connect_timeout,
         ' send_timeout: ', con_opts.send_timeout, ' read_timeout: ', con_opts.read_timeout)
       -- lua-resty-http uses nginx API for lua sockets
@@ -51,7 +52,7 @@ local function connect(request)
     local scheme = uri.scheme
     local host = uri.host
     local port = default_port(uri)
-    local skip_https_connect = request.skip_https_connect
+    local skip_https_connect = proxy_options.skip_https_connect
 
     -- set ssl_verify: lua-resty-http set ssl_verify to true by default if scheme is https, whereas
     -- openresty treat nil as false, so we need to explicitly set ssl_verify to false if nil
@@ -68,6 +69,10 @@ local function connect(request)
     if scheme == 'https' then
         options.ssl_server_name = host
         options.ssl_verify = ssl_verify
+        if proxy_options.upstream_ssl then
+          options.ssl_client_cert = proxy_options.upstream_ssl.ssl_client_cert
+          options.ssl_client_priv_key = proxy_options.upstream_ssl.ssl_client_priv_key
+        end
     end
 
     -- Connect via proxy
@@ -79,7 +84,7 @@ local function connect(request)
         end
 
         local proxy_url = format("%s://%s:%s", proxy_uri.scheme, proxy_uri.host, proxy_uri.port)
-        local proxy_auth = request.proxy_auth
+        local proxy_auth = proxy_options.proxy_auth
 
         if scheme == 'http' then
             -- Used by http_ng module to send request to 3scale backend through proxy.
