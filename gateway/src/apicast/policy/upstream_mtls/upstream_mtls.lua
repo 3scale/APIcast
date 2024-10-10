@@ -105,54 +105,11 @@ function _M.new(config)
   return self
 end
 
-
--- Set the certs for the upstream connection. Need to receive the pointers from
--- parse_* functions.
---- Public function to be able to unittest this.
-function _M.set_certs(r, cert, key)
-  local ok, err = tls.set_upstream_cert_and_key(r, cert, key)
-  if ok ~= nil then
-    ngx.log(ngx.ERR, "Certificate cannot be set correctly, err: ", err)
-  end
-end
-
-function _M.set_ca_cert(r, store)
-  local ok, err = tls.set_upstream_ca_cert(r, store)
-  if ok ~= nil then
-    ngx.log(ngx.WARN, "Cannot set a valid trusted CA store, err: ", err)
-    return
-  end
-end
-
--- All of this happens on balancer because this is subrequest inside APICAst
---to @upstream, so the request need to be the one that connects to the
---upstream0
-function _M:balancer(context)
-  local r = get_request()
-  if not r then
-    ngx.log(ngx.WARN, "Invalid request")
-    return
-  end
-
-  if self.cert and self.cert_key then
-    self.set_certs(r, self.cert, self.cert_key)
-  end
-
-  if not self.verify then
-    return
-  end
-
-  local ok, err = tls.set_upstream_ssl_verify(r, true, 1)
-  if ok ~= nil then
-    ngx.log(ngx.WARN, "Cannot verify SSL upstream connection, err: ", err)
-  end
-
-  if not self.ca_store then
-    ngx.log(ngx.WARN, "Set verify without including CA certificates")
-    return
-  end
-
-  self.set_ca_cert(r, self.ca_store)
+function _M:rewrite(context)
+  context.upstream_certificate = self.cert
+  context.upstream_key = self.cert_key
+  context.upstream_verify = self.verify
+  context.upstream_ca_store = self.ca_store
 end
 
 return _M
