@@ -786,3 +786,527 @@ Authentication failed
 --- no_error_log
 [error]
 
+
+
+=== TEST 24: with user_key in header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "headers",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+user_key: value
+--- request
+GET /
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+
+=== TEST 25: with invalid user_key in header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "headers",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+user_key: !123!
+--- request
+GET /
+--- response_body chomp
+Authentication failed
+--- error_code: 403
+
+
+
+=== TEST 26: with user_key in query parameters
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "query",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /?user_key=value
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+
+=== TEST 27: with invalid user_key in query parameters
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "query",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /?user_key=
+--- response_body chomp
+Authentication failed
+--- error_code: 403
+
+
+
+=== TEST 28: with user_key in Basic Authorization header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "authorization",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+Authorization: Basic dmFsdWU6Cg==
+--- request
+GET /
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+
+=== TEST 29: with invalid user_key in Basic Authorization header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "query",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+Authorization: Basic !123!
+--- request
+GET /
+--- response_body chomp
+Authentication parameters missing
+--- error_code: 401
+
+
+
+=== TEST 30: with app_id and app_key in header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "2",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "headers",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&app_id=foo&app_key=bar"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+app_id: foo
+app_key: bar
+--- request
+GET /
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+
+=== TEST 31: with invalid app_key and app_id in header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "2",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "headers",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&app_id=foo&app_key=bar"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+app_id: foo
+app_key: !123!
+--- request
+GET /
+--- response_body chomp
+Authentication failed
+--- error_code: 403
+
+
+
+=== TEST 32: with app_key and app_id in query parameters
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "2",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "query",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&app_id=foo&app_key=bar"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /?app_id=foo&app_key=bar
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+
+=== TEST 33: with invalid app_id and app_key in query parameters
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "2",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "query",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&app_id=foo&app_key=bar"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /?app_id=foo&app_key=!123!
+--- response_body chomp
+Authentication failed
+--- error_code: 403
+
+
+
+=== TEST 34: with app_id and app_key in Basic Authorization header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "2",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "authorization",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&app_id=foo&app_key=bar"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+Authorization: Basic Zm9vOmJhcg==
+--- request
+GET /
+--- response_body
+yay, api backend
+--- error_code: 200
+--- no_error_log
+[error]
+
+
+
+=== TEST 35: with invalid app_key/app_id in Basic Authorization header
+--- configuration
+{
+  "services": [
+    {
+      "backend_version": "1",
+      "id": 42,
+      "proxy": {
+        "credentials_location": "query",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
+        ],
+        "policy_chain": [
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      local expected = "service_id=42&usage%5Bhits%5D=2&user_key=value"
+      require('luassert').same(ngx.decode_args(expected), ngx.req.get_uri_args(0))
+    }
+  }
+--- upstream
+  location / {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- more_headers
+Authorization: Basic !123!
+--- request
+GET /
+--- response_body chomp
+Authentication parameters missing
+--- error_code: 401
+
+
+
