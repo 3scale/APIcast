@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added the `APICAST_PROXY_BUFFER_SIZE` variable to allow configuration of the buffer size for handling response from the proxied servers. [PR #1473](https://github.com/3scale/APIcast/pull/1473), [THREESCALE-8410](https://issues.redhat.com/browse/THREESCALE-8410)
 
 - Added the `APICAST_HTTPS_VERIFY_CLIENT` variable to allow configuration of the `ssl_verify_client` directive. [PR #1491](https://github.com/3scale/APIcast/pull/1491) [THREESCALE-10156](https://issues.redhat.com/browse/THREESCALE-10156)
+- Replace internal OPENSSL module with lua-resty-openssl [PR #1502](https://github.com/3scale/APIcast/pull/1502) [THREESCALE-11412](https://issues.redhat.com/browse/THREESCALE-11412)
 
 ## [3.15.0] 2024-04-04
 
