@@ -42,6 +42,7 @@ function _M.new(config)
 
   self.x509_store = init_trusted_store(store, config and config.whitelist or {})
   self.error_status = config and config.error_status or 400
+  self.allow_partial_chain = config.allow_partial_chain
 
   return self
 end
@@ -76,7 +77,10 @@ function _M:access()
   end
 
   local store = self.x509_store
-  store:set_flags(store.verify_flags.X509_V_FLAG_PARTIAL_CHAIN)
+
+  if self.allow_partial_chain then
+    store:set_flags(store.verify_flags.X509_V_FLAG_PARTIAL_CHAIN)
+  end
 
   -- err is printed inside validate_cert method
   -- so no need capture the err here

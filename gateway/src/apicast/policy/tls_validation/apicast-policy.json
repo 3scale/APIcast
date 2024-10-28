@@ -31,6 +31,11 @@
         "$ref": "#/definitions/store",
         "title": "Certificate Whitelist",
         "description": "Individual certificates and CA certificates to be whitelisted."
+      },
+      "allow_partial_chain": {
+        "description": "Allow certificate verification with only an intermediate certificate",
+        "type": "boolean",
+        "default": true
       }
     }
   }

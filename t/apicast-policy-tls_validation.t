@@ -353,3 +353,42 @@ No required TLS certificate was sent
 --- no_error_log
 [error]
 --- user_files fixture=CA/files.pl eval
+
+
+
+=== TEST 9: TLS Client Certificate with intermediate certificate fails when
+allow_partial_chain set to false
+--- configuration eval
+use JSON qw(to_json);
+use File::Slurp qw(read_file);
+
+to_json({
+  services => [{
+    proxy => {
+        hosts => ['test'],
+        policy_chain => [
+          { name => 'apicast.policy.tls_validation',
+            configuration => {
+              whitelist => [
+                { pem_certificate => CORE::join('', read_file('t/fixtures/CA/client.crt')) }
+              ],
+              allow_partial_chain => JSON::false
+            }
+          },
+          { name => 'apicast.policy.echo' },
+        ]
+    }
+  }]
+});
+--- test env
+proxy_ssl_verify on;
+proxy_ssl_trusted_certificate $TEST_NGINX_SERVER_ROOT/html/ca.crt;
+proxy_ssl_certificate $TEST_NGINX_SERVER_ROOT/html/client.crt;
+proxy_ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/client.key;
+proxy_pass https://$server_addr:$apicast_port/t;
+proxy_set_header Host test;
+log_by_lua_block { collectgarbage() }
+--- error_code: 400
+--- error_log
+unable to get local issuer certificat
+--- user_files fixture=CA/files.pl eval
