@@ -21,4 +21,6 @@ use File::Slurp qw(read_file);
         read_file('t/fixtures/CA/root-ca.crt'),
     ) ],
     [ "client.key" => CORE::join('', read_file('t/fixtures/CA/client.key')) ],
+    [ "revoked_client.crt" => CORE::join('',read_file('t/fixtures/CA/revoked_client.crt')) ],
+    [ "revoked_client.key" => CORE::join('', read_file('t/fixtures/CA/revoked_client.key')) ],
 ]
