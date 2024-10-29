@@ -1,8 +1,9 @@
 # TLS Validation policy
 
-This policy can validate TLS Client Certificate against a whitelist.
+This policy can validate TLS Client Certificate against a whitelist and Certificate Revocation List (CRL)
 
 Whitelist expects PEM formatted CA or Client certificates.
+Revocation List expects PEM formatted certificates.
 It is not necessary to have the full certificate chain, just partial matches are allowed.
 For example you can add to the whitelist just leaf client certificates without the whole bundle with a CA certificate.
 
@@ -23,6 +24,23 @@ NOTE: This policy is not compatible with `APICAST_PATH_ROUTING` or `APICAST_PATH
   "name": "apicast.policy.tls_validation",
   "configuration": {
     "whitelist": [
+      { "pem_certificate": ""-----BEGIN CERTIFICATE----- XXXXXX -----END CERTIFICATE-----"}
+    ]
+  }
+}
+```
+
+With Certificate Revocation List (CRL)
+
+```
+{
+  "name": "apicast.policy.tls_validation",
+  "configuration": {
+    "whitelist": [
+      { "pem_certificate": ""-----BEGIN CERTIFICATE----- XXXXXX -----END CERTIFICATE-----"}
+    ],
+    "revocation_check_type": "crl",
+    "revoke_list": [
       { "pem_certificate": ""-----BEGIN CERTIFICATE----- XXXXXX -----END CERTIFICATE-----"}
     ]
   }

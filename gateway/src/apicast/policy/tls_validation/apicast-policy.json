@@ -24,6 +24,13 @@
         "items": {
           "$ref": "#/definitions/certificate"
         }
+      },
+      "revoke": {
+        "$id": "#/definitions/revoke",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/certificate"
+        }
       }
     },
     "properties": {
@@ -36,6 +43,54 @@
         "description": "Allow certificate verification with only an intermediate certificate",
         "type": "boolean",
         "default": true
+      },
+      "revocation_check_type": {
+        "title": "Certificate Revocation Check type",
+        "type": "string",
+        "oneOf": [
+          {
+            "enum": [
+              "crl"
+            ],
+            "title": "Use certificates revocation list (CRL) in the PEM format to verify client certificates."
+          },
+          {
+            "enum": [
+              "none"
+            ],
+            "title": "Do not check for certificate recovation status"
+          }
+        ],
+        "default": "none"
+      }
+    },
+    "dependencies": {
+      "revocation_check_type": {
+        "oneOf": [
+          {
+            "properties": {
+              "revocation_check_type": {
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "revocation_check_type": {
+                "enum": [
+                  "crl"
+                ]
+              },
+              "revoke_list": {
+                "title": "Certificate RevokeList",
+                "description": "Individual certificates and CA certificates to be revoked.",
+                "$ref": "#/definitions/store"
+              }
+            }
+          }
+        ]
       }
     }
   }
