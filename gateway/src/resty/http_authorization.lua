@@ -9,8 +9,11 @@ local _M = {
 local mt = { __index = _M }
 
 function _M.parsers.Basic(param)
+  local userid, password
   local user_pass = ngx.decode_base64(param)
-  local userid, password = match(user_pass, '^(.*):(.*)$')
+  if user_pass then
+    userid, password = match(user_pass, '^(.*):(.*)$')
+  end
 
   return {
     userid = userid,

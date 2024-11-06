@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fixed CVE-2023-44487 (HTTP/2 Rapid Reset) [PR #1417](https://github.com/3scale/apicast/pull/1417) [THREESCALE-10224](https://issues.redhat.com/browse/THREESCALE-10224)
 
+- Fixed APIcast panic when parsing invalid base64 encoded value [PR #1505](https://github.com/3scale/APIcast/pull/1505) [THEESCALE-11435](https://issues.redhat.com/browse/THREESCALE-11435)
+
 ### Added
 
 - Detect number of CPU shares when running on Cgroups V2 [PR #1410](https://github.com/3scale/apicast/pull/1410) [THREESCALE-10167](https://issues.redhat.com/browse/THREESCALE-10167)

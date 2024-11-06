@@ -60,6 +60,13 @@ describe('HTTP Authorization', function()
         assert.equal('', auth.userid)
         assert.equal('pass', auth.password)
       end)
+
+      it('do not panic with invalid header', function()
+        local auth = authorization.new('Basic !123!')
+
+        assert.equal(nil, auth.userid)
+        assert.equal(nil, auth.password)
+      end)
     end)
 
     describe('Bearer', function()
