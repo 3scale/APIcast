@@ -33,7 +33,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Upstream TLS v1.3 [PR #1400](https://github.com/3scale/APIcast/pull/1400) [THREESCALE-9193](https://issues.redhat.com/browse/THREESCALE-9193)
 - Updated policy list for v3.13.2 [PR #1404](https://github.com/3scale/APIcast/pull/1404)
 - Updated policy list for v3.14.0 [PR #1407](https://github.com/3scale/APIcast/pull/1407)
-- Add `APICAST_LUA_SOCKET_KEEPALIVE_REQUESTS` to limit the number of requests a single keepalive socket can handle [PR #1496](https://github.com/3scale/APIcast/pull/1496) [THREESCALE-11321](https://issues.redhat.com/browse/THREESCALE-11321)
 
 ### Removed
 

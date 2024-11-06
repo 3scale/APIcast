@@ -4,11 +4,11 @@ APIcast is an application based on [OpenResty](https://openresty.org/en/). APIca
 
 ## Release
 
-APIcast is released as [Docker image](https://docs.docker.com).
+APIcast is released as [Docker image](https://docs.docker.com/engine/tutorials/dockerimages/). 
 
 ## Dependencies
 
-APIcast uses LuaRocks, the package manager for Lua modules, to install dependencies. With a correct configuration, LuaRocks installs dependencies into the correct path where OpenResty can see them.
+APIcast uses LuaRocks, the package manager for Lua modules, to install dependencies. With a correct configuration, LuaRocks installs dependencies into the correct path where OpenResty can see them. 
 
 For Docker images, LuaRocks is installed into the application folder. Then, `luarocks path` adds the application folder to the load path.
 
