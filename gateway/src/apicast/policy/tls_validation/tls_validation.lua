@@ -6,6 +6,7 @@ local X509_STORE = require('resty.openssl.x509.store')
 local X509 = require('resty.openssl.x509')
 local X509_CRL = require('resty.openssl.x509.crl')
 local ngx_ssl = require "ngx.ssl"
+local ocsp = require ("ocsp")
 
 local ipairs = ipairs
 local tostring = tostring
@@ -85,6 +86,7 @@ function _M:ssl_certificate()
   -- provide ca_certs: See https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/ssl.md#verify_client
   -- handle verify_depth
   --
+  -- TODO: OCSP stapling
   return ngx_ssl.verify_client()
 end
 
@@ -120,6 +122,16 @@ function _M:access()
     ngx.log(ngx.WARN, "TLS certificate validation failed, err: ", err)
     ngx.say("TLS certificate validation failed")
     return ngx.exit(ngx.status)
+  end
+
+  if self.revocation_type == "ocsp" then
+    ok, err = ocsp:check_for_revocation_status()
+    if not ok then
+      ngx.status = self.error_status
+      ngx.log(ngx.WARN, "TLS certificate validation failed, err: ", err)
+      ngx.say("TLS certificate validation failed")
+      return ngx.exit(ngx.status)
+    end
   end
 
   return true, nil

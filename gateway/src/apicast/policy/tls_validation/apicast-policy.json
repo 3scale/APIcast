@@ -50,6 +50,12 @@
         "oneOf": [
           {
             "enum": [
+              "ocsp"
+            ],
+            "title": "Enables OCSP validation of the client certificate."
+          },
+          {
+            "enum": [
               "crl"
             ],
             "title": "Use certificates revocation list (CRL) in the PEM format to verify client certificates."
@@ -87,6 +93,45 @@
                 "title": "Certificate RevokeList",
                 "description": "Individual certificates and CA certificates to be revoked.",
                 "$ref": "#/definitions/store"
+              }
+            }
+          },
+          {
+            "properties": {
+              "revocation_check_type": {
+                "enum": [
+                  "ocsp"
+                ]
+              },
+              "revocation_check_mode": {
+                "title": "Certificate Mode",
+                "description": "Certificate revocation check mode",
+                "type": "string",
+                "oneOf": [
+                  {
+                    "enum": [
+                      "ignore_error"
+                    ],
+                    "title": "Ignore Network Error: respects the revocation status when either OCSP or CRL URL is set, and doesn’t fail on network issues"
+                  },
+                  {
+                    "enum": [
+                      "strict"
+                    ],
+                    "title": "Strict: The certificate is valid only when it’s able to verify the revocation status."
+                  }
+                ],
+                "default": "strict"
+              },
+              "ocsp_responder_url": {
+                "title": "OCSP Responder URL ",
+                "description": "Overrides the URL of the OCSP responder specified in the “Authority Information Access” certificate extension for validation of client certificates. ",
+                "type": "string"
+              },
+              "cache_timeout": {
+                "title": " Cache timeout",
+                "description": "The length of time in milliseconds between refreshes of the revocation check status cache.",
+                "type": "integer"
               }
             }
           }
