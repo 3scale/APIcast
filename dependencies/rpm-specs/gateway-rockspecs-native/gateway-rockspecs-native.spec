@@ -21,7 +21,7 @@ Source2: luafilesystem-1.8.0-1.src.rock
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires: luarocks rpm-build redhat-rpm-config rpmdevtools libyaml-devel gcc
+BuildRequires: luarocks rpm-build redhat-rpm-config libyaml-devel gcc
 # Using requires so we can regenerate the manifest on installation.
 Requires: luarocks libyaml glibc-devel
 

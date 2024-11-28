@@ -34,7 +34,7 @@ Source17: date-2.2-2.src.rock
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
-BuildRequires: luarocks rpm-build redhat-rpm-config rpmdevtools
+BuildRequires: luarocks rpm-build redhat-rpm-config
 # Using requires so we can regenerate the manifest on installation.
 Requires: luarocks
 Requires: gateway-rockspecs-native
