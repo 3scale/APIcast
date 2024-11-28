@@ -90,7 +90,7 @@ Source49: opentelemetry-proto-%{opentelemetry_proto_version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  make, cmake, perl, systemtap-sdt-devel, git, annobin-annocheck
+BuildRequires:  make, cmake, perl, systemtap-sdt-devel, git, gcc-toolset-12-annobin-annocheck
 BuildRequires:  perl-File-Temp, dos2unix, pcre-devel, openssl-devel
 BuildRequires:  gcc, gcc-c++
 BuildRequires:  gcc-toolset-12-gcc, gcc-toolset-12-gcc-c++
