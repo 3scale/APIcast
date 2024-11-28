@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<licenseSummary>
+  <dependencies>
+
+    <dependency>
+      <packageName>lyaml</packageName>
+      <version>6.2.3-1</version>
+      <licenses>
+        <license>
+          <name>MIT</name>
+          <url>https://opensource.org/licenses/mit-license</url>
+        </license>
+      </licenses>
+    </dependency>
+
+  </dependencies>
+</licenseSummary>
+
