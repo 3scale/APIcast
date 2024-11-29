@@ -76,59 +76,6 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Fri May 06 2022 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-21
-- Bump release
-
-* Mon Feb 28 2022 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-20
-- Bump release
-
-* Mon Feb 28 2022 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-19
-- Bump release
-
-* Thu Feb 24 2022 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-18
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-12.9
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-12.8
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-12.7
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-12.6
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-12.5
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-12.4
-- Bump release
-
-* Thu May 06 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-11.3
-- Bump release
-
-* Thu May 06 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-11.2
-- Bump release
-
-* Thu May 06 2021 CPaaS User <cpaas-ops@redhat.com> - 1.2.11-11.1
-- Bump release
-
-* Mon Jan 20 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.2.11-7
-Built by CPaaS
-
-* Mon Jan 20 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.2.11-6
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.2.11-5
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.2.11-4
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.2.11-3
-Built by CPaaS
 
 * Fri Jul 14 2017 Yichun Zhang 1.2.11-3
 - bugfix: we did not enable debuginfo in the shared library files.
