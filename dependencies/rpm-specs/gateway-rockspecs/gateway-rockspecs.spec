@@ -78,158 +78,30 @@ rm -rf %{buildroot}
 %license licenses.xml
 
 %changelog
-* Fri Dec 02 2022 CPaaS User <cpaas-ops@redhat.com> - 2.10.0-2
-- Bump release
 
 * Fri Dec 02 2022 Yorgos Saslis <gsaslisl@redhat.com> - 2.10.0-1
 - Minor version bump to clarify lua-liquid dependency bump that already happened in 2.9.6-12
 
-* Mon Oct 03 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-14
-- Bump release
-
-* Mon Oct 03 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-13
-- Bump release
-
 * Fri Jul 15 2022 Eguzki Astiz Lezaun <eastizle@redhat.com> - 2.9.6-12
 - Updated lua-liquid dependency
-
-* Thu May 05 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-11
-- Bump release
-
-* Wed Feb 23 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-10
-- Bump release
-
-* Wed Feb 23 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-9
-- Bump release
-
-* Tue Feb 22 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-8
-- Bump release
-
-* Wed Feb 09 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-7
-- Bump release
-
-* Wed Feb 09 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-6
-- Bump release
-
-* Wed Feb 09 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-5
-- Bump release
-
-* Wed Feb 09 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-4
-- Bump release
-
-* Wed Jan 26 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-3
-- Bump release
-
-* Wed Jan 26 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-2
-- Bump release
-
-* Mon Jan 24 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-0.7
-- Bump release
-
-* Fri Jan 21 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.6-0.6
-- Bump release
 
 * Thu Jan 20 2022 CPaaS User <dmarin@redhat.com> - 2.9.6-0.1
 - Date filter support on liquid
 
-* Thu Jan 13 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.5-0.5
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.5-0.4
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.5-0.3
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 2.9.5-0.2
-- Bump release
-
 * Mon Sep 20 2021 Eloy Coto <ecotoper@redhat.com> - 2.9.5-0.1
 - Updated luafilesystem-ffi
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.19
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.18
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.17
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.16
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.15
-- Bump release
-
-* Fri Jul 02 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.14
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.13
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.12
-- Bump release
-
 
 * Thu Jul 01 2021 Eloy Coto <ecotoper@redhat.com> - 2.9.4-0.11
 - Added lua-rover and net-url and fix ENV variables
 
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.10
-- Bump release
-
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.9
-- Bump release
-
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.8
-- Bump release
-
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.7
-- Bump release
-
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.6
-- Bump release
-
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.5
-- Bump release
-
-* Wed Jun 30 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.4
-- Bump release
-
-* Tue Jun 29 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.4-0.3
-- Bump release
-
 * Thu Jun 17 2021 Eloy Coto <ecotoper@redhat.com> - 2.9.3-0.2
 - Updated lua-liquid dependency
-
-* Thu May 06 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.2-0.2
-- Bump release
-
-* Thu May 06 2021 CPaaS User <cpaas-ops@redhat.com> - 2.9.2-0.1
-- Bump release
-
 
 * Fri Jun 26 2020  Eloy Coto <ecotoper@redhat.com> - 2.9.2-0
 - Update lua-liquid dependency
 
-* Tue Jan 21 2020 cpaas-ops <cpaas-ops@redhat.com> - 2.8.1-8
-Built by CPaaS
-
-* Mon Jan 20 2020 cpaas-ops <cpaas-ops@redhat.com> - 2.8.1-8
-Built by CPaaS
-
 * Mon Jan 20 2020 Eloy Coto <ecotoper@redhat.com> - 2.8.1-0
 - Update lua-liquid dependency
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 2.8.0-7
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 2.8.0-6
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 2.8.0-5
-Built by CPaaS
-
 
 * Sat Jan 11 2020 Eloy Coto <ecotoper@redhat.com>
 - Update dependencies for APIcast AMP 2.8

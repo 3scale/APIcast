@@ -138,44 +138,6 @@ make %{?_smp_mflags}
 %doc README.md COPYING
 
 %changelog
-* Fri May 06 2022 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-31
-- Bump release
-
-* Mon Feb 28 2022 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-30
-- Bump release
-
-* Mon Feb 28 2022 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-29
-- Bump release
-
-* Thu Feb 24 2022 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-28
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-22.8
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-22.7
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-22.6
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 1.3.0-22.5
-- Bump release
-
-* Mon Jan 20 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.3.0-17
-Built by CPaaS
-
-* Mon Jan 20 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.3.0-16
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.3.0-15
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.3.0-14
-Built by CPaaS
-
-* Wed Jan 15 2020 cpaas-ops <cpaas-ops@redhat.com> - 1.3.0-13
-Built by CPaaS
 
 * Wed Oct 17 2018 Fernando Nasser <fnasser@redhat.com> - 1.3.0
 - Build 1.3.0

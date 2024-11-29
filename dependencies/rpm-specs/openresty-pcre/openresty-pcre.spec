@@ -91,38 +91,6 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Fri May 06 2022 CPaaS User <cpaas-ops@redhat.com> - 8.44-26
-- Bump release
-
-* Mon Feb 28 2022 CPaaS User <cpaas-ops@redhat.com> - 8.44-25
-- Bump release
-
-* Mon Feb 28 2022 CPaaS User <cpaas-ops@redhat.com> - 8.44-24
-- Bump release
-
-* Thu Feb 24 2022 CPaaS User <cpaas-ops@redhat.com> - 8.44-23
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 8.44-13
-- Bump release
-
-* Wed Jan 12 2022 CPaaS User <cpaas-ops@redhat.com> - 8.44-12
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 8.44-10
-- Bump release
-
-* Mon Jul 05 2021 CPaaS User <cpaas-ops@redhat.com> - 8.44-9
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 8.44-8
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 8.44-7
-- Bump release
-
-* Thu Jul 01 2021 CPaaS User <cpaas-ops@redhat.com> - 8.44-6
-- Bump release
 
 * Mon May 14 2018 Yichun Zhang (agentzh) 8.42-1
 - upgraded openresty-pcre to 8.42.
