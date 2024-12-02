@@ -1,4 +1,4 @@
-FROM registry.redhat.io/ubi8/ubi:8.10-1132.1731461736 AS rpm-builder
+FROM registry.access.redhat.com/ubi8/ubi:8.10-1132.1731461736 AS rpm-builder
 
 # Install rpm-build and dependencies, move sources and spec file to their respective directories, build the  RPMs and install them
 RUN yum install -y rpm-build cmake3 gcc-c++ yum-utils
@@ -243,7 +243,7 @@ RUN yum-builddep --assumeyes SPECS/gateway-rockspecs.spec
 
 RUN rpmbuild -ba SPECS/gateway-rockspecs.spec
 
-FROM registry.redhat.io/ubi8/ubi:8.10-1132.1731461736 AS apicast
+FROM registry.access.redhat.com/ubi8/ubi:8.10-1132.1731461736 AS apicast
 
 LABEL summary="3scale's API gateway (APIcast) is an OpenResty application which consists of two parts: Nginx configuration and Lua files." \
       description="APIcast is not a standalone API gateway therefore it needs connection to the 3scale API management platform. The container includes OpenResty and uses LuaRocks to install dependencies (rocks are installed in the application folder)." \
