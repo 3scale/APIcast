@@ -1,0 +1,159 @@
+[submodule "dependencies/git/opentracing-cpp"]
+	path = dependencies/git/opentracing-cpp
+	url = https://github.com/opentracing/opentracing-cpp
+[submodule "dependencies/git/zlib"]
+	path = dependencies/git/zlib
+	url = https://github.com/madler/zlib
+[submodule "dependencies/git/form-input-nginx-module"]
+	path = dependencies/git/form-input-nginx-module
+	url = https://github.com/calio/form-input-nginx-module
+[submodule "dependencies/git/iconv-nginx-module"]
+	path = dependencies/git/iconv-nginx-module
+	url = https://github.com/calio/iconv-nginx-module
+[submodule "dependencies/git/ngx_coolkit"]
+	path = dependencies/git/ngx_coolkit
+	url = https://github.com/FRiCKLE/ngx_coolkit
+[submodule "dependencies/git/array-var-nginx-module"]
+	path = dependencies/git/array-var-nginx-module
+	url = https://github.com/openresty/array-var-nginx-module
+[submodule "dependencies/git/drizzle-nginx-module"]
+	path = dependencies/git/drizzle-nginx-module
+	url = https://github.com/openresty/drizzle-nginx-module
+[submodule "dependencies/git/echo-nginx-module"]
+	path = dependencies/git/echo-nginx-module
+	url = https://github.com/openresty/echo-nginx-module
+[submodule "dependencies/git/encrypted-session-nginx-module"]
+	path = dependencies/git/encrypted-session-nginx-module
+	url = https://github.com/openresty/encrypted-session-nginx-module
+[submodule "dependencies/git/headers-more-nginx-module"]
+	path = dependencies/git/headers-more-nginx-module
+	url = https://github.com/openresty/headers-more-nginx-module
+[submodule "dependencies/git/lua-cjson"]
+	path = dependencies/git/lua-cjson
+	url = https://github.com/openresty/lua-cjson
+[submodule "dependencies/git/lua-nginx-module"]
+	path = dependencies/git/lua-nginx-module
+	url = https://github.com/openresty/lua-nginx-module
+[submodule "dependencies/git/lua-rds-parser"]
+	path = dependencies/git/lua-rds-parser
+	url = https://github.com/openresty/lua-rds-parser
+[submodule "dependencies/git/lua-redis-parser"]
+	path = dependencies/git/lua-redis-parser
+	url = https://github.com/openresty/lua-redis-parser
+[submodule "dependencies/git/lua-resty-core"]
+	path = dependencies/git/lua-resty-core
+	url = https://github.com/openresty/lua-resty-core
+[submodule "dependencies/git/lua-resty-dns"]
+	path = dependencies/git/lua-resty-dns
+	url = https://github.com/openresty/lua-resty-dns
+[submodule "dependencies/git/lua-resty-limit-traffic"]
+	path = dependencies/git/lua-resty-limit-traffic
+	url = https://github.com/openresty/lua-resty-limit-traffic
+[submodule "dependencies/git/lua-resty-lock"]
+	path = dependencies/git/lua-resty-lock
+	url = https://github.com/openresty/lua-resty-lock
+[submodule "dependencies/git/lua-resty-lrucache"]
+	path = dependencies/git/lua-resty-lrucache
+	url = https://github.com/openresty/lua-resty-lrucache
+[submodule "dependencies/git/lua-resty-memcached"]
+	path = dependencies/git/lua-resty-memcached
+	url = https://github.com/openresty/lua-resty-memcached
+[submodule "dependencies/git/lua-resty-mysql"]
+	path = dependencies/git/lua-resty-mysql
+	url = https://github.com/openresty/lua-resty-mysql
+[submodule "dependencies/git/lua-resty-redis"]
+	path = dependencies/git/lua-resty-redis
+	url = https://github.com/openresty/lua-resty-redis
+[submodule "dependencies/git/lua-resty-shell"]
+	path = dependencies/git/lua-resty-shell
+	url = https://github.com/openresty/lua-resty-shell
+[submodule "dependencies/git/lua-resty-signal"]
+	path = dependencies/git/lua-resty-signal
+	url = https://github.com/openresty/lua-resty-signal
+[submodule "dependencies/git/lua-resty-string"]
+	path = dependencies/git/lua-resty-string
+	url = https://github.com/openresty/lua-resty-string
+[submodule "dependencies/git/lua-resty-upload"]
+	path = dependencies/git/lua-resty-upload
+	url = https://github.com/openresty/lua-resty-upload
+[submodule "dependencies/git/lua-resty-upstream-healthcheck"]
+	path = dependencies/git/lua-resty-upstream-healthcheck
+	url = https://github.com/openresty/lua-resty-upstream-healthcheck
+[submodule "dependencies/git/lua-resty-websocket"]
+	path = dependencies/git/lua-resty-websocket
+	url = https://github.com/openresty/lua-resty-websocket
+[submodule "dependencies/git/lua-tablepool"]
+	path = dependencies/git/lua-tablepool
+	url = https://github.com/openresty/lua-tablepool
+[submodule "dependencies/git/lua-upstream-nginx-module"]
+	path = dependencies/git/lua-upstream-nginx-module
+	url = https://github.com/openresty/lua-upstream-nginx-module
+[submodule "dependencies/git/memc-nginx-module"]
+	path = dependencies/git/memc-nginx-module
+	url = https://github.com/openresty/memc-nginx-module
+[submodule "dependencies/git/ngx_postgres"]
+	path = dependencies/git/ngx_postgres
+	url = https://github.com/openresty/ngx_postgres
+[submodule "dependencies/git/opm"]
+	path = dependencies/git/opm
+	url = https://github.com/openresty/opm
+[submodule "dependencies/git/rds-csv-nginx-module"]
+	path = dependencies/git/rds-csv-nginx-module
+	url = https://github.com/openresty/rds-csv-nginx-module
+[submodule "dependencies/git/rds-json-nginx-module"]
+	path = dependencies/git/rds-json-nginx-module
+	url = https://github.com/openresty/rds-json-nginx-module
+[submodule "dependencies/git/redis2-nginx-module"]
+	path = dependencies/git/redis2-nginx-module
+	url = https://github.com/openresty/redis2-nginx-module
+[submodule "dependencies/git/resty-cli"]
+	path = dependencies/git/resty-cli
+	url = https://github.com/openresty/resty-cli
+[submodule "dependencies/git/set-misc-nginx-module"]
+	path = dependencies/git/set-misc-nginx-module
+	url = https://github.com/openresty/set-misc-nginx-module
+[submodule "dependencies/git/srcache-nginx-module"]
+	path = dependencies/git/srcache-nginx-module
+	url = https://github.com/openresty/srcache-nginx-module
+[submodule "dependencies/git/stream-lua-nginx-module"]
+	path = dependencies/git/stream-lua-nginx-module
+	url = https://github.com/openresty/stream-lua-nginx-module
+[submodule "dependencies/git/xss-nginx-module"]
+	path = dependencies/git/xss-nginx-module
+	url = https://github.com/openresty/xss-nginx-module
+[submodule "dependencies/git/luarocks"]
+	path = dependencies/git/luarocks
+	url = https://github.com/luarocks/luarocks
+[submodule "dependencies/git/luajit2"]
+	path = dependencies/git/luajit2
+	url = https://github.com/rh-api-management/luajit2
+[submodule "dependencies/git/openresty"]
+	path = dependencies/git/openresty
+	url = https://github.com/rh-api-management/openresty.git
+[submodule "dependencies/git/nginx"]
+	path = dependencies/git/nginx
+	url = https://github.com/rh-api-management/nginx
+[submodule "dependencies/git/ngx_devel_kit"]
+	path = dependencies/git/ngx_devel_kit
+	url = https://github.com/vision5/ngx_devel_kit
+[submodule "dependencies/git/ngx_http_redis"]
+	path = dependencies/git/ngx_http_redis
+	url = https://github.com/osokin/ngx_http_redis
+[submodule "dependencies/git/nginx-opentracing"]
+	path = dependencies/git/nginx-opentracing
+	url = https://github.com/opentracing-contrib/nginx-opentracing
+[submodule "dependencies/git/apicast-nginx-module"]
+	path = dependencies/git/apicast-nginx-module
+	url = https://github.com/3scale/apicast-nginx-module
+[submodule "dependencies/git/grpc"]
+	path = dependencies/git/grpc
+	url = https://github.com/grpc/grpc
+[submodule "dependencies/git/opentelemetry-proto"]
+	path = dependencies/git/opentelemetry-proto
+	url = https://github.com/open-telemetry/opentelemetry-proto
+[submodule "dependencies/git/opentelemetry-cpp"]
+	path = dependencies/git/opentelemetry-cpp
+	url = https://github.com/open-telemetry/opentelemetry-cpp
+[submodule "dependencies/git/opentelemetry-cpp-contrib"]
+	path = dependencies/git/opentelemetry-cpp-contrib
+	url = https://github.com/open-telemetry/opentelemetry-cpp-contrib
