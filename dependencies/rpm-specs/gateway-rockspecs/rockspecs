@@ -1,0 +1,17 @@
+https://luarocks.org/manifests/pintsized/lua-resty-http-0.17.1-0.rockspec
+https://luarocks.org/manifests/kikito/router-2.1-0.rockspec
+https://luarocks.org/manifests/kikito/inspect-3.1.1-0.rockspec
+https://luarocks.org/manifests/cdbattags/lua-resty-jwt-0.2.0-0.rockspec
+https://luarocks.org/manifests/3scale/lua-resty-url-0.3.5-1.rockspec
+https://luarocks.org/manifests/3scale/lua-resty-env-0.4.0-1.rockspec
+https://luarocks.org/manifests/3scale/liquid-0.2.0-2.rockspec
+https://luarocks.org/manifests/tieske/penlight-1.7.0-1.rockspec
+https://luarocks.org/manifests/mpeterv/argparse-0.6.0-1.rockspec
+https://luarocks.org/manifests/3scale/lua-resty-execvp-0.1.1-1.rockspec
+https://luarocks.org/manifests/3scale/lua-resty-jit-uuid-0.0.7-1.rockspec
+https://luarocks.org/manifests/knyar/nginx-lua-prometheus-0.20181120-2.rockspec
+https://luarocks.org/manifests/hamish/lua-resty-iputils-0.3.0-1.rockspec
+https://luarocks.org/manifests/golgote/net-url-0.9-1.rockspec
+https://luarocks.org/manifests/tieske/date-2.2-2.rockspec
+https://luarocks.org/manifests/membphis/jsonschema-0.8-0.rockspec
+https://luarocks.org/manifests/3scale/lua-rover-scm-1.rockspec
