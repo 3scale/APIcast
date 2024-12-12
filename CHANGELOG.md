@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add `APICAST_LUA_SOCKET_KEEPALIVE_REQUESTS` to limit the number of requests a single keepalive socket can handle [PR #1496](https://github.com/3scale/APIcast/pull/1496) [THREESCALE-11321](https://issues.redhat.com/browse/THREESCALE-11321)
+
 ## [3.15.0] 2024-04-04
 
 ### Fixed
