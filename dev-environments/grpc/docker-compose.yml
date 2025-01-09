@@ -37,6 +37,8 @@ services:
     volumes:
       - ./upstream-cert/upstream.example.com.pem:/etc/pki/upstream.example.com.pem
   two.upstream:
-    image: kalmhq/echoserver
+    container_name: two.upstream
+    build:
+      dockerfile: ./echoserver.Dockerfile
     expose:
       - "8005"
