@@ -24,15 +24,15 @@ services:
     volumes:
       - ./apicast-config.json:/tmp/config.json
   example.com:
-    image: alpine/socat:1.7.4.4
+    image: quay.io/openshift-logging/alpine-socat:1.8.0.0
     container_name: example.com
-    command: "-v openssl-listen:443,reuseaddr,fork,cert=/etc/pki/example.com.pem,verify=0,openssl-min-proto-version=TLS1.3,openssl-max-proto-version=TLS1.3 TCP:two.upstream:80"
+    command: "-v openssl-listen:443,reuseaddr,fork,cert=/etc/pki/example.com.pem,verify=0,openssl-min-proto-version=TLS1.3,openssl-max-proto-version=TLS1.3 TCP:two.upstream:8080"
     expose:
       - "443"
     restart: unless-stopped
     volumes:
       - ./cert/example.com.pem:/etc/pki/example.com.pem
   two.upstream:
-    image: kennethreitz/httpbin
+    image: quay.io/kuadrant/authorino-examples:talker-api
     expose:
-      - "80"
+      - "8080"

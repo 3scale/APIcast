@@ -1,4 +1,4 @@
-FROM alpine:3
+FROM mirror.gcr.io/library/alpine:3
 
 LABEL summary="Forward proxy based on tinyproxy for development purposes" \
       description="Forward proxy based on tinyproxy for development purposes" \

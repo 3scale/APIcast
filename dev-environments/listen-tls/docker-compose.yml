@@ -28,13 +28,13 @@ services:
       - ./apicast-config.json:/tmp/config.json
       - ./cert:/var/run/secrets/apicast
   one.upstream:
-    image: alpine/socat:1.7.4.4
+    image: quay.io/openshift-logging/alpine-socat:1.8.0.0
     container_name: one.upstream
-    command: "-d -v -d TCP-LISTEN:80,reuseaddr,fork TCP:two.upstream:80"
+    command: "-d -v -d TCP-LISTEN:80,reuseaddr,fork TCP:two.upstream:8080"
     expose:
       - "80"
     restart: unless-stopped
   two.upstream:
-    image: kennethreitz/httpbin
+    image: quay.io/kuadrant/authorino-examples:talker-api
     expose:
-      - "80"
+      - "8080"

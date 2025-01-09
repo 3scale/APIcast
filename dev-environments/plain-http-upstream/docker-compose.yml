@@ -24,7 +24,7 @@ services:
     volumes:
       - ./apicast-config.json:/tmp/config.json
   example.com:
-    image: alpine/socat:1.7.4.4
+    image: quay.io/openshift-logging/alpine-socat:1.8.0.0
     container_name: example.com
     command: "-d -d -v -d TCP-LISTEN:80,reuseaddr,fork TCP:two.upstream:3000"
     expose:
@@ -37,7 +37,7 @@ services:
     expose:
       - "3000"
   backend:
-    image: alpine/socat:1.7.4.4
+    image: quay.io/openshift-logging/alpine-socat:1.8.0.0
     container_name: backend
     command: "-d -d -v -d TCP-LISTEN:80,reuseaddr,fork TCP:3scale.backend:3000"
     expose:

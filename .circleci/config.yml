@@ -98,7 +98,7 @@ executors:
   docker:
     working_directory: /opt/app-root/apicast
     docker:
-    - image: docker:23.0.2-cli-alpine3.17
+    - image: mirror.gcr.io/library/docker:23.0.2-cli-alpine3.17
     environment:
       COMPOSE_TLS_VERSION: "TLSv1_2"
 
@@ -106,7 +106,7 @@ executors:
     working_directory: /opt/app-root/apicast
     docker:
       - image: quay.io/3scale/apicast-ci:openresty-1.21.4-1
-      - image: redis:3.2.8-alpine
+      - image: mirror.gcr.io/library/redis
     environment:
       TEST_NGINX_BINARY: openresty
       LUA_BIN_PATH: /opt/app-root/bin
