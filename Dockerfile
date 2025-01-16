@@ -30,7 +30,7 @@ RUN dnf install -y 'dnf-command(config-manager)'
 
 RUN yum config-manager --add-repo http://packages.dev.3sca.net/dev_packages_3sca_net.repo
 
-RUN PKGS="openresty-resty-${OPENRESTY_RPM_VERSION} openresty-opentelemetry-${OPENRESTY_RPM_VERSION} openresty-opentracing-${OPENRESTY_RPM_VERSION} openresty-${OPENRESTY_RPM_VERSION} luarocks-${LUAROCKS_VERSION} opentracing-cpp-devel-1.3.0 libopentracing-cpp1-1.3.0 jaegertracing-cpp-client-${JAEGERTRACING_CPP_CLIENT_RPM_VERSION}" && \
+RUN PKGS="openresty-resty-${OPENRESTY_RPM_VERSION} openresty-opentelemetry-${OPENRESTY_RPM_VERSION} openresty-${OPENRESTY_RPM_VERSION} luarocks-${LUAROCKS_VERSION}" && \
     mkdir -p "$HOME" && \
     yum -y --setopt=tsflags=nodocs install $PKGS && \
     rpm -V $PKGS && \

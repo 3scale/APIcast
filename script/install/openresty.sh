@@ -18,11 +18,7 @@ yum -y install \
     openresty-resty-${OPENRESTY_RPM_VERSION} \
     openresty-debuginfo-${OPENRESTY_RPM_VERSION} \
     openresty-debugsource-${OPENRESTY_RPM_VERSION} \
-    openresty-opentelemetry-${OPENRESTY_RPM_VERSION} \
-    openresty-opentracing-${OPENRESTY_RPM_VERSION} \
-    opentracing-cpp-devel-1.3.0 \
-    libopentracing-cpp1-1.3.0 \
-    jaegertracing-cpp-client-${JAEGERTRACING_CPP_CLIENT_RPM_VERSION}\
+    openresty-opentelemetry-${OPENRESTY_RPM_VERSION}
 
 export PATH="./lua_modules/bin:/usr/local/openresty/luajit/bin/:${PATH}"
 export LUA_PATH="./lua_modules/share/lua/5.1/?.lua;./lua_modules/share/lua/5.1/?/init.lua;/usr/lib64/lua/5.1/?.lua;/usr/share/lua/5.1/?.lua;/opt/app-root/lua_modules/share/lua/5.1/?.lua;/opt/app-root/lua_modules/share/lua/5.1/?/?.lua"

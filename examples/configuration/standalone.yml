@@ -2,7 +2,6 @@ global:
   log_level: debug
   error_log: stderr
   access_log: stdout
-  opentracing_tracer: jaeger
   upstream:
     load_balancer: least_conn
     retry: 5xx

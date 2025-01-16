@@ -100,16 +100,6 @@ local function env_value_ref(name)
     return setmetatable({ name = name }, env_value_mt)
 end
 
-local function read_opentracing_tracer(varname)
-    local opentracing_tracer = env_value_ref(varname)
-
-    if tostring(opentracing_tracer) ~= nil then
-        ngx.log(ngx.WARN, 'opentracing use is DEPRECATED. Use Opentelemetry instead with OPENTELEMETRY env var')
-    end
-
-    return opentracing_tracer
-end
-
 local _M = {}
 ---
 -- @field default_environment Default environment name.
@@ -122,9 +112,6 @@ _M.default_environment = 'production'
 -- @tfield ?string proxy_ssl_certificate_key path to SSL certificate key
 -- @tfield ?string proxy_ssl_session_reuse whether SSL sessions can be reused
 -- @tfield ?string proxy_ssl_password_file path to a file with passphrases for the certificate keys
--- @tfield ?string opentracing_tracer loads an opentracing tracer library, for example: jaeger
--- @tfield ?string opentracing_config opentracing config file to load
--- @tfield ?string opentracing_forward_header opentracing http header to forward upstream
 -- @tfield ?string opentelemetry enables server instrumentation using opentelemetry SDKs
 -- @tfield ?string opentelemetry_config_file opentelemetry config file to load
 -- @tfield ?string upstream_retry_cases error cases where the call to the upstream should be retried
@@ -142,9 +129,6 @@ _M.default_config = {
     proxy_ssl_session_reuse = env_value_ref('APICAST_PROXY_HTTPS_SESSION_REUSE'),
     proxy_ssl_password_file = env_value_ref('APICAST_PROXY_HTTPS_PASSWORD_FILE'),
     proxy_ssl_verify = resty_env.enabled('OPENSSL_VERIFY'),
-    opentracing_tracer = read_opentracing_tracer('OPENTRACING_TRACER'),
-    opentracing_config = env_value_ref('OPENTRACING_CONFIG'),
-    opentracing_forward_header = env_value_ref('OPENTRACING_FORWARD_HEADER'),
     opentelemetry = env_value_ref('OPENTELEMETRY'),
     opentelemetry_config_file = env_value_ref('OPENTELEMETRY_CONFIG'),
     upstream_retry_cases = env_value_ref('APICAST_UPSTREAM_RETRY_CASES'),

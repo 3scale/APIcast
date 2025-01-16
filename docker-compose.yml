@@ -54,25 +54,3 @@ services:
       KEYCLOAK_LOGLEVEL: INFO
     ports:
       - "8080"
-  opentracing-instrumented-gateway:
-    image: ${IMAGE_NAME:-apicast-test}
-    depends_on:
-    - jaeger
-    environment:
-      THREESCALE_CONFIG_FILE: /tmp/config.json
-      THREESCALE_DEPLOYMENT_ENV: staging
-      APICAST_CONFIGURATION_LOADER: lazy
-      APICAST_LOG_LEVEL: debug
-      APICAST_CONFIGURATION_CACHE: "0"
-      OPENTRACING_TRACER: jaeger
-      OPENTRACING_CONFIG: /opt/app-root/src/tracing-configs/tracing-config-jaeger-jaeger-config.json
-    volumes:
-      - ./examples/opentracing/apicast-config.json:/tmp/config.json
-      - ./examples/opentracing/jaeger-config.json:/opt/app-root/src/tracing-configs/tracing-config-jaeger-jaeger-config.json
-  jaeger:
-    image: quay.io/ducna/jaegertracing/all-in-one:1.60
-    environment:
-      JAEGER_DISABLED: "false"
-      COLLECTOR_OTLP_ENABLED: "true"
-    ports:
-      - 16686:16686

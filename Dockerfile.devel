@@ -32,11 +32,7 @@ RUN yum config-manager --add-repo http://packages.dev.3sca.net/dev_packages_3sca
 RUN yum install -y \
         openresty-${OPENRESTY_RPM_VERSION} \
         openresty-resty-${OPENRESTY_RPM_VERSION} \
-        openresty-opentelemetry-${OPENRESTY_RPM_VERSION} \
-        openresty-opentracing-${OPENRESTY_RPM_VERSION} \
-        opentracing-cpp-devel-1.3.0 \
-        libopentracing-cpp1-1.3.0 \
-        jaegertracing-cpp-client-${JAEGERTRACING_CPP_CLIENT_RPM_VERSION}
+        openresty-opentelemetry-${OPENRESTY_RPM_VERSION}
 
 RUN ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
