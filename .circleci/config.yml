@@ -230,6 +230,7 @@ jobs:
             JUNIT_OUTPUT_FILE: tmp/junit/prove/report.xml
             TEST_NGINX_ERROR_LOG: tmp/junit/prove/error.log
             HARNESS: TAP::Harness::JUnit
+            NPROC: 2
       - report-codecov:
           suite: prove
           flags: -f 'luacov.report.*.out'
