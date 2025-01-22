@@ -59,7 +59,7 @@ oc new-app -f https://raw.githubusercontent.com/3scale/apicast/master/openshift/
 - Performance: it is fast because it's built on top of [NGINX](https://www.nginx.com/) and uses [LuaJIT](https://luajit.org/).
 - Scalability: APIcast is stateless, so it scales horizontally.
 - Request transformation: allows to modify the headers, the path and the arguments of a request.
-- Rate-limit: can apply limits based on a header, [JWT](https://jwt.io/) claims, the IP of the request and many more.
+- Rate-limit: can apply limits based on a header, [JWT](https://datatracker.ietf.org/doc/html/rfc7519) claims, the IP of the request and many more.
 - Modular and extensible: thanks to the APIcast [policies framework](doc/policies.md).
 - Monitoring with [Prometheus](https://prometheus.io/).
 - [NGINX instrumentation](https://github.com/open-telemetry/opentelemetry-cpp-contrib) using [OpenTelemetry](https://opentelemetry.io/). Works with [Jaeger](https://www.jaegertracing.io/).
