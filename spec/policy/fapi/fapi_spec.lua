@@ -92,6 +92,7 @@ end)
 
 describe('fapi_1 advance profile', function()
   local context = {}
+  local ngx_req_headers = {}
   before_each(function()
     context = {
       jwt = {},
@@ -104,6 +105,8 @@ describe('fapi_1 advance profile', function()
     }
 
     ngx.header = {}
+    ngx_req_headers = {}
+    stub(ngx.req, 'get_headers', function() return ngx_req_headers end)
     stub(ngx, 'print')
     stub(ngx, 'exit')
     context.jwt = {}
