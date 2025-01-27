@@ -2726,7 +2726,7 @@
     ],
     "conditional": [
       {
-        "name": "Conditional Policy [Tech preview]",
+        "name": "Conditional Policy",
         "$schema": "http://apicast.io/policy-v1.1/schema#manifest#",
         "configuration": {
           "required": [
@@ -2734,11 +2734,11 @@
           ],
           "properties": {
             "policy_chain": {
-              "items": {
-                "type": "object"
-              },
-              "type": "array",
-              "description": "The policy chain to execute when the condition is true"
+              "type": "object",
+              "description": [
+                "The policy chain to execute when the condition is true. ",
+                "This field is managed by the operator and can't be edited."
+              ]
             },
             "condition": {
               "$ref": "#/definitions/condition"
