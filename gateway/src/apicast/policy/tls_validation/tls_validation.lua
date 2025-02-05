@@ -71,6 +71,9 @@ function _M.new(config)
   self.revocation_type = config and config.revocation_check_type or "none"
   if self.revocation_type == "crl" then
     init_crl_list(store, config and config.revoke_list or {})
+  elseif self.revocation_type == "ocsp" then
+    -- TODO: should we set empty string as default value?
+    self.ocsp_responder_url = config.ocsp_responder_url
   end
 
   return self
@@ -119,16 +122,16 @@ function _M:access()
 
   if not chain then
     ngx.status = self.error_status
-    ngx.log(ngx.WARN, "TLS certificate validation failed, err: ", err)
+    ngx.log(ngx.WARN, "client TLS certificate validation failed, err: ", err)
     ngx.say("TLS certificate validation failed")
     return ngx.exit(ngx.status)
   end
 
   if self.revocation_type == "ocsp" then
-    ok, err = ocsp:check_for_revocation_status()
+    ok, err = ocsp.check_revocation_status(self.ocsp_responder_url)
     if not ok then
       ngx.status = self.error_status
-      ngx.log(ngx.WARN, "TLS certificate validation failed, err: ", err)
+      ngx.log(ngx.WARN, "client TLS certificate validation failed, err: ", err)
       ngx.say("TLS certificate validation failed")
       return ngx.exit(ngx.status)
     end

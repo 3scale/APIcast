@@ -23,6 +23,7 @@ local function do_ocsp_request(ocsp_url, ocsp_request)
     headers= {
       ["Content-Type"] = "application/ocsp-request"
   }}
+
   if err then
     return nil, err
   end
@@ -38,7 +39,7 @@ local function do_ocsp_request(ocsp_url, ocsp_request)
   return res.body
 end
 
-function _M:check_revocation_status()
+function _M.check_revocation_status(ocsp_responder_url)
   local cert_chain, err = tls.get_full_client_certificate_chain()
   if not cert_chain then
     return nil, err or "no client certificate"
@@ -52,10 +53,14 @@ function _M:check_revocation_status()
 
   -- TODO: check response cache
   local ocsp_url
-  ocsp_url, err = ocsp.get_ocsp_responder_from_der_chain(der_cert)
-  if not ocsp_url then
-    return nil, error or ("could not extract OCSP responder URL, the client " ..
-                          "certificate may be missing the required extensions")
+  if ocsp_responder_url then
+    ocsp_url = ocsp_responder_url
+  else
+    ocsp_url, err = ocsp.get_ocsp_responder_from_der_chain(der_cert)
+    if not ocsp_url then
+      return nil, err or ("could not extract OCSP responder URL, the client " ..
+                            "certificate may be missing the required extensions")
+    end
   end
 
   local ocsp_req
