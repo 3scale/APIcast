@@ -1,0 +1,16 @@
+{
+  "CN": "APIcast Root CA",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "CA",
+      "L": "Ottawa",
+      "O": "Lua Nginx",
+      "OU": "APIcast Root CA",
+      "ST": "Ontario"
+    }
+  ]
+}
