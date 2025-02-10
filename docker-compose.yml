@@ -45,34 +45,12 @@ services:
     dns_search:
       - example.com
   redis:
-    image: redis
+    image: mirror.gcr.io/library/redis
   keycloak:
-    image: jboss/keycloak:3.1.0.Final
+    image: quay.io/keycloak/keycloak:23.0.4
     environment:
-      KEYCLOAK_USER: keycloak
-      KEYCLOAK_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: keycloak
+      KEYCLOAK_ADMIN_PASSWORD: keycloak
       KEYCLOAK_LOGLEVEL: INFO
     ports:
       - "8080"
-  opentracing-instrumented-gateway:
-    image: ${IMAGE_NAME:-apicast-test}
-    depends_on:
-    - jaeger
-    environment:
-      THREESCALE_CONFIG_FILE: /tmp/config.json
-      THREESCALE_DEPLOYMENT_ENV: staging
-      APICAST_CONFIGURATION_LOADER: lazy
-      APICAST_LOG_LEVEL: debug
-      APICAST_CONFIGURATION_CACHE: "0"
-      OPENTRACING_TRACER: jaeger
-      OPENTRACING_CONFIG: /opt/app-root/src/tracing-configs/tracing-config-jaeger-jaeger-config.json
-    volumes:
-      - ./examples/opentracing/apicast-config.json:/tmp/config.json
-      - ./examples/opentracing/jaeger-config.json:/opt/app-root/src/tracing-configs/tracing-config-jaeger-jaeger-config.json
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    environment:
-      JAEGER_DISABLED: "false"
-      COLLECTOR_OTLP_ENABLED: "true"
-    ports:
-      - 16686:16686

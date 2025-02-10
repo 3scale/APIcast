@@ -10,7 +10,7 @@ services:
     cpuset: "0"
     cpu_count: 1
   wrk:
-    image: skandyla/wrk
+    image: quay.io/skupper/wrk
     environment:
       - WRK_REPORT=/tmp/wrk/${WRK_REPORT:-report.csv}
     depends_on:
@@ -23,7 +23,7 @@ services:
     command: "--script /tmp/wrk/report.lua --threads ${THREADS:-10} --connections ${CONNECTIONS:-100} --duration ${DURATION:-60} -H 'Host: localhost' http://apicast:8080/echo?user_key=foo"
 
   curl:
-    image: byrnedo/alpine-curl
+    image: quay.io/curl/curl
     links:
       - apicast
     depends_on:

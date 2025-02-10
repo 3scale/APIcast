@@ -51,7 +51,8 @@ The policy enables caching of the tokens to avoid calling the Token Introspectio
     "client_id": "myclient",
     "client_secret": "mysecret",
     "introspection_url": "http://red_hat_single_sign-on/token/introspection",
-    "client_jwt_assertion_audience": "http://red_hat_single_sign-on/auth/realms/basic"
+    "client_jwt_assertion_audience": "http://red_hat_single_sign-on/auth/realms/basic",
+    "client_jwt_assertion_expires_in": 60
   }
 }
 ```
@@ -64,10 +65,11 @@ The policy enables caching of the tokens to avoid calling the Token Introspectio
   "configuration": {
     "auth_type": "private_key_jwt",
     "client_id": "myclient",
-    "client_secret": "mysecret",
-    "introspection_url": "http://red_hat_single_sign-on/token/introspection"
+    "introspection_url": "http://red_hat_single_sign-on/token/introspection",
+    "client_jwt_assertion_audience": "http://red_hat_single_sign-on/auth/realms/basic",
+    "client_jwt_assertion_expires_in": 60,
     "certificate_type": "embedded",
-    "certificate": "data:application/x-x509-ca-cert;name=rsa.pem;base64,XXXXXXXXXxx",
+    "certificate": "data:application/x-x509-ca-cert;name=rsa.pem;base64,XXXXXXXXX"
   }
 }
 ```

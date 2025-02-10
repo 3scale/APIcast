@@ -28,7 +28,7 @@ services:
       - ./apicast-config.json:/tmp/config.json
       - ./gateway-cert:/var/run/secrets/apicast
   one.upstream:
-    image: alpine/socat:1.7.4.4
+    image: quay.io/openshift-logging/alpine-socat:1.8.0.0
     container_name: one.upstream
     command: "-v openssl-listen:443,reuseaddr,fork,cert=/etc/pki/upstream.example.com.pem,verify=0,openssl-max-proto-version=TLS1.3 ssl:two.upstream:8005,verify=0"
     expose:
@@ -37,6 +37,8 @@ services:
     volumes:
       - ./upstream-cert/upstream.example.com.pem:/etc/pki/upstream.example.com.pem
   two.upstream:
-    image: kalmhq/echoserver
+    container_name: two.upstream
+    build:
+      dockerfile: ./echoserver.Dockerfile
     expose:
       - "8005"

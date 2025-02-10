@@ -28,11 +28,6 @@ server {
   listen {{ port.management | default: 8090 }};
   server_name {{ server_name.management | default: 'management _' }};
 
-  {% if opentracing_tracer != empty %}
-  opentracing_operation_name "apicast_management";
-  opentracing_trace_locations off;
-  {% endif %}
-
   {% if opentelemetry != empty %}
   opentelemetry_operation_name apicast_management;
   {% endif %}
@@ -43,11 +38,6 @@ server {
 server {
   listen {{ port.backend | default: 8081 }};
   server_name backend;
-
-  {% if opentracing_tracer != empty %}
-  opentracing_operation_name "apicast_mockbackend";
-  opentracing_trace_locations off;
-  {% endif %}
 
   {% if opentelemetry != empty %}
   opentelemetry_operation_name apicast_mockbackend;
@@ -64,11 +54,6 @@ upstream echo {
 server {
   listen {{ port.echo | default: 8081 }} default_server;
   server_name echo _;
-
-  {% if opentracing_tracer != empty %}
-  opentracing_operation_name "apicast_echo";
-  opentracing_trace_locations off;
-  {% endif %}
 
   {% if opentelemetry != empty %}
   opentelemetry_operation_name apicast_echo;
@@ -119,12 +104,6 @@ server {
 
   {% if http_keepalive_timeout != empty %}
       keepalive_timeout {{ http_keepalive_timeout}};
-  {% endif %}
-
-  {% if opentracing_tracer != empty %}
-  opentracing_operation_name "apicast";
-  opentracing_trace_locations on;
-  opentracing_tag original_request_uri $original_request_uri;
   {% endif %}
 
   {% if opentelemetry != empty %}

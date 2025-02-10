@@ -1,8 +1,9 @@
 FROM registry.access.redhat.com/ubi8:8.5
 
 ARG OPENRESTY_RPM_VERSION="1.21.4-1.el8"
-ARG LUAROCKS_VERSION="2.3.0"
+ARG LUAROCKS_VERSION="3.11.1"
 ARG JAEGERTRACING_CPP_CLIENT_RPM_VERSION="0.3.1-13.el8"
+ARG LUAROVER_VERSION="0.2.1"
 
 WORKDIR /tmp
 
@@ -19,22 +20,19 @@ RUN dnf install -y 'dnf-command(config-manager)'
 
 RUN yum install -y \
         gcc make git which curl iputils bind-utils expat-devel kernel-headers openssl-devel m4 \
-        libyaml libyaml-devel perl-local-lib perl-App-cpanminus
+        libyaml libyaml-devel perl-local-lib perl-App-cpanminus perl-LWP-Protocol-https
 
 # perl-Test-Nginx
 RUN cpanm --notest IPC::Run && \
-    cpanm https://cpan.metacpan.org/authors/id/A/AG/AGENT/Test-Nginx-0.29.tar.gz
+    cpanm https://cpan.metacpan.org/authors/id/A/AG/AGENT/Test-Nginx-0.29.tar.gz && \
+    cpanm https://cpan.metacpan.org/authors/id/O/OA/OALDERS/LWP-Protocol-https-6.14.tar.gz
 
 RUN yum config-manager --add-repo http://packages.dev.3sca.net/dev_packages_3sca_net.repo
 
 RUN yum install -y \
         openresty-${OPENRESTY_RPM_VERSION} \
         openresty-resty-${OPENRESTY_RPM_VERSION} \
-        openresty-opentelemetry-${OPENRESTY_RPM_VERSION} \
-        openresty-opentracing-${OPENRESTY_RPM_VERSION} \
-        opentracing-cpp-devel-1.3.0 \
-        libopentracing-cpp1-1.3.0 \
-        jaegertracing-cpp-client-${JAEGERTRACING_CPP_CLIENT_RPM_VERSION}
+        openresty-opentelemetry-${OPENRESTY_RPM_VERSION}
 
 RUN ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
@@ -49,16 +47,24 @@ ENV PATH="./lua_modules/bin:/usr/local/openresty/luajit/bin/:${PATH}" \
     LUA_CPATH="./lua_modules/lib/lua/5.1/?.so;/opt/app-root/lua_modules/lib64/lua/5.1/?.so;/opt/app-root/lua_modules/lib64/lua/5.1/?/?.so;;" \
     LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/app-root/lib"
 
-RUN yum install -y luarocks-${LUAROCKS_VERSION} && \
-    luarocks install luaossl 20200709 --tree ${APP_ROOT}/lua_modules CFLAGS="-O2 -fPIC -DHAVE_EVP_KDF_CTX=1" && \
-    luarocks install http --tree ${APP_ROOT}/lua_modules && \
-    luarocks install --server=http://luarocks.org/dev lua-rover && \
-    rover -v && \
-    yum -y remove luarocks && \
-    ln -s /usr/bin/rover /usr/local/openresty/luajit/bin/ && \
-    chmod g+w "${HOME}/.cache" && \
-    rm -rf /var/cache/yum && yum clean all -y && \
-    rm -rf "${HOME}/.cache/luarocks" ./*
+RUN cd /tmp \
+    && curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${LUAROCKS_VERSION}.tar.gz -o luarocks-${LUAROCKS_VERSION}.tar.gz \
+    && tar xzf luarocks-${LUAROCKS_VERSION}.tar.gz \
+    && cd luarocks-${LUAROCKS_VERSION} \
+    && ./configure \
+        --prefix=/usr/local/openresty/luajit \
+        --with-lua=/usr/local/openresty/luajit \
+        --with-lua-include=/usr/local/openresty/luajit/include/luajit-2.1 \
+    && make build \
+    && make install \
+    && cd /tmp \
+    && rm -rf luarocks-${LUAROCKS_VERSION} luarocks-${LUAROCKS_VERSION}.tar.gz \
+    && curl -fSL https://github.com/3scale/lua-rover/archive/refs/tags/v${LUAROVER_VERSION}.tar.gz -o lua-rover-v${LUAROVER_VERSION}.tar.gz \
+    && tar xzf lua-rover-v${LUAROVER_VERSION}.tar.gz \
+    && cd lua-rover-${LUAROVER_VERSION} \
+    && luarocks make \
+    && yum -y remove luarocks \
+    && rm -rf /var/cache/yum && yum clean all -y 
 
 # Directory with the sources is set as the working directory so all STI scripts
 # can execute relative to this path.

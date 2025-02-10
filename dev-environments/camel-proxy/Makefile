@@ -24,12 +24,12 @@ $(WORKDIR)/cert/keystore.jks: ## use same JVM version as camel-netty-proxy, curr
 	$(DOCKER) run -t --rm \
 		-v $(WORKDIR)/cert:/tmp/cert \
 		--user $(USER):$(GROUP) \
-		openjdk:11.0.9 \
+		registry.access.redhat.com/ubi8/openjdk-11:1.21-1.1733300800 \
 		keytool -genkeypair -keystore /tmp/cert/keystore.jks -dname "CN=tls.camel.proxy" -keypass changeit -storepass changeit -alias camel -keyalg RSA -ext SAN=dns:tls.camel.proxy
 	$(DOCKER) run -t --rm \
 		-v $(WORKDIR)/cert:/tmp/cert \
 		--user $(USER):$(GROUP) \
-		openjdk:11.0.9 \
+		registry.access.redhat.com/ubi8/openjdk-11:1.21-1.1733300800 \
 		keytool -list -v -keystore /tmp/cert/keystore.jks -storepass changeit
 
 .PHONY: certs

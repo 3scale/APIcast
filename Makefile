@@ -70,7 +70,7 @@ export COMPOSE_PROJECT_NAME
 # * update .circleci/config.yaml openresty executor with the image URL
 .PHONY: dev-build
 dev-build: export OPENRESTY_RPM_VERSION?=1.21.4
-dev-build: export LUAROCKS_VERSION?=2.3.0
+dev-build: export LUAROCKS_VERSION?=3.11.1
 dev-build: IMAGE_NAME ?= apicast-development:latest
 dev-build: ## Build development image
 	$(DOCKER) build --platform linux/amd64 -t $(IMAGE_NAME) \
@@ -164,9 +164,6 @@ bash: ## Run bash inside the runtime image
 gateway-logs: export IMAGE_NAME = does-not-matter
 gateway-logs:
 	$(DOCKER) compose logs gateway
-
-opentracing-gateway: ## run gateway instrumented with opentracing
-	$(DOCKER) compose run opentracing-instrumented-gateway
 
 test-runtime-image: export IMAGE_NAME ?= $(RUNTIME_IMAGE)
 test-runtime-image: clean-containers ## Smoke test the runtime image. Pass any docker image in IMAGE_NAME parameter.

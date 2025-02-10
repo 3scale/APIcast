@@ -22,4 +22,4 @@ services:
       GIT_COMMITTER_NAME: ${GIT_COMMITTER_NAME:-${USER}}
       GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL:-""}
   redis:
-    image: redis
+    image: mirror.gcr.io/library/redis
