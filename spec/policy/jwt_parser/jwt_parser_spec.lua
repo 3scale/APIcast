@@ -1,4 +1,4 @@
-local _M = require('apicast.policy.oidc_authentication')
+local _M = require('apicast.policy.jwt_parser')
 local JWT = require('resty.jwt')
 local certs = require('fixtures.certs')
 local OIDC = require('apicast.oauth.oidc')
@@ -14,7 +14,7 @@ local access_token = setmetatable({
   },
 }, { __tostring = function(jwt) return JWT:sign(certs.rsa_private_key, jwt) end })
 
-describe('oidc_authentication policy', function()
+describe('jwt_parser policy', function()
   describe('.new', function()
     it('works without configuration', function()
       assert(_M.new())
@@ -111,9 +111,40 @@ describe('oidc_authentication policy', function()
       assert.is_table(context.jwt)
       assert.contains({reason = 'invalid jwt string', valid = false }, context.jwt)
     end)
+
+    it('ignore when authenticate mode is oidc', function()
+      local policy = _M.new()
+      local context = {
+        service = {
+          authentication_method = "oidc"
+        }
+      }
+
+      ngx.var.http_authorization = 'Bearer ' .. tostring(access_token)
+
+      policy:rewrite(context)
+
+      assert.falsy(context.jwt)
+    end)
+
+    it('ignore when backend_version is oauth', function()
+      local policy = _M.new()
+      local context = {
+        service = {
+          backend_version = "oauth"
+        }
+      }
+
+      ngx.var.http_authorization = 'Bearer ' .. 'invalid token value'
+
+      policy:rewrite(context)
+
+      assert.falsy(context.jwt)
+    end)
   end)
 
   describe(':access', function()
+
 
     it('works without config', function()
       _M.new():access({})
@@ -123,7 +154,38 @@ describe('oidc_authentication policy', function()
       _M.new({}):access({})
     end)
 
+    it('ignore when authenticate mode is oidc', function()
+      spy.on(ngx, 'exit')
+      local policy = _M.new()
+      local context = {
+        service = {
+          authentication_method = "oidc"
+        }
+      }
+
+      policy:access(context)
+      assert.spy(ngx.exit).was_not_called()
+    end)
+
+    it('ignore when backend_version is oauth', function()
+      spy.on(ngx, 'exit')
+      local policy = _M.new()
+      local context = {
+        service = {
+          backend_version = "oauth"
+        }
+      }
+
+      policy:access(context)
+      assert.spy(ngx.exit).was_not_called()
+    end)
+
     context('when OIDC is required', function ()
+      local function assert_authentication_failed()
+        assert.same(ngx.status, 403)
+        assert.stub(ngx.say).was.called_with("auth failed")
+        assert.stub(ngx.exit).was.called_with(403)
+      end
 
       local policy
       before_each(function()
@@ -134,10 +196,16 @@ describe('oidc_authentication policy', function()
         spy.on(ngx, 'exit')
 
         ngx.header = { }
-        policy:access({})
+        policy:access({
+          service = {
+            auth_failed_status = 403,
+            error_auth_failed = "auth failed"
+          }
+        })
 
-        assert.spy(ngx.exit).was_called_with(ngx.HTTP_UNAUTHORIZED)
         assert.same('Bearer', ngx.header.www_authenticate)
+        assert.same(ngx.status, 403)
+        assert.stub(ngx.exit).was.called_with(403)
       end)
 
       it('returns forbidden on invalid token', function()
