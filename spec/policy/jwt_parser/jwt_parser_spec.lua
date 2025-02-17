@@ -97,30 +97,75 @@ describe('jwt_parser policy', function()
       policy:rewrite(context)
 
       assert.is_table(context.jwt)
-      assert.same(access_token.payload, context.jwt.payload)
+      assert.same(access_token.payload, context.jwt)
     end)
 
     it('handles invalid token', function()
+      spy.on(ngx, 'exit')
       local policy = _M.new()
-      local context = { }
+      local context = {
+          service = {
+            auth_failed_status = 403,
+            error_auth_failed = "auth failed"
+          }
+      }
 
       ngx.var.http_authorization = 'Bearer ' .. 'invalid token value'
 
       policy:rewrite(context)
 
-      assert.is_table(context.jwt)
-      assert.contains({reason = 'invalid jwt string', valid = false }, context.jwt)
-    end)
-  end)
-
-  describe(':access', function()
-
-    it('works without config', function()
-      _M.new():access({})
+      assert.spy(ngx.exit).was_not_called()
     end)
 
-    it('works with empty config', function()
-      _M.new({}):access({})
+    it('handles invalid token with required set to true', function()
+      spy.on(ngx, 'exit')
+      local policy = _M.new{required = true}
+      local context = {
+          service = {
+            auth_failed_status = 403,
+            error_auth_failed = "auth failed"
+          }
+      }
+
+      ngx.var.http_authorization = 'Bearer ' .. 'invalid token value'
+
+      policy:rewrite(context)
+
+      assert.spy(ngx.exit).was_called_with(403)
+    end)
+
+    it('ignore when authenticate mode is oidc', function()
+      spy.on(ngx, 'exit')
+      local policy = _M.new()
+      local context = {
+        service = {
+          authentication_method = "oidc"
+        }
+      }
+
+      ngx.var.http_authorization = 'Bearer ' .. tostring(access_token)
+
+      policy:rewrite(context)
+
+      assert.falsy(context.jwt)
+      assert.spy(ngx.exit).was_not_called()
+    end)
+
+    it('ignore when backend_version is oauth', function()
+      spy.on(ngx, 'exit')
+      local policy = _M.new()
+      local context = {
+        service = {
+          backend_version = "oauth"
+        }
+      }
+
+      ngx.var.http_authorization = 'Bearer ' .. 'invalid token value'
+
+      policy:rewrite(context)
+
+      assert.falsy(context.jwt)
+      assert.spy(ngx.exit).was_not_called()
     end)
 
     context('when OIDC is required', function ()
@@ -134,19 +179,38 @@ describe('jwt_parser policy', function()
         spy.on(ngx, 'exit')
 
         ngx.header = { }
-        policy:access({})
+        policy:rewrite({
+          service = {
+            auth_failed_status = 403,
+            error_auth_failed = "auth failed"
+          }
+        })
 
-        assert.spy(ngx.exit).was_called_with(ngx.HTTP_UNAUTHORIZED)
         assert.same('Bearer', ngx.header.www_authenticate)
+        assert.same(ngx.status, 403)
+        assert.stub(ngx.exit).was.called_with(403)
       end)
 
       it('returns forbidden on invalid token', function()
         spy.on(ngx, 'exit')
-        local jwt = { token = 'invalid' }
-        local context = { [policy] = jwt }
+        ngx.var.http_authorization = 'Bearer ' .. tostring(access_token)
+
+        local oidc = OIDC.new{
+          issuer = access_token.payload.iss,
+          config = { id_token_signing_alg_values_supported = { access_token.header.alg } },
+          keys = { [access_token.header.kid] = { pem = certs.rsa_public_key, alg = "ES256" }  },
+        }
+
+        policy.oidc = oidc
+        local context = {
+          service = {
+            auth_failed_status = 403,
+            error_auth_failed = "auth failed"
+          }
+        }
 
         ngx.header = { }
-        policy:access(context)
+        policy:rewrite(context)
 
         assert.spy(ngx.exit).was_called_with(ngx.HTTP_FORBIDDEN)
       end)
@@ -162,25 +226,40 @@ describe('jwt_parser policy', function()
       it('does nothing when token is not sent', function()
         spy.on(ngx, 'exit')
 
-        policy:access({})
+        policy:rewrite({})
 
         assert.spy(ngx.exit).was_not_called()
       end)
 
-      it('returns forbidden on invalid token', function()
+      it('returns forbidden on invalid token, jwk.alg does not match jwt.header.alg', function()
         spy.on(ngx, 'exit')
-        local jwt = { token = 'invalid' }
-        local context = { [policy] = jwt }
 
-        ngx.header = { }
-        policy:access(context)
+        ngx.var.http_authorization = 'Bearer ' .. tostring(access_token)
+        local oidc = OIDC.new{
+          issuer = access_token.payload.iss,
+          config = { id_token_signing_alg_values_supported = { access_token.header.alg } },
+          keys = { [access_token.header.kid] = { pem = certs.rsa_public_key, alg = "ES256" }  },
+        }
 
-        assert.spy(ngx.exit).was_called_with(ngx.HTTP_FORBIDDEN)
+        local policy = _M.new{ oidc = oidc }
+
+        local context = {
+          service = {
+            auth_failed_status = 403,
+            error_auth_failed = "auth failed"
+          }
+        }
+
+        policy:rewrite(context)
+
+        assert.falsy(context.jwt)
       end)
     end)
 
     it('continues on valid token', function()
       spy.on(ngx, 'exit')
+
+      ngx.var.http_authorization = 'Bearer ' .. tostring(access_token)
 
       local oidc = OIDC.new{
         issuer = access_token.payload.iss,
@@ -188,11 +267,11 @@ describe('jwt_parser policy', function()
         keys = { [access_token.header.kid] = { pem = certs.rsa_public_key, alg = access_token.header.alg }  },
       }
       local policy = _M.new{ oidc = oidc }
-      local jwt = oidc:parse(access_token)
-      local context = { [policy] = jwt }
+      local context = {}
 
-      assert.is_true(policy:access(context))
+      policy:rewrite(context)
 
+      assert.is_table(context.jwt)
       assert.spy(ngx.exit).was_not_called()
     end)
   end)

@@ -41,7 +41,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `APICAST_LUA_SOCKET_KEEPALIVE_REQUESTS` to limit the number of requests a single keepalive socket can handle [PR #1496](https://github.com/3scale/APIcast/pull/1496) [THREESCALE-11321](https://issues.redhat.com/browse/THREESCALE-11321)
 - Replace internal OPENSSL module with lua-resty-openssl [PR #1502](https://github.com/3scale/APIcast/pull/1502) [THREESCALE-11412](https://issues.redhat.com/browse/THREESCALE-11412)
 - Remove opentracing support [PR #1520](https://github.com/3scale/APIcast/pull/1520) [THREESCALE-11603](https://issues.redhat.com/browse/THREESCALE-11603)
-- JWT signature verification, support for ES256/ES512 #1533 [PR #1533](https://github.com/3scale/APIcast/pull/1533) [THREESCALE-11474](https://issues.redhat.com/browse/THREESCALE-11474)
+- JWT signature verification, support for ES256/ES512 [PR #1533](https://github.com/3scale/APIcast/pull/1533) [THREESCALE-11474](https://issues.redhat.com/browse/THREESCALE-11474)
+- JWT Parser policy [PR #1536](https://github.com/3scale/APIcast/pull/1536) [THREESCALE-10708](https://issues.redhat.com/browse/THREESCALE-10708)
 
 ## [3.15.0] 2024-04-04
 
