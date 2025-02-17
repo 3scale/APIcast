@@ -1,0 +1,20 @@
+{
+  "$schema": "http://apicast.io/policy-v1/schema#manifest#",
+  "name": "JWT Parser",
+  "summary": "Parse JWT",
+  "description": ["This policy parse JWT token from Authorization header"],
+  "version": "builtin",
+  "configuration": {
+    "type": "object",
+    "properties": {
+      "issuer_endpoint": {
+        "description": "URL of OpenID Provider. The format of this endpoint is determined on your OpenID Provider setup.",
+        "type": "string"
+      },
+      "required": {
+        "description": "when enabled, rejected request if no JWT token present in Authorization header",
+        "type": "boolean"
+      }
+    }
+  }
+}
