@@ -4,18 +4,28 @@ local type = type
 local tostring = tostring
 
 local get_request = base.get_request
+local get_size_ptr = base.get_size_ptr
 local ffi = require "ffi"
+local ffi_new = ffi.new
+local ffi_str = ffi.string
 local C = ffi.C
 
 local _M = {}
 
 local NGX_OK = ngx.OK
+local NGX_ERROR = ngx.ERROR
+local NGX_DECLINED = ngx.DECLINED
 
+local ngx_http_apicast_ffi_get_full_client_certificate_chain;
 local ngx_http_apicast_ffi_set_proxy_cert_key;
 local ngx_http_apicast_ffi_set_proxy_ca_cert;
 local ngx_http_apicast_ffi_set_ssl_verify
 
+local value_ptr = ffi_new("unsigned char *[1]")
+
 ffi.cdef([[
+  int ngx_http_apicast_ffi_get_full_client_certificate_chain(
+    ngx_http_request_t *r, char **value, size_t *value_len);
   int ngx_http_apicast_ffi_set_proxy_cert_key(
     ngx_http_request_t *r, void *cdata_chain, void *cdata_key);
   int ngx_http_apicast_ffi_set_proxy_ca_cert(
@@ -24,6 +34,7 @@ ffi.cdef([[
     ngx_http_request_t *r, int verify, int verify_deph);
 ]])
 
+ngx_http_apicast_ffi_get_full_client_certificate_chain = C.ngx_http_apicast_ffi_get_full_client_certificate_chain
 ngx_http_apicast_ffi_set_proxy_cert_key = C.ngx_http_apicast_ffi_set_proxy_cert_key
 ngx_http_apicast_ffi_set_proxy_ca_cert = C.ngx_http_apicast_ffi_set_proxy_ca_cert
 ngx_http_apicast_ffi_set_ssl_verify = C.ngx_http_apicast_ffi_set_ssl_verify
@@ -85,6 +96,31 @@ function _M.set_upstream_ssl_verify(verify, verify_deph)
   local val = ngx_http_apicast_ffi_set_ssl_verify(r, verify, verify_deph)
   if val ~= NGX_OK then
     return nil, "error while setting upstream verify"
+  end
+end
+
+-- Retrieve the full client certificate chain
+function _M.get_full_client_certificate_chain()
+  local r = get_request()
+  if not r then
+      error("no request found")
+  end
+
+  local size_ptr = get_size_ptr()
+
+  local rc = ngx_http_apicast_ffi_get_full_client_certificate_chain(r, value_ptr, size_ptr)
+
+  if rc == NGX_OK then
+      return ffi_str(value_ptr[0], size_ptr[0])
+  end
+
+  if rc == NGX_ERROR then
+      return nil, "error while obtaining client certificate chain"
+  end
+
+
+  if rc == NGX_DECLINED then
+      return nil
   end
 end
 

@@ -37,10 +37,8 @@ describe('resty backend', function()
       local req = { method = method, url = 'http://0.0.0.0:0/' }
       local response, err = backend:send(req)
 
-      assert.falsy(err)
-      assert.truthy(response.error)
-      assert.falsy(response.ok)
-      assert.same(req, response.request)
+      assert.falsy(response)
+      assert.equal("connection refused", err)
     end)
 
     context('http proxy is set', function()

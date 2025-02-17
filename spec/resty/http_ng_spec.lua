@@ -224,18 +224,18 @@ describe('http_ng', function()
   end)
 
   describe('when there is error #network', function()
-    local response
+    local response, err
     before_each(function()
       http = http_ng.new{ backend = resty_backend }
-      response = http.get('http://127.0.0.1:1')
+      response, err = http.get('http://127.0.0.1:1')
     end)
 
     it('is not ok', function()
-      assert.equal(false, response.ok)
+      assert.falsy(response)
     end)
 
     it('has error', function()
-      assert.equal('string', type(response.error)) -- depending on the openresty version it can be "timeout" or "connection refused"
+      assert.equal("connection refused", err)
     end)
   end)
 

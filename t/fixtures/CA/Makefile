@@ -1,4 +1,4 @@
-all: client.key client.crt server.key server.crt ca-bundle.crt:
+all: client.key client.crt server.key server.crt ca-bundle.crt crl.pem
 
 EXPIRATION := 87600h # 10 years 
 
@@ -27,3 +27,12 @@ client.crt client.key: intermediate-ca.crt intermediate-ca.key
 	step certificate create client client.crt client.key --profile leaf \
 		--ca ./intermediate-ca.crt --ca-key ./intermediate-ca.key \
 		--no-password --insecure --not-after=${EXPIRATION}
+
+revoke_client.crt revoke_client.key:
+	step certificate create client revoked_client.crt revoked_client.key --profile leaf \
+		--ca ./intermediate-ca.crt --ca-key ./intermediate-ca.key \
+		--no-password --insecure --not-after=${EXPIRATION}
+
+crl.pem: revoke_client.crt revoke_client.key
+	openssl ca --revoke revoked_client.crt -config ./crl_openssl.conf
+	openssl ca -config crl_openssl.conf -gencrl -out crl.pem -crldays 3650

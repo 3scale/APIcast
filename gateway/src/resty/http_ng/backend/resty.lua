@@ -12,6 +12,7 @@ local function send(httpc, params)
 
   local res, err = httpc:request(params)
   if not res then return nil, err end
+  ngx.log(ngx.INFO, "\n---\n i'm here 10", err, "\n---\n")
 
   res.body, err = res:read_body()
 
@@ -35,6 +36,10 @@ end
 backend.send = function(_, request)
   local res
   local httpc, err = http_proxy.new(request)
+
+  if err then
+    return nil, err
+  end
 
   if httpc then
     res, err = send(httpc, request)

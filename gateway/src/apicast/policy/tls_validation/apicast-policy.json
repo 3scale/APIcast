@@ -24,6 +24,13 @@
         "items": {
           "$ref": "#/definitions/certificate"
         }
+      },
+      "revoke": {
+        "$id": "#/definitions/revoke",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/certificate"
+        }
       }
     },
     "properties": {
@@ -31,6 +38,104 @@
         "$ref": "#/definitions/store",
         "title": "Certificate Whitelist",
         "description": "Individual certificates and CA certificates to be whitelisted."
+      },
+      "allow_partial_chain": {
+        "description": "Allow certificate verification with only an intermediate certificate",
+        "type": "boolean",
+        "default": true
+      },
+      "revocation_check_type": {
+        "title": "Certificate Revocation Check type",
+        "type": "string",
+        "oneOf": [
+          {
+            "enum": [
+              "ocsp"
+            ],
+            "title": "Enables OCSP validation of the client certificate."
+          },
+          {
+            "enum": [
+              "crl"
+            ],
+            "title": "Use certificates revocation list (CRL) in the PEM format to verify client certificates."
+          },
+          {
+            "enum": [
+              "none"
+            ],
+            "title": "Do not check for certificate recovation status"
+          }
+        ],
+        "default": "none"
+      }
+    },
+    "dependencies": {
+      "revocation_check_type": {
+        "oneOf": [
+          {
+            "properties": {
+              "revocation_check_type": {
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "revocation_check_type": {
+                "enum": [
+                  "crl"
+                ]
+              },
+              "revoke_list": {
+                "title": "Certificate RevokeList",
+                "description": "Individual certificates and CA certificates to be revoked.",
+                "$ref": "#/definitions/store"
+              }
+            }
+          },
+          {
+            "properties": {
+              "revocation_check_type": {
+                "enum": [
+                  "ocsp"
+                ]
+              },
+              "revocation_check_mode": {
+                "title": "Certificate Mode",
+                "description": "Certificate revocation check mode",
+                "type": "string",
+                "oneOf": [
+                  {
+                    "enum": [
+                      "ignore_error"
+                    ],
+                    "title": "Ignore Network Error: respects the revocation status when either OCSP or CRL URL is set, and doesn’t fail on network issues"
+                  },
+                  {
+                    "enum": [
+                      "strict"
+                    ],
+                    "title": "Strict: The certificate is valid only when it’s able to verify the revocation status."
+                  }
+                ],
+                "default": "strict"
+              },
+              "ocsp_responder_url": {
+                "title": "OCSP Responder URL ",
+                "description": "Overrides the URL of the OCSP responder specified in the “Authority Information Access” certificate extension for validation of client certificates. ",
+                "type": "string"
+              },
+              "cache_timeout": {
+                "title": " Cache timeout",
+                "description": "The length of time in milliseconds between refreshes of the revocation check status cache.",
+                "type": "integer"
+              }
+            }
+          }
+        ]
       }
     }
   }
