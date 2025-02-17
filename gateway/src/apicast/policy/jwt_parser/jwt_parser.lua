@@ -1,4 +1,4 @@
--- OpenID Connect Authentication policy
+-- JWT Parser policy
 -- It will verify JWT signature against a list of public keys
 -- discovered through OIDC Discovery from the IDP.
 
@@ -8,7 +8,7 @@ local oidc_discovery = require('resty.oidc.discovery')
 local http_authorization = require('resty.http_authorization')
 local resty_url = require('resty.url')
 local policy = require('apicast.policy')
-local _M = policy.new('oidc_authentication', 'builtin')
+local _M = policy.new('jwt_parser', 'builtin')
 
 local tostring = tostring
 
@@ -23,7 +23,7 @@ local function valid_issuer_endpoint(endpoint)
 end
 
 local new = _M.new
---- Initialize a oidc_authentication
+--- Initialize jwt_parser policy
 -- @tparam[opt] table config Policy configuration.
 function _M.new(config)
   local self = new(config)

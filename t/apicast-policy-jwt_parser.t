@@ -7,14 +7,14 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: oidc_authentication accepts configuration
+=== TEST 1: jwt_parser accepts configuration
 --- configuration
 {
   "services": [
     {
       "proxy": {
         "policy_chain": [
-          { "name": "apicast.policy.oidc_authentication",
+          { "name": "apicast.policy.jwt_parser",
             "configuration": { } },
           { "name": "apicast.policy.echo" }
         ]
@@ -65,7 +65,7 @@ location = /jwks {
     {
       "proxy": {
         "policy_chain": [
-            { "name": "apicast.policy.oidc_authentication",
+            { "name": "apicast.policy.jwt_parser",
                 "configuration": {
                     "issuer_endpoint": "http://test_backend:$TEST_NGINX_SERVER_PORT/realm" } },
             { "name": "apicast.policy.echo" }

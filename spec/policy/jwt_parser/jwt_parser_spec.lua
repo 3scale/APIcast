@@ -1,4 +1,4 @@
-local _M = require('apicast.policy.oidc_authentication')
+local _M = require('apicast.policy.jwt_parser')
 local JWT = require('resty.jwt')
 local certs = require('fixtures.certs')
 local OIDC = require('apicast.oauth.oidc')
@@ -14,7 +14,7 @@ local access_token = setmetatable({
   },
 }, { __tostring = function(jwt) return JWT:sign(certs.rsa_private_key, jwt) end })
 
-describe('oidc_authentication policy', function()
+describe('jwt_parser policy', function()
   describe('.new', function()
     it('works without configuration', function()
       assert(_M.new())
