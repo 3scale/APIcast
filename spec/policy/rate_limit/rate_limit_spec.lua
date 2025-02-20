@@ -35,6 +35,7 @@ describe('Rate limit policy', function()
     redis:flushdb()
 
     stub(ngx, 'exit')
+    stub(ngx, 'say')
     stub(ngx, 'sleep')
 
     stub(ngx, 'time', function() return 11111 end)
@@ -138,8 +139,9 @@ describe('Rate limit policy', function()
           redis_url = 'redis://invalidhost.domain:'..redis_port..'/1'
         })
 
-        assert.returns_error('failed to connect to redis on invalidhost.domain:6379: invalidhost.domain could not be resolved (3: Host not found)', rate_limit_policy:access(context))
+        rate_limit_policy:access(context)
 
+        assert.spy(ngx.say).was_not_called_with('failed to connect to redis on invalidhost.domain:6379: invalidhost.domain could not be resolved (3: Host not found)')
         assert.spy(ngx.exit).was_called_with(500)
       end)
 
