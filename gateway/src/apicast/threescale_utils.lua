@@ -1,5 +1,6 @@
 local sub = string.sub
 local tonumber = tonumber
+local fmt = string.format
 
 local redis = require 'resty.redis'
 local env = require 'resty.env'
@@ -152,14 +153,14 @@ function _M.connect_redis(options)
 
   local ok, err = red:connect(_M.resolve(host, port))
   if not ok then
-    return nil, _M.error("failed to connect to redis on ", host, ":", port, ": ", err)
+    return nil, fmt("failed to connect to redis on %s:%d, err: %s",host, port, err)
   end
 
   if opts.password then
     ok = red:auth(opts.password)
 
     if not ok then
-      return nil, _M.error("failed to auth on redis ", host, ":", port)
+      return nil, fmt("failed to auth on redis %s:%d", host, port)
     end
   end
 
@@ -167,7 +168,7 @@ function _M.connect_redis(options)
     ok = red:select(opts.db)
 
     if not ok then
-      return nil, _M.error("failed to select db ", opts.db, " on redis ", host, ":", port)
+      return nil, fmt("failed to select db %s on redis %s:%d", opts.db, host, port)
     end
   end
 

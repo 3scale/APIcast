@@ -213,8 +213,6 @@ Return 500 code.
 --- request
 GET /
 --- error_code: 500
---- no_error_log
-[error]
 --- error_log
 query for invalidhost finished with no answers
 
@@ -1565,3 +1563,40 @@ location /transactions/authrep.xml {
 [error]
 --- error_log
 Requests over the limit.
+
+
+
+=== TEST 23: Invalid redis url and configuration_error set to log.
+Return 200 code.
+--- configuration
+{
+  "services" : [
+    {
+      "id" : 42,
+      "proxy" : {
+        "policy_chain" : [
+          {
+            "name" : "apicast.policy.rate_limit",
+            "configuration" : {
+              "connection_limiters" : [
+                {
+                  "key" : {"name" : "test3", "scope" : "global"},
+                  "conn" : 20,
+                  "burst" : 10,
+                  "delay" : 0.5
+                }
+              ],
+              "redis_url" : "redis://invalidhost:$TEST_NGINX_REDIS_PORT/1",
+              "configuration_error": {"error_handling": "log"}
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- request
+GET /
+--- error_code: 200
+--- error_log
+query for invalidhost finished with no answers
