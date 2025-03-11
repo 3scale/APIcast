@@ -1,0 +1,82 @@
+[ ca ]
+default_ca      = CA_default
+
+[ CA_default ]
+dir             = .
+certificate     = $dir/intermediate.cert.pem
+database        = $dir/index.txt
+new_certs_dir   = $dir
+serial          = $dir/serial
+crlnumber       = $dir/crlnumber
+
+private_key     = $dir/intermediate.key.pem
+
+name_opt        = ca_default
+cert_opt        = ca_default
+
+default_days    = 365
+default_crl_days= 30
+default_md      = sha256
+preserve        = no
+policy          = policy_anything
+
+[ policy_match ]
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ policy_anything ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits            = 4096
+default_md              = sha256
+default_keyfile         = privkey.pem
+distinguished_name      = req_distinguished_name
+x509_extensions         = v3_ca
+string_mask             = nombstr
+
+[ req_distinguished_name ]
+countryName                     = Country Name (2 letter code)
+countryName_default             = US
+countryName_min                 = 2
+countryName_max                 = 2
+stateOrProvinceName             = State or Province Name (full name)
+stateOrProvinceName_default     = CA
+localityName                    = Locality Name (eg, city)
+localityName_default            = Testland
+0.organizationName              = Organization Name (eg, company)
+0.organizationName_default      = Testers
+organizationalUnitName          = Organizational Unit Name (eg, section)
+commonName                      = Common Name (eg, your name or your server\'s hostname)
+commonName_max                  = 64
+emailAddress                    = Email Address
+emailAddress_max                = 64
+emailAddress_default            = sec@test.testing
+
+[ v3_ca ]
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+basicConstraints = critical,CA:true
+
+[ v3_intermediate_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true, pathlen:0
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+extendedKeyUsage = OCSPSigning
+
+[ v3_ocsp ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = OCSPSigning
+
+[ v3_leaf ]
+extendedKeyUsage = serverAuth, clientAuth
+authorityInfoAccess = OCSP;URI:http://ocsp:2560

@@ -1,0 +1,93 @@
+{
+  "services": [
+    {
+      "id": "1",
+      "backend_version": "1",
+      "proxy": {
+        "hosts": [
+          "crl.example.com"
+        ],
+        "api_backend": "http://one.upstream/get",
+        "backend": {
+          "endpoint": "http://127.0.0.1:8081",
+          "host": "backend"
+        },
+        "policy_chain": [
+          {
+            "name": "tls_validation",
+            "version": "builtin",
+            "configuration": {
+              "whitelist": [
+                {
+                  "pem_certificate": ""
+                }
+              ],
+              "allow_partial_chain": true,
+              "revocation_check_type": "crl",
+              "revoke_list": [
+                {
+                  "pem_certificate": ""
+                }
+              ]
+            }
+          },
+          {
+            "name": "apicast.policy.apicast"
+          }
+        ],
+        "proxy_rules": [
+          {
+            "http_method": "GET",
+            "pattern": "/",
+            "metric_system_name": "hits",
+            "delta": 1,
+            "parameters": [],
+            "querystring_parameters": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "2",
+      "backend_version": "1",
+      "proxy": {
+        "hosts": [
+          "ocsp.example.com"
+        ],
+        "api_backend": "http://one.upstream/get",
+        "backend": {
+          "endpoint": "http://127.0.0.1:8081",
+          "host": "backend"
+        },
+        "policy_chain": [
+          {
+            "name": "tls_validation",
+            "version": "builtin",
+            "configuration": {
+              "whitelist": [
+                {
+                  "pem_certificate": ""
+                }
+              ],
+              "allow_partial_chain": true,
+              "revocation_check_type": "ocsp"
+            }
+          },
+          {
+            "name": "apicast.policy.apicast"
+          }
+        ],
+        "proxy_rules": [
+          {
+            "http_method": "GET",
+            "pattern": "/",
+            "metric_system_name": "hits",
+            "delta": 1,
+            "parameters": [],
+            "querystring_parameters": {}
+          }
+        ]
+      }
+    }
+  ]
+}
