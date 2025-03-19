@@ -224,18 +224,18 @@ describe('http_ng', function()
   end)
 
   describe('when there is error #network', function()
-    local response, err
+    local response
     before_each(function()
       http = http_ng.new{ backend = resty_backend }
-      response, err = http.get('http://127.0.0.1:1')
+      response = http.get('http://127.0.0.1:1')
     end)
 
     it('is not ok', function()
-      assert.falsy(response)
+      assert.equal(false, response.ok)
     end)
 
     it('has error', function()
-      assert.equal("connection refused", err)
+      assert.equal("connection refused", response.error)
     end)
   end)
 

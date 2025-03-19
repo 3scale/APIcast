@@ -37,7 +37,7 @@ backend.send = function(_, request)
   local httpc, err = http_proxy.new(request)
 
   if err then
-    return nil, err
+    return response.error(request, err)
   end
 
   if httpc then
