@@ -249,12 +249,11 @@ end
 -- @param env gateway environment
 -- @param page page in the paginated list. Defaults to 1 for the API, as the client will not send the page param.
 -- @param per_page number of results per page. Default and max is 500 for the API, as the client will not send the per_page param.
-local function proxy_configs_per_page(http_client, portal_endpoint, host, env, page, per_page)
+local function proxy_configs_per_page(http_client, portal_endpoint, host, page, per_page)
   local args = { host = host, version = "latest", page = page, per_page = per_page }
 
   local query_args = '?'..ngx.encode_args(args)
-  local base_url = proxy_configs_index_endpoint(portal_endpoint, env)
-  local url = base_url..query_args
+  local url = portal_endpoint..query_args
 
   -- http://${THREESCALE_PORTAL_ENDPOINT}/admin/api/account/proxy_configs/<env>.json?host=host&version=latest&page=1&per_page=500
   local res, err = http_client.get(url)
@@ -301,9 +300,10 @@ function _M:index(host)
   local all_results_per_page = false
   local current_page = 1
   local proxy_configs = array()
+  local portal_endpoint = proxy_configs_index_endpoint(self.endpoint, env)
 
   repeat
-    local page_proxy_configs, err = proxy_configs_per_page(http_client, self.endpoint, host, env, current_page, PROXY_CONFIGS_PER_PAGE)
+    local page_proxy_configs, err = proxy_configs_per_page(http_client, portal_endpoint, host, current_page, PROXY_CONFIGS_PER_PAGE)
     if not page_proxy_configs and err then
       return nil, err
     end
@@ -370,8 +370,7 @@ end
 local function services_per_page(http_client, portal_endpoint, page, per_page)
   local encoded_args = ngx.encode_args({page = page, per_page = per_page})
   local query_args = encoded_args ~= '' and '?'..encoded_args
-  local base_url = services_index_endpoint(portal_endpoint)
-  local url = query_args and base_url..query_args or base_url
+  local url = query_args and portal_endpoint..query_args or portal_endpoint
 
   local res, err = http_client.get(url)
 
@@ -431,9 +430,10 @@ function _M:services()
   local all_results_per_page = false
   local current_page = 1
   local services = array()
+  local portal_endpoint = services_index_endpoint(endpoint)
 
   repeat
-    local page_services, err = services_per_page(http_client, endpoint, current_page, SERVICES_PER_PAGE)
+    local page_services, err = services_per_page(http_client, portal_endpoint, current_page, SERVICES_PER_PAGE)
     if not page_services and err then
       return nil, err
     end
