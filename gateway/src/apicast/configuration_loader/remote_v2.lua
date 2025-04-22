@@ -5,14 +5,13 @@ local ipairs = ipairs
 local insert = table.insert
 local rawset = rawset
 local tonumber = tonumber
-local pcall = pcall
 
 local tablex = require('pl.tablex')
 local deepcopy = tablex.deepcopy
 local resty_url = require 'resty.url'
 local http_ng = require "resty.http_ng"
 local user_agent = require 'apicast.user_agent'
-local cjson = require 'cjson'
+local cjson = require 'cjson.safe'
 local resty_env = require 'resty.env'
 local re = require 'ngx.re'
 local configuration = require 'apicast.configuration'
@@ -135,9 +134,8 @@ local function parse_proxy_configs(self, proxy_configs)
 end
 
 local function parse_resp_body(self, resp_body)
-  local ok, res = pcall(cjson.decode, resp_body)
-  if not ok then return nil, res end
-  local json = res
+  local json, err = cjson.decode(resp_body)
+  if not json then return nil, err end
 
   local proxy_configs = json.proxy_configs or {}
 
@@ -266,9 +264,9 @@ local function proxy_configs_per_page(http_client, portal_endpoint, host, page, 
   ngx.log(ngx.DEBUG, 'proxy configs get status: ', res.status, ' url: ', url, ' body: ', res.body)
 
   if res and res.status == 200 and res.body then
-    local ok, res = pcall(cjson.decode, res.body)
-    if not ok then return nil, res end
-    local json = res
+    local json
+    json, err = cjson.decode(res.body)
+    if not json then return nil, err end
 
     return json.proxy_configs or array()
   else
@@ -382,9 +380,9 @@ local function services_per_page(http_client, portal_endpoint, page, per_page)
   ngx.log(ngx.DEBUG, 'services get status: ', res.status, ' url: ', url, ' body: ', res.body)
 
   if res.status == 200 then
-    local ok, res = pcall(cjson.decode, res.body)
-    if not ok then return nil, res end
-    local json = res
+    local json
+    json, err = cjson.decode(res.body)
+    if not json then return nil, err end
 
     return json.services or array()
   else
@@ -430,10 +428,10 @@ function _M:services()
   local all_results_per_page = false
   local current_page = 1
   local services = array()
-  local portal_endpoint = services_index_endpoint(endpoint)
+  local service_endpoint = services_index_endpoint(endpoint)
 
   repeat
-    local page_services, err = services_per_page(http_client, portal_endpoint, current_page, SERVICES_PER_PAGE)
+    local page_services, err = services_per_page(http_client, service_endpoint, current_page, SERVICES_PER_PAGE)
     if not page_services and err then
       return nil, err
     end
