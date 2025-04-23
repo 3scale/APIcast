@@ -176,7 +176,7 @@ function _M:index_per_service()
 
   local service_regexp_filter  = resty_env.value("APICAST_SERVICES_FILTER_BY_URL")
   if service_regexp_filter then
-    local _, err = match("", service_regexp_filter, 'oj')
+    _, err = match("", service_regexp_filter, 'oj')
     if err then
       ngx.log(ngx.ERR, "APICAST_SERVICES_FILTER_BY_URL cannot compile, all services will be used: ", err)
       service_regexp_filter = nil
@@ -351,7 +351,11 @@ local function services_subset()
   local services = resty_env.value('APICAST_SERVICES_LIST') or resty_env.value('APICAST_SERVICES')
   if resty_env.value('APICAST_SERVICES') then ngx.log(ngx.WARN, 'DEPRECATION NOTICE: Use APICAST_SERVICES_LIST not APICAST_SERVICES as this will soon be unsupported') end
   if services and len(services) > 0 then
-    local ids = re.split(services, ',', 'oj')
+    local ids, err = re.split(services, ',', 'oj')
+    if not ids then
+      return nil, err
+    end
+
     for i=1, #ids do
       ids[i] = { service = { id = tonumber(ids[i]) } }
     end
