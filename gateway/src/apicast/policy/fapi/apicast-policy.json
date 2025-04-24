@@ -12,13 +12,13 @@
         "description": "Validate x-fapi-customer-ip-address header. If the verification fails, the request will be rejected with 403",
         "title": "Validate x-fapi-customer-ip-address header",
         "type": "boolean",
-        "default": "false"
+        "default": false
       },
       "validate_oauth2_certificate_bound_access_token ": {
         "description": "Validate OAuth 2.0 Mutual TLS Certificate Bound access token. If enable, all tokens are verified and must contain the certificate hash claim (cnf). If the verification fails, the request will be rejected with 401.",
         "title": "Validate OAuth 2.0 Mutual TLS Certificate Bound access token",
         "type": "boolean",
-        "default": "false"
+        "default": false
       }
     }
   }
