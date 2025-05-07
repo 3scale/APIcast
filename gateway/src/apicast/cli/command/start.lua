@@ -13,6 +13,7 @@ local exec = require('resty.execvp')
 local resty_env = require('resty.env')
 local re = require('ngx.re')
 local resty_url = require('resty.url')
+local system = require('resty.system')
 
 local Template = require('apicast.cli.template')
 local Environment = require('apicast.cli.environment')
@@ -146,7 +147,10 @@ local function build_context(options, config)
 
 
     context.prefix = apicast_root()
-    context.ca_bundle = pl.path.abspath(tostring(context.ca_bundle) or pl.path.join(context.prefix, 'conf', 'ca-bundle.crt'))
+
+    context.ca_bundle = pl.path.abspath(tostring(context.ca_bundle)
+                        or system.get_system_trusted_certs_filepath()
+                        or pl.path.join(context.prefix, 'conf', 'ca-bundle.crt'))
 
     context.access_log_file = options.access_log_file
 
