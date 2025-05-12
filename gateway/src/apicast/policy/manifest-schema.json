@@ -1,5 +1,5 @@
 {
-  "$id": "http://apicast.io/policy-v1.1/schema#manifest",
+  "$id": "http://apicast.io/policy-v1.1/schema",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
