@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1.1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1.1/schema",
   "name": "Upstream Mutual TLS",
   "summary": "Certificates to be used with the upstream API",
   "description": "With this policy a new TLS connection with the upstream API will be used with the certificates set in the config",

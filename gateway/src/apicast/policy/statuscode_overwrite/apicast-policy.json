@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1.1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1.1/schema",
   "name": "HTTP Status Code Overwrite",
   "summary": "Modify the HTTP status code returned by the upstream",
   "description": [

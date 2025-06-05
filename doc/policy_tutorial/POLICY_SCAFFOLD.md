@@ -53,7 +53,7 @@ The source code of the policy in the directory src/gateway/apicast/policy/hello_
 * aplicast-policy.json: The APIcast gateway is configured using a JSON document. Policies requiring configuration also use this JSON document. The apicast-policy.json file is a JSON schema file where configuration properties for the policy can be defined. The next section looks into configuration properties and this file in more detail.
 ```json
 {
-  "$schema": "http://apicast.io/policy-v1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1/schema",
   "name": "hello_world",
   "summary": "TODO: write policy summary",
   "description": [

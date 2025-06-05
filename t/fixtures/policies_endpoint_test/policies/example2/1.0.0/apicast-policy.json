@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1/schema",
   "name": "Example policy 2",
   "summary": "Just an example with a version mismatch.",
   "version": "2.0.0",
