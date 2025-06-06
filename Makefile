@@ -70,7 +70,7 @@ export COMPOSE_PROJECT_NAME
 # * update .circleci/config.yaml openresty executor with the image URL
 .PHONY: dev-build
 dev-build: export OPENRESTY_RPM_VERSION?=1.21.4
-dev-build: export LUAROCKS_VERSION?=3.11.1
+dev-build: export LUAROCKS_VERSION?=3.12.0
 dev-build: IMAGE_NAME ?= apicast-development:latest
 dev-build: ## Build development image
 	$(DOCKER) build --platform linux/amd64 -t $(IMAGE_NAME) \
