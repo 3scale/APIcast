@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1/schema",
   "name": "Ngx example policy",
   "summary": "Sets request headers",
   "description":

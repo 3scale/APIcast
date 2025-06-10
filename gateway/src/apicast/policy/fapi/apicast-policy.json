@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1/schema",
   "name": "The Financial-grade API (FAPI)",
   "summary": "Support FAPI profiles",
   "description": ["This policy adding support for Financial-grade API (API) profiles"
