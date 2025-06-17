@@ -216,6 +216,8 @@ local function call_chain(phase_name)
             if not status then
               if context.policy_error_callback then
                   context.policy_error_callback(self[i]._NAME, return_val)
+              else
+                error(return_val)
               end
               -- This is important because Openresty just died on error on init
               -- phase, and we should keep in this way.
