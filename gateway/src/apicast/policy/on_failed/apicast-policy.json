@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1.1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1.1/schema",
   "name": "On fail",
   "summary": "Block request if any policy fails",
   "description": "When a policy fails, this policy allows to set an error message back to the user and stop processing the request to the upstream API.",

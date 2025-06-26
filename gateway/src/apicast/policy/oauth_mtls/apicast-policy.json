@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1/schema",
   "name": "OAuth 2.0 Mutual TLS Client Authentication",
   "summary": "Configure OAuth 2.0 Mutual TLS Client Authentication.",
   "description": ["This policy executes OAuth 2.0 Mutual TLS Client Authentication ",

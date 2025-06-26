@@ -1,5 +1,5 @@
 {
-  "$schema": "http://apicast.io/policy-v1.1/schema#manifest#",
+  "$schema": "http://apicast.io/policy-v1.1/schema",
   "name": "HTTP2 Endpoint",
   "summary": "Main functionality to enable HTTP2 endpoint reply.",
   "description":
