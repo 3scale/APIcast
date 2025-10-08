@@ -1,21 +1,21 @@
 {
   "$schema": "http://apicast.io/policy-v1/schema",
-  "name": "The Financial-grade API (FAPI)",
+  "name": "Financial-grade API (FAPI)",
   "summary": "Support FAPI profiles",
-  "description": ["This policy adding support for Financial-grade API (API) profiles"
+  "description": ["This policy adds support for Financial-grade API (API) profiles."
   ],
   "version": "builtin",
   "configuration": {
     "type": "object",
     "properties": {
       "validate_x_fapi_customer_ip_address": {
-        "description": "Validate x-fapi-customer-ip-address header. If the verification fails, the request will be rejected with 403",
+        "description": "If the verification fails, the request will be rejected with 403.",
         "title": "Validate x-fapi-customer-ip-address header",
         "type": "boolean",
         "default": false
       },
       "validate_oauth2_certificate_bound_access_token ": {
-        "description": "Validate OAuth 2.0 Mutual TLS Certificate Bound access token. If enable, all tokens are verified and must contain the certificate hash claim (cnf). If the verification fails, the request will be rejected with 401.",
+        "description": "If enabled, all tokens are verified and must contain the certificate hash claim (cnf). If the verification fails, the request will be rejected with 401.",
         "title": "Validate OAuth 2.0 Mutual TLS Certificate Bound access token",
         "type": "boolean",
         "default": false
