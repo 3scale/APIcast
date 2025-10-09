@@ -13,7 +13,7 @@ local b64 = require('ngx.base64')
 local fmt = string.format
 
 local new = _M.new
-local X_FAPI_TRANSACTION_ID_HEADER = "x-fapi-transaction-id"
+local X_FAPI_INTERACTION_ID_HEADER = "x-fapi-interaction-id"
 local X_FAPI_CUSTOMER_IP_ADDRESS = "x-fapi-customer-ip-address"
 
 -- The "x5t#S256" (X.509 Certificate SHA-256 Thumbprint) Header
@@ -98,15 +98,15 @@ end
 function _M:header_filter()
   --- 6.2.1.11
   -- shall set the response header x-fapi-interaction-id to the value received from the corresponding FAPI client request header or to a RFC4122 UUID value if the request header was not provided to track the interaction
-  local transaction_id = ngx.req.get_headers()[X_FAPI_TRANSACTION_ID_HEADER]
+  local transaction_id = ngx.req.get_headers()[X_FAPI_INTERACTION_ID_HEADER]
   if not transaction_id or transaction_id == "" then
       -- Nothing found, generate one
-    transaction_id = ngx.resp.get_headers()[X_FAPI_TRANSACTION_ID_HEADER]
+    transaction_id = ngx.resp.get_headers()[X_FAPI_INTERACTION_ID_HEADER]
     if not transaction_id or transaction_id == "" then
       transaction_id = uuid.generate_v4()
     end
   end
-  ngx.header[X_FAPI_TRANSACTION_ID_HEADER] = transaction_id
+  ngx.header[X_FAPI_INTERACTION_ID_HEADER] = transaction_id
 end
 
 return _M
