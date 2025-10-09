@@ -54,10 +54,10 @@ Validate requests with a x-fapi-customer-ip-address header containing a valid IP
 
 ### Validate certificate-bound access tokens
 
-Certificate-bound access tokens, as defined in [RFC 8705]((https://datatracker.ietf.org/doc/html/rfc8705)), enhance security by linking tokens to clients, thereby verifying the sender's authorization to access protected resources.
+Certificate-bound access tokens, as defined in [RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705), enhance security by linking tokens to clients, thereby verifying the sender's authorization to access protected resources.
 
 You'll need to:
-* Configure an Identity Provider (IdP) such as Keycloak configured with mTLS and X.509 client certificate authentication.
+* Configure an Identity Provider (IdP) such as Keycloak with mTLS and X.509 client certificate authentication.
 * Configure the gateway to handle mTLS client certificate authentication.
 * Enable `validate_oauth2_certificate_bound_access_token` in the FAPI plugin.
 
