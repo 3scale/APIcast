@@ -23,7 +23,7 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: Enables fapi policy inject x-fapi-transaction-id header to the response
+=== TEST 1: Enables fapi policy inject x-fapi-interaction-id header to the response
 --- configuration
 {
   "services": [
@@ -62,9 +62,9 @@ __DATA__
      }
   }
 --- more_headers
-x-fapi-transaction-id: abc
+x-fapi-interaction-id: abc
 --- response_headers
-x-fapi-transaction-id: abc
+x-fapi-interaction-id: abc
 --- request
 GET /?user_key=value
 --- error_code: 200
@@ -73,7 +73,7 @@ GET /?user_key=value
 
 
 
-=== TEST 2: When x-fapi-transaction-id exist in both request and response headers, always use
+=== TEST 2: When x-fapi-interaction-id exist in both request and response headers, always use
 value from request
 --- configuration
 {
@@ -109,23 +109,23 @@ value from request
 --- upstream
   location / {
      content_by_lua_block {
-       ngx.header['x-fapi-transaction-id'] = "blah"
+       ngx.header['x-fapi-interaction-id'] = "blah"
        ngx.exit(200)
      }
   }
 --- more_headers
-x-fapi-transaction-id: abc
+x-fapi-interaction-id: abc
 --- request
 GET /?user_key=value
 --- response_headers
-x-fapi-transaction-id: abc
+x-fapi-interaction-id: abc
 --- error_code: 200
 --- no_error_log
 [error]
 
 
 
-=== TEST 3: Use x-fapi-transaction-id header from upstream response
+=== TEST 3: Use x-fapi-interaction-id header from upstream response
 --- configuration
 {
   "services": [
@@ -160,14 +160,14 @@ x-fapi-transaction-id: abc
 --- upstream
   location / {
      content_by_lua_block {
-       ngx.header['x-fapi-transaction-id'] = "blah"
+       ngx.header['x-fapi-interaction-id'] = "blah"
        ngx.exit(200)
      }
   }
 --- request
 GET /?user_key=value
 --- response_headers
-x-fapi-transaction-id: blah
+x-fapi-interaction-id: blah
 --- error_code: 200
 --- no_error_log
 [error]
@@ -215,7 +215,7 @@ x-fapi-transaction-id: blah
 --- request
 GET /?user_key=value
 --- response_headers_like
-x-fapi-transaction-id: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
+x-fapi-interaction-id: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$
 --- error_code: 200
 --- no_error_log
 [error]
