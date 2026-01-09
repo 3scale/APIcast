@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Correct FAPI header to `x-fapi-interaction-id` [PR #1557](https://github.com/3scale/APIcast/pull/1557) [THREESCALE-11957](https://issues.redhat.com/browse/THREESCALE-11957)
+
+### Added
+- Update APIcast schema manifest [PR #1550](https://github.com/3scale/APIcast/pull/1550)
+- Update luarocks to v3.12.0 [PR #1555](https://github.com/3scale/APIcast/pull/1555)
+
+### Removed
+
 ## [3.16.0] 2025-05-19
 
 ### Fixed

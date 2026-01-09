@@ -7,7 +7,6 @@ local clientCert = assert(fixture('CA', 'client.crt'))
 local header_parameter = 'x5t#S256'
 
 local function jwt_cnf()
-  local cnf = b64.encode_base64url(X509.new(clientCert):digest('SHA256'))
   return { [header_parameter] = b64.encode_base64url(X509.new(clientCert):digest('SHA256')) }
 end
 
@@ -36,31 +35,31 @@ describe('fapi_1_baseline_profile policy', function()
 
   describe('.header_filter', function()
     it('Use value from request', function()
-        ngx_req_headers['x-fapi-transaction-id'] = 'abc'
+        ngx_req_headers['x-fapi-interaction-id'] = 'abc'
         local fapi_policy = FAPIPolicy.new({})
         fapi_policy:header_filter()
-        assert.same('abc', ngx.header['x-fapi-transaction-id'])
+        assert.same('abc', ngx.header['x-fapi-interaction-id'])
     end)
 
-    it('Only use x-fapi-transaction-id from request if the header also exist in response from upstream', function()
-        ngx_req_headers['x-fapi-transaction-id'] = 'abc'
-        ngx_resp_headers['x-fapi-transaction-id'] = 'bdf'
+    it('Only use x-fapi-interaction-id from request if the header also exist in response from upstream', function()
+        ngx_req_headers['x-fapi-interaction-id'] = 'abc'
+        ngx_resp_headers['x-fapi-interaction-id'] = 'bdf'
         local fapi_policy = FAPIPolicy.new({})
         fapi_policy:header_filter()
-        assert.same('abc', ngx.header['x-fapi-transaction-id'])
+        assert.same('abc', ngx.header['x-fapi-interaction-id'])
     end)
 
-    it('Use x-fapi-transaction-id from upstream response', function()
-        ngx_resp_headers['x-fapi-transaction-id'] = 'abc'
+    it('Use x-fapi-interaction-id from upstream response', function()
+        ngx_resp_headers['x-fapi-interaction-id'] = 'abc'
         local fapi_policy = FAPIPolicy.new({})
         fapi_policy:header_filter()
-        assert.same('abc', ngx.header['x-fapi-transaction-id'])
+        assert.same('abc', ngx.header['x-fapi-interaction-id'])
     end)
 
     it('generate uuid if header does not exist in both request and response', function()
         local fapi_policy = FAPIPolicy.new({})
         fapi_policy:header_filter()
-        assert.is_true(uuid.is_valid(ngx.header['x-fapi-transaction-id']))
+        assert.is_true(uuid.is_valid(ngx.header['x-fapi-interaction-id']))
     end)
   end)
 
