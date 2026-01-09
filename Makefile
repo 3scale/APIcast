@@ -13,7 +13,7 @@ NPROC ?= $(firstword $(shell nproc 2>/dev/null) 1)
 
 SEPARATOR="\n=============================================\n"
 
-DEVEL_IMAGE ?= quay.io/3scale/apicast-ci:openresty-1.21.4-1
+DEVEL_IMAGE ?= quay.io/3scale/apicast-ci:openresty-1.21.4-4
 DEVEL_DOCKERFILE ?= Dockerfile.devel
 
 RUNTIME_IMAGE ?= quay.io/3scale/apicast:latest
