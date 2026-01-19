@@ -102,22 +102,24 @@ local function service_config_endpoint(portal_endpoint, service_id, env, version
   )
 end
 
+local function get_oidc_issuer_endpoint(proxy_content)
+  return proxy_content.proxy and proxy_content.proxy.oidc_issuer_endpoint
+end
+
 local function parse_proxy_configs(self, proxy_configs)
   local config = { services = array(), oidc = array() }
 
   for i, proxy_conf in ipairs(proxy_configs) do
     local proxy_config = proxy_conf.proxy_config
+    local content = proxy_config.content
 
-    -- Copy the config because parse_service have side-effects. It adds
-    -- liquid templates in some policies and those cannot be encoded into a
-    -- JSON. We should get rid of these side effects.
-    local original_proxy_config = deepcopy(proxy_config)
+    config.services[i] = content
 
-    local service = configuration.parse_service(proxy_config.content)
-
-    -- We always assign a oidc to the service, even an empty one with the
-    -- service_id, if not on APICAST_SERVICES_LIST will fail on filtering
-    local oidc = self:oidc_issuer_configuration(service)
+    local issuer_endpoint = get_oidc_issuer_endpoint(content)
+    local oidc
+    if issuer_endpoint then
+      oidc = self.oidc:call(issuer_endpoint, self.ttl)
+    end
     if not oidc then
       oidc = {}
     end
@@ -125,10 +127,9 @@ local function parse_proxy_configs(self, proxy_configs)
     -- deepcopy because this can be cached, and we want to have a deepcopy to
     -- avoid issues with service_id
     local oidc_copy = deepcopy(oidc)
-    oidc_copy.service_id = service.id
+    oidc_copy.service_id = tostring(content.id)
 
     config.oidc[i] = oidc_copy
-    config.services[i] = original_proxy_config.content
   end
   return cjson.encode(config)
 end
@@ -482,20 +483,22 @@ function _M:config(service, environment, version, service_regexp_filter)
 
   if res.status == 200 then
     local proxy_config = cjson.decode(res.body).proxy_config
-
-    -- Copy the config because parse_service have side-effects. It adds
-    -- liquid templates in some policies and those cannot be encoded into a
-    -- JSON. We should get rid of these side effects.
-    local original_proxy_config = deepcopy(proxy_config)
+    local content = proxy_config.content
 
     local config_service = configuration.parse_service(proxy_config.content)
     if service_regexp_filter and not config_service:match_host(service_regexp_filter) then
       return nil, "Service filtered out because APICAST_SERVICES_FILTER_BY_URL"
     end
 
-    original_proxy_config.oidc = self:oidc_issuer_configuration(config_service)
+    local issuer_endpoint = get_oidc_issuer_endpoint(content)
+    local oidc
 
-    return original_proxy_config
+    if issuer_endpoint then
+      oidc = self.oidc:call(issuer_endpoint, self.ttl)
+    end
+
+    proxy_config.oidc = oidc
+    return proxy_config
   else
     return nil, status_code_error(res)
   end
