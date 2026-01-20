@@ -90,7 +90,11 @@ end
 
 -- report: Report the given usage information to the backend
 function _M.report(context, usage)
-  local backend = backend_client:new(context.service, http_ng_resty)
+  local backend, err = backend_client:new(context.service, http_ng_resty)
+  if not backend then
+    ngx.log(ngx.ERR, "failed to create backend_client, err: ", err)
+    return
+  end
   local reports = {}
   for key, value in pairs(usage.deltas) do
     local result = deepcopy(context.credentials)

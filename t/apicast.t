@@ -1310,3 +1310,89 @@ Authentication parameters missing
 
 
 
+=== TEST 36: works with BACKEND_ENDPOINT_OVERRIDE
+--- env eval
+(
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend:$ENV{TEST_NGINX_SERVER_PORT}"
+)
+--- configuration
+{
+  "services" : [
+    {
+      "backend_version": 1,
+      "proxy": {
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/",
+        "proxy_rules": [
+            { "pattern" : "/", "http_method" : "GET", "metric_system_name" : "hits", "delta" : 1}
+        ],
+        "policy_chain" : [
+          { "name" : "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+location /api-backend/ {
+  echo "yay, api backend!";
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      content_by_lua_block { ngx.exit(200) }
+    }
+  }
+--- request
+GET /?user_key=value
+--- error_code: 200
+--- response_body
+yay, api backend!
+--- no_error_log
+[error]
+
+
+
+=== TEST 37: with invalid BACKEND_ENDPOINT_OVERRIDE
+Print the stacktrace, and terminate the request with 500 response code
+--- env eval
+(
+  'BACKEND_ENDPOINT_OVERRIDE' => 'invalid.backend.com'
+)
+--- configuration
+{
+  "services" : [
+    {
+      "backend_version": 1,
+      "proxy": {
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/api-backend/",
+        "proxy_rules": [
+            { "pattern" : "/", "http_method" : "GET", "metric_system_name" : "hits", "delta" : 1}
+        ],
+        "policy_chain" : [
+          { "name" : "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+location /api-backend/ {
+  echo "yay, api backend!";
+}
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+       error('APIcast called authrep, but it should not have')
+    }
+  }
+--- request
+GET /?user_key=value
+--- error_code: 500
+--- error_log eval
+[
+'lua entry thread aborted: runtime error:',
+'missing scheme',
+'stack traceback:',
+" in function 'error'",
+": in function 'access'",
+]
