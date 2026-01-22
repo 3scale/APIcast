@@ -199,7 +199,7 @@ local default_policy_order_check = PolicyOrderChecker.new(policy_manifests_loade
 -- It doesn't return anything, it prints error messages when there's a problem.
 function _M:check_order(manifests)
   if manifests then
-    PolicyOrderChecker.new(manifests):check(self)
+    return PolicyOrderChecker.new(manifests):check(self)
   end
   default_policy_order_check:check(self)
 end

@@ -16,10 +16,10 @@ local concat = table.concat
 local setmetatable = setmetatable
 local pcall = pcall
 
-local tab_new = require('table.new')
 local isempty = require('table.isempty')
 
-local manifests_cache = tab_new(32, 0)
+-- Module-level cache storage (one per worker process)
+local manifests_cache = {}
 
 local _M = {}
 
@@ -75,7 +75,11 @@ local function lua_load_path(load_path)
   return format('%s/?.lua', load_path)
 end
 
-local function get_manifest(name, version)
+-- Get a cached manifest by policy name and version
+-- @tparam string name The policy name
+-- @tparam string version The policy version
+-- @treturn table|nil The cached manifest table, or nil if not cached
+local function get_cached_manifest(name, version)
   local manifests = manifests_cache[name]
   if manifests then
     for _, manifest in ipairs(manifests) do
@@ -87,7 +91,7 @@ local function get_manifest(name, version)
 end
 
 local function load_manifest(name, version, path)
-  local manifest = get_manifest(name, version)
+  local manifest = get_cached_manifest(name, version)
   if not manifest then
     manifest = read_manifest(path)
   end
