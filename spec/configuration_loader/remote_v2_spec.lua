@@ -651,7 +651,7 @@ UwIDAQAB
     it('does not crash on empty issuer', function()
       local service = { oidc = { issuer_endpoint = '' }}
 
-      assert.falsy(loader:oidc_issuer_configuration(service))
+      assert.falsy(loader.oidc:call(service.oidc.issuer_endpoint, 0))
     end)
   end)
 

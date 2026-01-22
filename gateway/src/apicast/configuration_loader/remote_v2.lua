@@ -120,6 +120,8 @@ local function parse_proxy_configs(self, proxy_configs)
     if issuer_endpoint then
       oidc = self.oidc:call(issuer_endpoint, self.ttl)
     end
+    -- We always assign a oidc to the service, even an empty one with the
+    -- service_id, if not on APICAST_SERVICES_LIST will fail on filtering
     if not oidc then
       oidc = {}
     end
@@ -450,10 +452,6 @@ function _M:services()
   until(not  all_results_per_page)
 
   return services
-end
-
-function _M:oidc_issuer_configuration(service)
-  return self.oidc:call(service.oidc.issuer_endpoint, self.ttl)
 end
 
 function _M:config(service, environment, version, service_regexp_filter)
