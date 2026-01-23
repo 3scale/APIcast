@@ -103,7 +103,7 @@ local function service_config_endpoint(portal_endpoint, service_id, env, version
 end
 
 local function get_oidc_issuer_endpoint(proxy_content)
-  return proxy_content.proxy and proxy_content.proxy.oidc_issuer_endpoint
+  return proxy_content.proxy and (proxy_content.proxy.authentication_method == "oidc") and proxy_content.proxy.oidc_issuer_endpoint
 end
 
 local function parse_proxy_configs(self, proxy_configs)
