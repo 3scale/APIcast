@@ -16,6 +16,11 @@ local concat = table.concat
 local setmetatable = setmetatable
 local pcall = pcall
 
+local isempty = require('table.isempty')
+
+-- Module-level cache storage (one per worker process)
+local manifests_cache = {}
+
 local _M = {}
 
 local resty_env = require('resty.env')
@@ -70,8 +75,26 @@ local function lua_load_path(load_path)
   return format('%s/?.lua', load_path)
 end
 
+-- Get a cached manifest by policy name and version
+-- @tparam string name The policy name
+-- @tparam string version The policy version
+-- @treturn table|nil The cached manifest table, or nil if not cached
+local function get_cached_manifest(name, version)
+  local manifests = manifests_cache[name]
+  if manifests then
+    for _, manifest in ipairs(manifests) do
+      if version == manifest.version then
+        return manifest
+      end
+    end
+  end
+end
+
 local function load_manifest(name, version, path)
-  local manifest = read_manifest(path)
+  local manifest = get_cached_manifest(name, version)
+  if not manifest then
+    manifest = read_manifest(path)
+  end
 
   if manifest then
       if manifest.version ~= version then
@@ -110,6 +133,16 @@ end
 function _M:load_path(name, version, paths)
   local failures = {}
 
+  if version == 'builtin' then
+    local manifest, load_path = load_manifest(name, version, format('%s/%s', self.builtin_policy_load_path(), name) )
+
+    if manifest then
+      return load_path, manifest.configuration
+    else
+      insert(failures, load_path)
+    end
+  end
+
   for _, path in ipairs(paths or self.policy_load_paths()) do
     local manifest, load_path = load_manifest(name, version, format('%s/%s/%s', path, name, version) )
 
@@ -120,15 +153,6 @@ function _M:load_path(name, version, paths)
     end
   end
 
-  if version == 'builtin' then
-    local manifest, load_path = load_manifest(name, version, format('%s/%s', self.builtin_policy_load_path(), name) )
-
-    if manifest then
-      return load_path, manifest.configuration
-    else
-      insert(failures, load_path)
-    end
-  end
 
   return nil, nil, failures
 end
@@ -173,9 +197,15 @@ end
 -- Returns all the policy modules
 function _M:get_all()
   local policy_modules = {}
+  local manifests
 
-  local policy_manifests_loader = require('apicast.policy_manifests_loader')
-  local manifests = policy_manifests_loader.get_all()
+  if isempty(manifests_cache) then
+    local policy_manifests_loader = require('apicast.policy_manifests_loader')
+    manifests = policy_manifests_loader.get_all()
+    manifests_cache = manifests
+  else
+    manifests = manifests_cache
+  end
 
   for policy_name, policy_manifests in pairs(manifests) do
     for _, manifest in ipairs(policy_manifests) do
