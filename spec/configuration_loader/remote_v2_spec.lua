@@ -251,7 +251,10 @@ describe('Configuration Remote Loader V2', function()
                   environment = 'sandbox',
                   content = {
                     id = 42, backend_version = 1,
-                    proxy = { oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/' }
+                    proxy = {
+                      authentication_method= 'oidc',
+                      oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/'
+                    }
                   }
                 }
               }
@@ -310,6 +313,28 @@ UwIDAQAB
 ]],
         } },
       }, config.oidc)
+    end)
+
+    it('ingore OIDC configuration when authentication_method is not oidc', function()
+      test_backend.expect{ url = 'http://example.com/admin/api/services/42/proxy/configs/staging/latest.json' }.
+      respond_with{ status = 200, body = cjson.encode(
+              {
+                proxy_config = {
+                  version = 2,
+                  environment = 'sandbox',
+                  content = {
+                    id = 42, backend_version = 1,
+                    proxy = {
+                      authentication_method= '1',
+                      oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/'
+                    }
+                  }
+                }
+              }
+      ) }
+
+      local config = assert(loader:config({ id = 42 }, 'staging', 'latest'))
+      assert.is_nil(config.oidc)
     end)
   end)
 
@@ -580,7 +605,10 @@ UwIDAQAB
             {
               proxy_config = {
                 content = {
-                  proxy = { oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/' }
+                  proxy = {
+                    authentication_method= 'oidc',
+                    oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/'
+                  }
                 }
               }
             }
@@ -730,7 +758,10 @@ UwIDAQAB
               content = {
                 id = 2,
                 backend_version = 1,
-                proxy = { oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/' }
+                proxy = {
+                  authentication_method= 'oidc',
+                  oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/'
+                }
               }
             }
           }
@@ -920,7 +951,10 @@ UwIDAQAB
               content = {
                 id = 2,
                 backend_version = 1,
-                proxy = { oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/' }
+                proxy = {
+                  authentication_method= 'oidc',
+                  oidc_issuer_endpoint = 'http://user:pass@idp.example.com/auth/realms/foo/'
+                }
               }
             }
           }

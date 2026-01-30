@@ -21,6 +21,15 @@ _M.discovery = require('resty.oidc.discovery').new()
 
 local function load_service(service)
     if not service or not service.proxy then return nil end
+    local proxy = service.proxy
+
+    -- Only fetch OIDC configuration if authentication method is set to 'oidc'
+    local authentication = proxy.authentication_method or service.backend_version
+
+    if authentication and authentication ~= 'oidc' then
+      return nil
+    end
+
     local result = _M.discovery:call(service.proxy.oidc_issuer_endpoint)
 
     if result and service.id then

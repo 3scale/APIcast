@@ -24,6 +24,17 @@ describe('OIDC Configuration loader', function()
       assert(loader.call(config))
     end)
 
+    it('ignores config with oidc_issuer_endpoint but not oidc authentication mode', function()
+      local config = cjson.encode{
+        services = {
+          { id = 21, proxy = { oidc_issuer_endpoint = 'https://user:pass@example.com' } },
+          { id = 42 },
+        }
+      }
+
+      assert(loader.call(config))
+    end)
+
     it('forwards all parameters', function()
       assert.same({'{"oidc":[]}', 'one', 'two'}, { loader.call('{}', 'one', 'two')})
     end)
@@ -31,7 +42,7 @@ describe('OIDC Configuration loader', function()
     it('gets openid configuration', function()
       local config = {
         services = {
-          { id = 21, proxy = { oidc_issuer_endpoint = 'https://user:pass@example.com' } },
+          { id = 21, proxy = { oidc_issuer_endpoint = 'https://user:pass@example.com', authentication_method = 'oidc' }},
         }
       }
 
@@ -58,7 +69,8 @@ describe('OIDC Configuration loader', function()
             {
               "id": 21,
               "proxy": {
-                "oidc_issuer_endpoint": "https://user:pass@example.com"
+                "oidc_issuer_endpoint": "https://user:pass@example.com",
+                "authentication_method": "oidc"
               }
             }
           ],
@@ -96,6 +108,51 @@ describe('OIDC Configuration loader', function()
       local config = { services = services, oidc = oidc }
 
       loader.call(cjson.encode(config))
+    end)
+
+    it('ignore openid configuration if authentication_method is not oidc', function()
+      local config = {
+        services = {
+          { id = 21, proxy = { oidc_issuer_endpoint = 'https://user:pass@example.com', authentication_method = '1' }},
+        }
+      }
+
+      test_backend
+        .expect{ url = "https://example.com/.well-known/openid-configuration" }
+        .respond_with{
+          status = 200,
+          headers = { content_type = 'application/json' },
+          body = [[{"jwks_uri":"http://example.com/jwks","issuer":"https://example.com"}]],
+        }
+
+      test_backend
+        .expect{ url = "http://example.com/jwks" }
+        .respond_with{
+          status = 200,
+          headers = { content_type = 'application/json' },
+          body = [[{"keys":[]}]],
+        }
+
+      local oidc = loader.call(cjson.encode(config))
+      local expected_oidc = cjson.decode([[
+        {
+          "services": [
+            {
+              "id": 21,
+              "proxy": {
+                "oidc_issuer_endpoint": "https://user:pass@example.com",
+                "authentication_method": "1"
+              }
+            }
+          ],
+          "oidc": [
+            {
+              "service_id": 21
+            }
+          ]
+        }
+      ]])
+      assert.same(expected_oidc, cjson.decode(oidc))
     end)
   end)
 end)
