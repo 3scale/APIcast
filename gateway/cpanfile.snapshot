@@ -36,10 +36,10 @@ DISTRIBUTIONS
       perl 5.008001
       strict 0
       warnings 0
-  Capture-Tiny-0.48
-    pathname: D/DA/DAGOLDEN/Capture-Tiny-0.48.tar.gz
+  Capture-Tiny-0.50
+    pathname: D/DA/DAGOLDEN/Capture-Tiny-0.50.tar.gz
     provides:
-      Capture::Tiny 0.48
+      Capture::Tiny 0.50
     requirements:
       Carp 0
       Exporter 0
@@ -51,10 +51,10 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
-  Carton-v1.0.34
-    pathname: M/MI/MIYAGAWA/Carton-v1.0.34.tar.gz
+  Carton-v1.0.35
+    pathname: M/MI/MIYAGAWA/Carton-v1.0.35.tar.gz
     provides:
-      Carton 1.000034
+      Carton 1.000035
       Carton::Builder undef
       Carton::CLI undef
       Carton::CPANfile undef
@@ -92,11 +92,11 @@ DISTRIBUTIONS
       parent 0.223
       perl 5.008005
       version 0.77
-  Class-Tiny-1.006
-    pathname: D/DA/DAGOLDEN/Class-Tiny-1.006.tar.gz
+  Class-Tiny-1.008
+    pathname: D/DA/DAGOLDEN/Class-Tiny-1.008.tar.gz
     provides:
-      Class::Tiny 1.006
-      Class::Tiny::Object 1.006
+      Class::Tiny 1.008
+      Class::Tiny::Object 1.008
     requirements:
       Carp 0
       ExtUtils::MakeMaker 6.17
@@ -111,130 +111,135 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       Pod::Text 2.08
-  Crypt-JWT-0.021
-    pathname: M/MI/MIK/Crypt-JWT-0.021.tar.gz
+  Crypt-JWT-0.037
+    pathname: M/MI/MIK/Crypt-JWT-0.037.tar.gz
     provides:
-      Crypt::JWT 0.021
-      Crypt::KeyWrap 0.021
+      Crypt::JWT 0.037
+      Crypt::KeyWrap 0.037
     requirements:
       Compress::Raw::Zlib 0
-      CryptX 0.034
+      CryptX 0.067
       Exporter 5.57
       ExtUtils::MakeMaker 0
-      JSON::MaybeXS 1.003005
+      JSON 0
+      Scalar::Util 0
+      Test::More 0.88
       perl 5.006
-  CryptX-0.060
-    pathname: M/MI/MIK/CryptX-0.060.tar.gz
+  CryptX-0.087
+    pathname: M/MI/MIK/CryptX-0.087.tar.gz
     provides:
-      Crypt::AuthEnc 0.060
-      Crypt::AuthEnc::CCM 0.060
-      Crypt::AuthEnc::ChaCha20Poly1305 0.060
-      Crypt::AuthEnc::EAX 0.060
-      Crypt::AuthEnc::GCM 0.060
-      Crypt::AuthEnc::OCB 0.060
-      Crypt::Checksum 0.060
-      Crypt::Checksum::Adler32 0.060
-      Crypt::Checksum::CRC32 0.060
-      Crypt::Cipher 0.060
-      Crypt::Cipher::AES 0.060
-      Crypt::Cipher::Anubis 0.060
-      Crypt::Cipher::Blowfish 0.060
-      Crypt::Cipher::CAST5 0.060
-      Crypt::Cipher::Camellia 0.060
-      Crypt::Cipher::DES 0.060
-      Crypt::Cipher::DES_EDE 0.060
-      Crypt::Cipher::IDEA 0.060
-      Crypt::Cipher::KASUMI 0.060
-      Crypt::Cipher::Khazad 0.060
-      Crypt::Cipher::MULTI2 0.060
-      Crypt::Cipher::Noekeon 0.060
-      Crypt::Cipher::RC2 0.060
-      Crypt::Cipher::RC5 0.060
-      Crypt::Cipher::RC6 0.060
-      Crypt::Cipher::SAFERP 0.060
-      Crypt::Cipher::SAFER_K128 0.060
-      Crypt::Cipher::SAFER_K64 0.060
-      Crypt::Cipher::SAFER_SK128 0.060
-      Crypt::Cipher::SAFER_SK64 0.060
-      Crypt::Cipher::SEED 0.060
-      Crypt::Cipher::Serpent 0.060
-      Crypt::Cipher::Skipjack 0.060
-      Crypt::Cipher::Twofish 0.060
-      Crypt::Cipher::XTEA 0.060
-      Crypt::Digest 0.060
-      Crypt::Digest::BLAKE2b_160 0.060
-      Crypt::Digest::BLAKE2b_256 0.060
-      Crypt::Digest::BLAKE2b_384 0.060
-      Crypt::Digest::BLAKE2b_512 0.060
-      Crypt::Digest::BLAKE2s_128 0.060
-      Crypt::Digest::BLAKE2s_160 0.060
-      Crypt::Digest::BLAKE2s_224 0.060
-      Crypt::Digest::BLAKE2s_256 0.060
-      Crypt::Digest::CHAES 0.060
-      Crypt::Digest::Keccak224 0.060
-      Crypt::Digest::Keccak256 0.060
-      Crypt::Digest::Keccak384 0.060
-      Crypt::Digest::Keccak512 0.060
-      Crypt::Digest::MD2 0.060
-      Crypt::Digest::MD4 0.060
-      Crypt::Digest::MD5 0.060
-      Crypt::Digest::RIPEMD128 0.060
-      Crypt::Digest::RIPEMD160 0.060
-      Crypt::Digest::RIPEMD256 0.060
-      Crypt::Digest::RIPEMD320 0.060
-      Crypt::Digest::SHA1 0.060
-      Crypt::Digest::SHA224 0.060
-      Crypt::Digest::SHA256 0.060
-      Crypt::Digest::SHA384 0.060
-      Crypt::Digest::SHA3_224 0.060
-      Crypt::Digest::SHA3_256 0.060
-      Crypt::Digest::SHA3_384 0.060
-      Crypt::Digest::SHA3_512 0.060
-      Crypt::Digest::SHA512 0.060
-      Crypt::Digest::SHA512_224 0.060
-      Crypt::Digest::SHA512_256 0.060
-      Crypt::Digest::SHAKE 0.060
-      Crypt::Digest::Tiger192 0.060
-      Crypt::Digest::Whirlpool 0.060
-      Crypt::KeyDerivation 0.060
-      Crypt::Mac 0.060
-      Crypt::Mac::BLAKE2b 0.060
-      Crypt::Mac::BLAKE2s 0.060
-      Crypt::Mac::F9 0.060
-      Crypt::Mac::HMAC 0.060
-      Crypt::Mac::OMAC 0.060
-      Crypt::Mac::PMAC 0.060
-      Crypt::Mac::Pelican 0.060
-      Crypt::Mac::Poly1305 0.060
-      Crypt::Mac::XCBC 0.060
-      Crypt::Misc 0.060
-      Crypt::Mode 0.060
-      Crypt::Mode::CBC 0.060
-      Crypt::Mode::CFB 0.060
-      Crypt::Mode::CTR 0.060
-      Crypt::Mode::ECB 0.060
-      Crypt::Mode::OFB 0.060
-      Crypt::PK 0.060
-      Crypt::PK::DH 0.060
-      Crypt::PK::DSA 0.060
-      Crypt::PK::ECC 0.060
-      Crypt::PK::RSA 0.060
-      Crypt::PRNG 0.060
-      Crypt::PRNG::ChaCha20 0.060
-      Crypt::PRNG::Fortuna 0.060
-      Crypt::PRNG::RC4 0.060
-      Crypt::PRNG::Sober128 0.060
-      Crypt::PRNG::Yarrow 0.060
-      Crypt::Stream::ChaCha 0.060
-      Crypt::Stream::RC4 0.060
-      Crypt::Stream::Rabbit 0.060
-      Crypt::Stream::Salsa20 0.060
-      Crypt::Stream::Sober128 0.060
-      Crypt::Stream::Sosemanuk 0.060
-      CryptX 0.060
-      Math::BigInt::LTM 0.060
+      Crypt::AuthEnc 0.087
+      Crypt::AuthEnc::CCM 0.087
+      Crypt::AuthEnc::ChaCha20Poly1305 0.087
+      Crypt::AuthEnc::EAX 0.087
+      Crypt::AuthEnc::GCM 0.087
+      Crypt::AuthEnc::OCB 0.087
+      Crypt::Checksum 0.087
+      Crypt::Checksum::Adler32 0.087
+      Crypt::Checksum::CRC32 0.087
+      Crypt::Cipher 0.087
+      Crypt::Cipher::AES 0.087
+      Crypt::Cipher::Anubis 0.087
+      Crypt::Cipher::Blowfish 0.087
+      Crypt::Cipher::CAST5 0.087
+      Crypt::Cipher::Camellia 0.087
+      Crypt::Cipher::DES 0.087
+      Crypt::Cipher::DES_EDE 0.087
+      Crypt::Cipher::IDEA 0.087
+      Crypt::Cipher::KASUMI 0.087
+      Crypt::Cipher::Khazad 0.087
+      Crypt::Cipher::MULTI2 0.087
+      Crypt::Cipher::Noekeon 0.087
+      Crypt::Cipher::RC2 0.087
+      Crypt::Cipher::RC5 0.087
+      Crypt::Cipher::RC6 0.087
+      Crypt::Cipher::SAFERP 0.087
+      Crypt::Cipher::SAFER_K128 0.087
+      Crypt::Cipher::SAFER_K64 0.087
+      Crypt::Cipher::SAFER_SK128 0.087
+      Crypt::Cipher::SAFER_SK64 0.087
+      Crypt::Cipher::SEED 0.087
+      Crypt::Cipher::Serpent 0.087
+      Crypt::Cipher::Skipjack 0.087
+      Crypt::Cipher::Twofish 0.087
+      Crypt::Cipher::XTEA 0.087
+      Crypt::Digest 0.087
+      Crypt::Digest::BLAKE2b_160 0.087
+      Crypt::Digest::BLAKE2b_256 0.087
+      Crypt::Digest::BLAKE2b_384 0.087
+      Crypt::Digest::BLAKE2b_512 0.087
+      Crypt::Digest::BLAKE2s_128 0.087
+      Crypt::Digest::BLAKE2s_160 0.087
+      Crypt::Digest::BLAKE2s_224 0.087
+      Crypt::Digest::BLAKE2s_256 0.087
+      Crypt::Digest::CHAES 0.087
+      Crypt::Digest::Keccak224 0.087
+      Crypt::Digest::Keccak256 0.087
+      Crypt::Digest::Keccak384 0.087
+      Crypt::Digest::Keccak512 0.087
+      Crypt::Digest::MD2 0.087
+      Crypt::Digest::MD4 0.087
+      Crypt::Digest::MD5 0.087
+      Crypt::Digest::RIPEMD128 0.087
+      Crypt::Digest::RIPEMD160 0.087
+      Crypt::Digest::RIPEMD256 0.087
+      Crypt::Digest::RIPEMD320 0.087
+      Crypt::Digest::SHA1 0.087
+      Crypt::Digest::SHA224 0.087
+      Crypt::Digest::SHA256 0.087
+      Crypt::Digest::SHA384 0.087
+      Crypt::Digest::SHA3_224 0.087
+      Crypt::Digest::SHA3_256 0.087
+      Crypt::Digest::SHA3_384 0.087
+      Crypt::Digest::SHA3_512 0.087
+      Crypt::Digest::SHA512 0.087
+      Crypt::Digest::SHA512_224 0.087
+      Crypt::Digest::SHA512_256 0.087
+      Crypt::Digest::SHAKE 0.087
+      Crypt::Digest::Tiger192 0.087
+      Crypt::Digest::Whirlpool 0.087
+      Crypt::KeyDerivation 0.087
+      Crypt::Mac 0.087
+      Crypt::Mac::BLAKE2b 0.087
+      Crypt::Mac::BLAKE2s 0.087
+      Crypt::Mac::F9 0.087
+      Crypt::Mac::HMAC 0.087
+      Crypt::Mac::OMAC 0.087
+      Crypt::Mac::PMAC 0.087
+      Crypt::Mac::Pelican 0.087
+      Crypt::Mac::Poly1305 0.087
+      Crypt::Mac::XCBC 0.087
+      Crypt::Misc 0.087
+      Crypt::Mode 0.087
+      Crypt::Mode::CBC 0.087
+      Crypt::Mode::CFB 0.087
+      Crypt::Mode::CTR 0.087
+      Crypt::Mode::ECB 0.087
+      Crypt::Mode::OFB 0.087
+      Crypt::PK 0.087
+      Crypt::PK::DH 0.087
+      Crypt::PK::DSA 0.087
+      Crypt::PK::ECC 0.087
+      Crypt::PK::Ed25519 0.087
+      Crypt::PK::RSA 0.087
+      Crypt::PK::X25519 0.087
+      Crypt::PRNG 0.087
+      Crypt::PRNG::ChaCha20 0.087
+      Crypt::PRNG::Fortuna 0.087
+      Crypt::PRNG::RC4 0.087
+      Crypt::PRNG::Sober128 0.087
+      Crypt::PRNG::Yarrow 0.087
+      Crypt::Stream::ChaCha 0.087
+      Crypt::Stream::RC4 0.087
+      Crypt::Stream::Rabbit 0.087
+      Crypt::Stream::Salsa20 0.087
+      Crypt::Stream::Sober128 0.087
+      Crypt::Stream::Sosemanuk 0.087
+      CryptX 0.087
+      Math::BigInt::LTM 0.087
     requirements:
       ExtUtils::MakeMaker 0
+      Math::BigInt 0
       perl 5.006
   Data-Inspect-0.05
     pathname: O/OW/OWL/Data-Inspect-0.05.tar.gz
@@ -259,22 +264,25 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 6.17
       perl 5.006001
-  ExtUtils-Config-0.008
-    pathname: L/LE/LEONT/ExtUtils-Config-0.008.tar.gz
+  ExtUtils-Config-0.010
+    pathname: L/LE/LEONT/ExtUtils-Config-0.010.tar.gz
     provides:
-      ExtUtils::Config 0.008
+      ExtUtils::Config 0.010
+      ExtUtils::Config::MakeMaker 0.010
     requirements:
       Data::Dumper 0
-      ExtUtils::MakeMaker 6.30
+      ExtUtils::MakeMaker 0
+      ExtUtils::MakeMaker::Config 0
+      perl 5.006
       strict 0
       warnings 0
-  ExtUtils-Helpers-0.026
-    pathname: L/LE/LEONT/ExtUtils-Helpers-0.026.tar.gz
+  ExtUtils-Helpers-0.028
+    pathname: L/LE/LEONT/ExtUtils-Helpers-0.028.tar.gz
     provides:
-      ExtUtils::Helpers 0.026
-      ExtUtils::Helpers::Unix 0.026
-      ExtUtils::Helpers::VMS 0.026
-      ExtUtils::Helpers::Windows 0.026
+      ExtUtils::Helpers 0.028
+      ExtUtils::Helpers::Unix 0.028
+      ExtUtils::Helpers::VMS 0.028
+      ExtUtils::Helpers::Windows 0.028
     requirements:
       Carp 0
       Exporter 5.57
@@ -283,19 +291,18 @@ DISTRIBUTIONS
       File::Copy 0
       File::Spec::Functions 0
       Text::ParseWords 3.24
-      perl 5.006
       strict 0
       warnings 0
-  ExtUtils-InstallPaths-0.012
-    pathname: L/LE/LEONT/ExtUtils-InstallPaths-0.012.tar.gz
+  ExtUtils-InstallPaths-0.015
+    pathname: L/LE/LEONT/ExtUtils-InstallPaths-0.015.tar.gz
     provides:
-      ExtUtils::InstallPaths 0.012
+      ExtUtils::InstallPaths 0.015
     requirements:
       Carp 0
-      ExtUtils::Config 0.002
+      ExtUtils::Config 0.009
       ExtUtils::MakeMaker 0
       File::Spec 0
-      perl 5.006
+      perl 5.008
       strict 0
       warnings 0
   File-Listing-6.04
@@ -430,10 +437,10 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       HTTP::Headers 6
       perl 5.008001
-  HTTP-Tinyish-0.15
-    pathname: M/MI/MIYAGAWA/HTTP-Tinyish-0.15.tar.gz
+  HTTP-Tinyish-0.19
+    pathname: M/MI/MIYAGAWA/HTTP-Tinyish-0.19.tar.gz
     provides:
-      HTTP::Tinyish 0.15
+      HTTP::Tinyish 0.19
       HTTP::Tinyish::Base undef
       HTTP::Tinyish::Curl undef
       HTTP::Tinyish::HTTPTiny undef
@@ -455,10 +462,10 @@ DISTRIBUTIONS
       Encode 2.10
       Exporter 5.57
       ExtUtils::MakeMaker 6.30
-  IPC-Run3-0.048
-    pathname: R/RJ/RJBS/IPC-Run3-0.048.tar.gz
+  IPC-Run3-0.049
+    pathname: R/RJ/RJBS/IPC-Run3-0.049.tar.gz
     provides:
-      IPC::Run3 0.048
+      IPC::Run3 0.049
     requirements:
       ExtUtils::MakeMaker 0
       Test::More 0.31
@@ -630,11 +637,11 @@ DISTRIBUTIONS
       strict 0
       vars 0
       warnings 0
-  Path-Tiny-0.108
-    pathname: D/DA/DAGOLDEN/Path-Tiny-0.108.tar.gz
+  Path-Tiny-0.150
+    pathname: D/DA/DAGOLDEN/Path-Tiny-0.150.tar.gz
     provides:
-      Path::Tiny 0.108
-      Path::Tiny::Error 0.108
+      Path::Tiny 0.150
+      Path::Tiny::Error 0.150
     requirements:
       Carp 0
       Cwd 0
@@ -644,6 +651,7 @@ DISTRIBUTIONS
       Exporter 5.57
       ExtUtils::MakeMaker 6.17
       Fcntl 0
+      File::Compare 0
       File::Copy 0
       File::Glob 0
       File::Path 2.07
@@ -943,7 +951,7 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       LWP::UserAgent 0
-      perl 5.00405
+      perl 5.004050
   XML-SAX-1.02
     pathname: G/GR/GRANTM/XML-SAX-1.02.tar.gz
     provides:
