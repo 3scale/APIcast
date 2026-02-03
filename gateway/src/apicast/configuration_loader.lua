@@ -11,6 +11,8 @@ local env = require('resty.env')
 local resty_url = require('resty.url')
 local synchronization = require('resty.synchronization').new(1)
 
+local test
+
 local error = error
 local len = string.len
 local format = string.format
