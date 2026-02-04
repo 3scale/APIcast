@@ -8,7 +8,7 @@ on:
 
 jobs:
   require-changelog:
-    if: ${{ !contains(github.event.*.labels.*.name, 'skip-changelog') }}
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changelog') }}
     name: Requires changelog
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +27,7 @@ jobs:
       - name: Check changelog existence
         if: steps.changelog-file.outputs.any_changed == 'false'
         run: |
-          echo("Please include a CHANGELOG entry. You can find it at [CHANGELOG.md](https://github.com/3scale/apicast/blob/master/CHANGELOG.md)."
+          echo "Please include a CHANGELOG entry. You can find it at [CHANGELOG.md](https://github.com/3scale/apicast/blob/master/CHANGELOG.md)."
           echo "Note, we hard-wrap at 80 chars and use 2 spaces after the last line."
           echo "If you believe this PR requires no changelog entry, label it with \"skip-changelog\"."
           exit 1
