@@ -193,12 +193,15 @@ function _M:add_policy(name, version, ...)
     end
 end
 
+local default_policy_order_check = PolicyOrderChecker.new(policy_manifests_loader.get_all())
+
 -- Checks if there are any policies placed in the wrong place in the chain.
 -- It doesn't return anything, it prints error messages when there's a problem.
 function _M:check_order(manifests)
-    PolicyOrderChecker.new(
-        manifests or policy_manifests_loader.get_all()
-    ):check(self)
+  if manifests then
+    return PolicyOrderChecker.new(manifests):check(self)
+  end
+  default_policy_order_check:check(self)
 end
 
 local function call_chain(phase_name)
