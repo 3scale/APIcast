@@ -13,7 +13,7 @@ local file_reader = require("resty.file").file_reader
 local file_size = require("resty.file").file_size
 local client_body_reader = require("resty.http.request_reader").get_client_body_reader
 local send_response = require("resty.http.response_writer").send_response
-local concat = table.concat
+local proxy_response = require("resty.http.response_writer").proxy_response
 
 local _M = { }
 
@@ -161,13 +161,19 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
 
     if res then
         if opts.request_unbuffered and raw then
-            local bytes, err = send_response(sock, res, DEFAULT_CHUNKSIZE)
-            if not bytes then
+            err = send_response(sock, res, DEFAULT_CHUNKSIZE)
+            if err then
                 ngx.log(ngx.ERR, "failed to send response: ", err)
-                return sock:send("HTTP/1.1 502 Bad Gateway")
+                sock:close()
+                return ngx.exit(ngx.HTTP_BAD_GATEWAY)
             end
         else
-            httpc:proxy_response(res)
+            err = proxy_response(res, DEFAULT_CHUNKSIZE)
+            if err then
+                ngx.log(ngx.ERR, 'failed to proxy request to: ', proxy_uri, ' err : ', err)
+                httpc:close()
+                return
+            end
             httpc:set_keepalive()
         end
     else
