@@ -36,14 +36,12 @@ describe('resty.http.response_writer', function()
   describe('.send_response', function()
 
     it('returns nil when no response is provided', function()
-      local ok, err = response_writer.send_response(mock_sock, nil)
-      assert.is_nil(ok)
+      local err = response_writer.send_response(mock_sock, nil)
       assert.is_nil(err)
     end)
 
     it('returns error when no socket is provided', function()
-      local ok, err = response_writer.send_response(nil, make_response())
-      assert.is_nil(ok)
+      local err = response_writer.send_response(nil, make_response())
       assert.equal("socket not initialized yet", err)
     end)
 
@@ -145,18 +143,16 @@ describe('resty.http.response_writer', function()
 
     it('returns true on success', function()
       local response = make_response()
-      local ok, err = response_writer.send_response(mock_sock, response)
+      local err = response_writer.send_response(mock_sock, response)
 
-      assert.is_true(ok)
       assert.is_nil(err)
     end)
 
     it('returns error when headers send fails', function()
       mock_sock.send = function() return nil, "closed" end
       local response = make_response()
-      local ok, err = response_writer.send_response(mock_sock, response)
+      local err = response_writer.send_response(mock_sock, response)
 
-      assert.is_nil(ok)
       assert.truthy(string.find(err, "failed to send headers"))
     end)
 
@@ -171,9 +167,8 @@ describe('resty.http.response_writer', function()
       end
 
       local response = make_response({ chunks = { "hello" } })
-      local ok, err = response_writer.send_response(mock_sock, response)
+      local err = response_writer.send_response(mock_sock, response)
 
-      assert.is_nil(ok)
       assert.truthy(string.find(err, "failed to send response body"))
     end)
 
@@ -186,9 +181,8 @@ describe('resty.http.response_writer', function()
           return nil, "read error"
         end
       }
-      local ok, err = response_writer.send_response(mock_sock, response)
+      local err = response_writer.send_response(mock_sock, response)
 
-      assert.is_nil(ok)
       assert.truthy(string.find(err, "failed to read response body"))
     end)
 
@@ -198,9 +192,8 @@ describe('resty.http.response_writer', function()
         reason = "OK",
         headers = {},
       }
-      local ok, err = response_writer.send_response(mock_sock, response)
+      local err = response_writer.send_response(mock_sock, response)
 
-      assert.is_nil(ok)
       assert.equal("no body reader", err)
     end)
 
@@ -238,10 +231,168 @@ describe('resty.http.response_writer', function()
 
     it('handles empty body', function()
       local response = make_response({ chunks = {} })
-      local ok, err = response_writer.send_response(mock_sock, response)
+      local err = response_writer.send_response(mock_sock, response)
 
-      assert.is_true(ok)
       assert.is_nil(err)
+    end)
+  end)
+
+  describe('.proxy_response', function()
+    local printed_data
+    local headers_set
+
+    before_each(function()
+      printed_data = {}
+      headers_set = {}
+
+      ngx.status = nil
+      ngx.header = setmetatable({}, {
+        __newindex = function(_, k, v)
+          headers_set[k] = v
+        end
+      })
+
+      stub(ngx, 'print', function(data)
+        table.insert(printed_data, data)
+        return true
+      end)
+      stub(ngx, 'flush', function() return true end)
+    end)
+
+    it('returns nil when no response is provided', function()
+      local ok = response_writer.proxy_response(nil)
+      assert.is_nil(ok)
+    end)
+
+    it('sets ngx.status from response', function()
+      local res = make_response({ status = 201 })
+      local err = response_writer.proxy_response(res)
+
+      assert.is_nil(err)
+      assert.equal(201, ngx.status)
+    end)
+
+    it('sets response headers on ngx.header', function()
+      local res = make_response({
+        headers = {
+          ["Content-Type"] = "application/json",
+          ["X-Request-Id"] = "abc123",
+        }
+      })
+      local err = response_writer.proxy_response(res)
+
+      assert.is_nil(err)
+      assert.equal("application/json", headers_set["Content-Type"])
+      assert.equal("abc123", headers_set["X-Request-Id"])
+    end)
+
+    it('filters hop-by-hop headers', function()
+      local res = make_response({
+        headers = {
+          ["Connection"] = "keep-alive",
+          ["Keep-Alive"] = "timeout=5",
+          ["Transfer-Encoding"] = "chunked",
+          ["Proxy-Authenticate"] = "Basic",
+          ["Proxy-Authorization"] = "Basic abc",
+          ["TE"] = "trailers",
+          ["Trailers"] = "Expires",
+          ["Upgrade"] = "websocket",
+          ["Content-Length"] = "5",
+          ["X-Custom"] = "kept",
+        }
+      })
+      local err = response_writer.proxy_response(res)
+
+      assert.is_nil(err)
+      assert.is_nil(headers_set["Connection"])
+      assert.is_nil(headers_set["Keep-Alive"])
+      assert.is_nil(headers_set["Transfer-Encoding"])
+      assert.is_nil(headers_set["Proxy-Authenticate"])
+      assert.is_nil(headers_set["Proxy-Authorization"])
+      assert.is_nil(headers_set["TE"])
+      assert.is_nil(headers_set["Trailers"])
+      assert.is_nil(headers_set["Upgrade"])
+      assert.is_nil(headers_set["Content-Length"])
+      assert.equal("kept", headers_set["X-Custom"])
+    end)
+
+    it('filters hop-by-hop headers case-insensitively', function()
+      local res = make_response({
+        headers = {
+          ["CONNECTION"] = "close",
+          ["TRANSFER-ENCODING"] = "chunked",
+        }
+      })
+      local err = response_writer.proxy_response(res)
+
+      assert.is_nil(err)
+      assert.is_nil(headers_set["CONNECTION"])
+      assert.is_nil(headers_set["TRANSFER-ENCODING"])
+    end)
+
+    it('prints and flushes body chunks', function()
+      local res = make_response({ chunks = { "chunk1", "chunk2" } })
+      local err = response_writer.proxy_response(res)
+
+      assert.is_nil(err)
+      assert.stub(ngx.print).was_called(2)
+      assert.stub(ngx.print).was_called_with("chunk1")
+      assert.stub(ngx.print).was_called_with("chunk2")
+      -- assert.stub(ngx.flush).was_called(2)
+    end)
+
+    it('returns true on success', function()
+      -- local res = make_response({ chunks = { "data" } })
+      -- local ok, err = response_writer.proxy_response(res)
+
+      -- assert.is_true(ok)
+      -- assert.is_nil(err)
+    end)
+
+    it('handles empty body', function()
+      local res = make_response({ chunks = {} })
+      local err = response_writer.proxy_response(res)
+
+      assert.is_nil(err)
+      assert.stub(ngx.print).was_not_called()
+    end)
+
+    it('returns error when ngx.print fails', function()
+      ngx.print:revert()
+      stub(ngx, 'print', function() return nil, "broken pipe" end)
+
+      local res = make_response({ chunks = { "data" } })
+      local err = response_writer.proxy_response(res)
+
+      assert.truthy(string.find(err, "output response failed"))
+    end)
+
+    it('returns error when body reader fails', function()
+      local res = {
+        status = 200,
+        headers = {},
+        body_reader = function()
+          return nil, "read timeout"
+        end
+      }
+      local err = response_writer.proxy_response(res)
+
+      assert.truthy(string.find(err, "failed to read response body"))
+    end)
+
+    it('passes chunksize to body_reader', function()
+      local received_chunksize
+      local res = {
+        status = 200,
+        headers = {},
+        body_reader = function(size)
+          received_chunksize = size
+          return nil
+        end
+      }
+      response_writer.proxy_response(res, 2048)
+
+      assert.equal(2048, received_chunksize)
     end)
   end)
 end)

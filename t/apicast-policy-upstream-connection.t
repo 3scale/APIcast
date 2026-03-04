@@ -142,7 +142,7 @@ ETag: foobar
 --- error_log env
 proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 using proxy: $TEST_NGINX_HTTPS_PROXY
-proxy_response(): timeout
+failed to read response body: timeout
 --- user_files fixture=tls.pl eval
 
 === TEST 3: Set timeouts using HTTPS proxy for backend using HTTPS_PROXY env var
@@ -223,7 +223,7 @@ ETag: foobar
 --- error_log env
 proxy request: CONNECT test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT HTTP/1.1
 using proxy: $TEST_NGINX_HTTPS_PROXY
-proxy_response(): timeout
+failed to read response body: timeout
 --- user_files fixture=tls.pl eval
 
 === TEST 4: Set timeouts using HTTPS Camel proxy for backend

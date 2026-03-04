@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Correct FAPI header to `x-fapi-interaction-id` [PR #1557](https://github.com/3scale/APIcast/pull/1557) [THREESCALE-11957](https://issues.redhat.com/browse/THREESCALE-11957)
 - Only validate oidc setting if authentication method is set to oidc [PR #1568](https://github.com/3scale/APIcast/pull/1568) [THREESCALE-11441](https://issues.redhat.com/browse/THREESCALE-11441)
+- Reduce memory consumption when returning large response that has been routed through a proxy server. [PR #1572](https://github.com/3scale/APIcast/pull/1572) [THREESCALE-12258](https://issues.redhat.com/browse/THREESCALE-12258)
 
 ### Added
 - Update APIcast schema manifest [PR #1550](https://github.com/3scale/APIcast/pull/1550)
