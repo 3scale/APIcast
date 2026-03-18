@@ -32,7 +32,7 @@ end
 local function connect(request)
     request = request or { }
     local httpc = http.new()
-    local proxy_options = request.proxy_options or {}
+    local proxy_options = request.options or {}
 
     if proxy_options.upstream_connection_opts then
       local con_opts = request.proxy_options.upstream_connection_opts
@@ -54,10 +54,6 @@ local function connect(request)
     local port = default_port(uri)
     local skip_https_connect = proxy_options.skip_https_connect
 
-    -- set ssl_verify: lua-resty-http set ssl_verify to true by default if scheme is https, whereas
-    -- openresty treat nil as false, so we need to explicitly set ssl_verify to false if nil
-    local ssl_verify = request.options and request.options.ssl and request.options.ssl.verify or false
-
     -- We need to set proxy_opts to an empty table here otherwise, lua-resty-http will fallback
     -- to the global proxy options
     local options = {
@@ -68,10 +64,12 @@ local function connect(request)
     }
     if scheme == 'https' then
         options.ssl_server_name = host
-        options.ssl_verify = ssl_verify
-        if proxy_options.upstream_ssl then
-          options.ssl_client_cert = proxy_options.upstream_ssl.ssl_client_cert
-          options.ssl_client_priv_key = proxy_options.upstream_ssl.ssl_client_priv_key
+        if proxy_options.ssl then
+          -- set ssl_verify: lua-resty-http set ssl_verify to true by default if scheme is https, whereas
+          -- openresty treat nil as false, so we need to explicitly set ssl_verify to false if nil
+          options.ssl_verify = proxy_options.ssl.verify or false
+          options.ssl_client_cert = proxy_options.ssl.client_cert
+          options.ssl_client_priv_key = proxy_options.ssl.client_priv_key
         end
     end
 
@@ -113,9 +111,6 @@ local function connect(request)
                 ', pool: ', httpc.pool, ' reused times: ', httpc:get_reused_times())
 
             ngx.log(ngx.DEBUG, 'targeting server ', host, ':', port)
-
-            local ok, err = httpc:ssl_handshake(nil, host, request.ssl_verify)
-            if not ok then return nil, err end
 
             return httpc
         elseif scheme == 'https' then
