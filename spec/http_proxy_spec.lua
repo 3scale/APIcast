@@ -44,7 +44,7 @@ describe('http_proxy', function()
 
       it('terminates phase', function()
         local http_proxy = require('apicast.http_proxy')
-        http_proxy.request(upstream, proxy_uri)
+        http_proxy.request(upstream, proxy_uri, {})
         assert.spy(ngx.exit).was_called_with(ngx.OK)
       end)
     end)

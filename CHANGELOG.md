@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Correct FAPI header to `x-fapi-interaction-id` [PR #1557](https://github.com/3scale/APIcast/pull/1557) [THREESCALE-11957](https://issues.redhat.com/browse/THREESCALE-11957)
 - Only validate oidc setting if authentication method is set to oidc [PR #1568](https://github.com/3scale/APIcast/pull/1568) [THREESCALE-11441](https://issues.redhat.com/browse/THREESCALE-11441)
+- Server certificate is never verified in API request for https backend via proxy [PR #1573](https://github.com/3scale/APIcast/pull/1568) [THREESCALE-11944](https://redhat.atlassian.net/browse/THREESCALE-11944)
 
 ### Added
 - Update APIcast schema manifest [PR #1550](https://github.com/3scale/APIcast/pull/1550)

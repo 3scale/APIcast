@@ -231,14 +231,16 @@ function _M:call(context)
           self:set_skip_https_connect_on_proxy();
         end
 
-        self.request_unbuffered = context.request_unbuffered
-        self.upstream_connection_opts = context.upstream_connection_opts
-        self.upstream_ssl = {
-          ssl_verify = context.upstream_verify,
-          ssl_client_cert = context.upstream_certificate,
-          ssl_client_priv_key = context.upstream_key
+        local options = {
+          request_unbuffered = context.request_unbuffered,
+          upstream_connection_opts = context.upstream_connection_opts,
+          upstream_ssl = {
+            ssl_verify = context.upstream_verify,
+            ssl_client_cert = context.upstream_certificate,
+            ssl_client_priv_key = context.upstream_key
+          }
         }
-        http_proxy.request(self, proxy_uri)
+        http_proxy.request(self, proxy_uri, options)
     else
         local err = self:rewrite_request()
         if err then

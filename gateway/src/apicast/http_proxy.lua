@@ -44,10 +44,10 @@ local function resolve_servers(uri)
     return resolver:get_servers(uri.host, uri)
 end
 
-local function forward_https_request(proxy_uri, uri, proxy_opts)
+local function forward_https_request(proxy_uri, uri, options)
     local body, err
     local sock
-    local opts = proxy_opts or {}
+    local opts = options or {}
     local req_method = ngx_get_method()
     local encoding = ngx.req.get_headers()["Transfer-Encoding"]
     local is_chunked = encoding and encoding:lower() == "chunked"
@@ -143,7 +143,7 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
         path = format('%s%s%s', ngx.var.uri, ngx.var.is_args, ngx.var.query_string or ''),
         body = body,
         proxy_uri = proxy_uri,
-        proxy_options = opts
+        options = opts
     }
 
     local httpc, err = http_proxy.new(request)
@@ -189,7 +189,7 @@ function _M.find(upstream)
     return get_proxy_uri(upstream.uri)
 end
 
-function _M.request(upstream, proxy_uri)
+function _M.request(upstream, proxy_uri, options)
     local uri = upstream.uri
     local proxy_auth
 
@@ -220,15 +220,9 @@ function _M.request(upstream, proxy_uri)
         return
     elseif uri.scheme == 'https' then
         upstream:rewrite_request()
-        local proxy_opts = {
-            proxy_auth = proxy_auth,
-            skip_https_connect = upstream.skip_https_connect,
-            request_unbuffered = upstream.request_unbuffered,
-            upstream_connection_opts = upstream.upstream_connection_opts,
-            upstream_ssl = upstream.upstream_ssl
-        }
+        options.proxy_auth = proxy_auth
 
-        forward_https_request(proxy_uri, uri, proxy_opts)
+        forward_https_request(proxy_uri, uri, options)
         return ngx.exit(ngx.OK) -- terminate phase
     else
         ngx.log(ngx.ERR, 'could not connect to proxy: ',  proxy_uri, ' err: ', 'invalid request scheme')
