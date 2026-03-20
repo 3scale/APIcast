@@ -1,7 +1,9 @@
 local format = string.format
 local tostring = tostring
+local ngx = ngx
 local ngx_get_method = ngx.req.get_method
 local ngx_http_version = ngx.req.http_version
+local ngx_req_get_headers = ngx.req.get_headers
 
 local resty_url = require "resty.url"
 local url_helper = require('resty.url_helper')
@@ -11,7 +13,7 @@ local file_reader = require("resty.file").file_reader
 local file_size = require("resty.file").file_size
 local client_body_reader = require("resty.http.request_reader").get_client_body_reader
 local send_response = require("resty.http.response_writer").send_response
-local concat = table.concat
+local proxy_response = require("resty.http.response_writer").proxy_response
 
 local _M = { }
 
@@ -49,9 +51,9 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
     local sock
     local opts = proxy_opts or {}
     local req_method = ngx_get_method()
-    local encoding = ngx.req.get_headers()["Transfer-Encoding"]
+    local encoding = ngx_req_get_headers()["Transfer-Encoding"]
     local is_chunked = encoding and encoding:lower() == "chunked"
-    local content_type = ngx.req.get_headers()["Content-Type"]
+    local content_type = ngx_req_get_headers()["Content-Type"]
     local content_type_is_urlencoded = content_type and content_type:lower() == "application/x-www-form-urlencoded"
     local raw = false
 
@@ -138,9 +140,9 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
 
     local request = {
         uri = uri,
-        method = ngx.req.get_method(),
-        headers = ngx.req.get_headers(0, true),
-        path = format('%s%s%s', ngx.var.uri, ngx.var.is_args, ngx.var.query_string or ''),
+        method = req_method,
+        headers = ngx_req_get_headers(0, true),
+        path = (ngx.var.uri or '') .. (ngx.var.is_args or '') .. (ngx.var.query_string or ''),
         body = body,
         proxy_uri = proxy_uri,
         proxy_options = opts
@@ -159,13 +161,19 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
 
     if res then
         if opts.request_unbuffered and raw then
-            local bytes, err = send_response(sock, res, DEFAULT_CHUNKSIZE)
-            if not bytes then
+            err = send_response(sock, res, DEFAULT_CHUNKSIZE)
+            if err then
                 ngx.log(ngx.ERR, "failed to send response: ", err)
-                return sock:send("HTTP/1.1 502 Bad Gateway")
+                sock:close()
+                return ngx.exit(ngx.HTTP_BAD_GATEWAY)
             end
         else
-            httpc:proxy_response(res)
+            err = proxy_response(res, DEFAULT_CHUNKSIZE)
+            if err then
+                ngx.log(ngx.ERR, 'failed to proxy request to: ', proxy_uri, ' err : ', err)
+                httpc:close()
+                return
+            end
             httpc:set_keepalive()
         end
     else
@@ -194,7 +202,7 @@ function _M.request(upstream, proxy_uri)
     local proxy_auth
 
     if proxy_uri.user or proxy_uri.password then
-        proxy_auth = "Basic " .. ngx.encode_base64(concat({ proxy_uri.user or '', proxy_uri.password or '' }, ':'))
+        proxy_auth = "Basic " .. ngx.encode_base64((proxy_uri.user or '') .. ":" .. (proxy_uri.password or ''))
     end
 
     if uri.scheme == 'http' then -- rewrite the request to use http_proxy
