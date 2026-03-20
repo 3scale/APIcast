@@ -56,9 +56,8 @@ describe('resty backend', function()
       local req = { method = method, url = 'https://untrusted-root.badssl.com/', options = { ssl = { verify = true } } }
 
       local response = backend:send(req)
-
       assert.truthy(response)
-      assert.match('self signed certificate in certificate chain', response.error)
+      assert.is_same('19: self-signed certificate in certificate chain', response.error)
       assert.equal(req, response.request)
       assert.falsy(response.ok)
     end)

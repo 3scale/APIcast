@@ -268,7 +268,7 @@ env APICAST_MANAGEMENT_API=debug;
 lua_package_path "$TEST_NGINX_LUA_PATH";
 init_by_lua_block {
   ngx.now = function() return 0 end
-  local cache = require('resty.resolver.cache').shared():save({ {
+  local cache = require('resty.resolver.cache').shared():save("127.0.0.1.xip.io", 1, { {
     address = "127.0.0.1",
     class = 1,
     name = "127.0.0.1.xip.io",
@@ -285,8 +285,13 @@ GET /dns/cache
 Content-Type: application/json; charset=utf-8
 --- expected_response_body_like_multiple eval
 [[
+    qr/"127.0.0.1.xip.io:1":\{/,
+    qr/"value":\{"1":\{/,
     qr/"name":"127.0.0.1.xip.io"/,
-    qr/\{"127.0.0.1.xip.io":\{"value":{"1":{"address":"127.0.0.1","class":1,"ttl":199/,
+    qr/"type":1/,
+    qr/"class":1/,
+    qr/"address":"127.0.0.1"/,
+    qr/"ttl":199/,
 ]]
 --- no_error_log
 [error]

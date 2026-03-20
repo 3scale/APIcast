@@ -173,8 +173,7 @@ content_by_lua_block {
 connected: 1
 failed to do SSL handshake: handshake failed
 --- error_log
-ssl3_read_bytes:sslv3 alert handshake failure:SSL
-sslv3 alert handshake failure
+ssl/tls alert handshake failure
 --- user_files
 >>> server_invalid.crt
 -----BEGIN CERTIFICATE-----

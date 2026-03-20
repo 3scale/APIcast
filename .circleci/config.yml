@@ -26,9 +26,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-          - apicast-cpanm-v2-{{ arch }}-{{ checksum "gateway/cpanfile.snapshot" }}
-          - apicast-cpanm-v2-{{ arch }}-{{ .Branch }}
-          - apicast-cpanm-v2-{{ arch }}-master
+          - apicast-cpanm-v3-{{ arch }}-{{ checksum "gateway/cpanfile.snapshot" }}
+          - apicast-cpanm-v3-{{ arch }}-{{ .Branch }}
+          - apicast-cpanm-v3-{{ arch }}-master
 
   setup-docker:
     steps:
@@ -105,7 +105,7 @@ executors:
   openresty:
     working_directory: /opt/app-root/apicast
     docker:
-      - image: quay.io/3scale/apicast-ci:openresty-1.21.4-4
+      - image: quay.io/3scale/apicast-ci:openresty-1.21.4-5
       - image: mirror.gcr.io/library/redis
     environment:
       TEST_NGINX_BINARY: openresty
@@ -180,7 +180,7 @@ jobs:
       - restore-perl-cache
       - run: make carton
       - save_cache:
-          key: apicast-cpanm-v2-{{ arch }}-{{ checksum "gateway/cpanfile.snapshot" }}
+          key: apicast-cpanm-v3-{{ arch }}-{{ checksum "gateway/cpanfile.snapshot" }}
           <<: *perl-cache-paths
       - persist_to_workspace:
           root: .

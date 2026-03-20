@@ -496,7 +496,7 @@ GET /?user_key=value
 --- no_error_log
 [error]
 --- error_log
-routines:tls_process_server_certificate:certificate verify failed
+routines::tlsv1 alert unknown ca
 
 
 === TEST 7: MTLS policy with correct CA works as expected

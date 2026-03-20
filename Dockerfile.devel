@@ -1,8 +1,7 @@
-FROM registry.access.redhat.com/ubi8
+FROM registry.access.redhat.com/ubi9/ubi-minimal
 
-ARG OPENRESTY_RPM_VERSION="1.21.4-1.el8"
+ARG OPENRESTY_RPM_VERSION="1.21.4-4.el9"
 ARG LUAROCKS_VERSION="3.12.0"
-ARG JAEGERTRACING_CPP_CLIENT_RPM_VERSION="0.3.1-13.el8"
 ARG LUAROVER_VERSION="0.2.3"
 
 WORKDIR /tmp
@@ -10,26 +9,24 @@ WORKDIR /tmp
 ENV APP_ROOT=/opt/app-root \
     HOME=/opt/app-root/src \
     PATH=/opt/app-root/src/bin:/opt/app-root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    PLATFORM="el8"
+    PLATFORM="el9"
 
-RUN sed -i s/enabled=./enabled=0/g /etc/yum/pluginconf.d/subscription-manager.conf
+RUN microdnf update -y \
+    && microdnf install -y 'yum-utils'
 
-RUN yum upgrade -y
-
-RUN dnf install -y 'dnf-command(config-manager)'
-
-RUN yum install -y \
-        gcc make git which curl iputils bind-utils expat-devel kernel-headers openssl-devel m4 \
-        libyaml libyaml-devel perl-local-lib perl-App-cpanminus perl-LWP-Protocol-https
+RUN microdnf install -y \
+        gcc make git which iputils bind-utils expat-devel kernel-headers openssl-devel m4 \
+        libyaml libyaml-devel perl-local-lib perl-App-cpanminus perl-LWP-Protocol-https \
+        tar
 
 # perl-Test-Nginx
 RUN cpanm --notest IPC::Run && \
     cpanm https://cpan.metacpan.org/authors/id/A/AG/AGENT/Test-Nginx-0.29.tar.gz && \
-    cpanm https://cpan.metacpan.org/authors/id/O/OA/OALDERS/LWP-Protocol-https-6.14.tar.gz
+    cpanm https://cpan.metacpan.org/authors/id/O/OA/OALDERS/LWP-Protocol-https-6.15.tar.gz
 
-RUN yum config-manager --add-repo http://packages.dev.3sca.net/dev_packages_3sca_net.repo
+RUN yum-config-manager --add-repo http://packages.dev.3sca.net/dev_packages_3sca_net.repo
 
-RUN yum install -y \
+RUN microdnf install -y \
         openresty-${OPENRESTY_RPM_VERSION} \
         openresty-resty-${OPENRESTY_RPM_VERSION} \
         openresty-opentelemetry-${OPENRESTY_RPM_VERSION}
@@ -57,7 +54,7 @@ RUN cd /tmp \
         --with-lua-include=/usr/local/openresty/luajit/include/luajit-2.1 \
     && make build \
     && make install \
-    && luarocks install luaossl 20200709 --tree ${APP_ROOT}/lua_modules CFLAGS="-O2 -fPIC -DHAVE_EVP_KDF_CTX=1" \
+    # && luarocks install luaossl 20200709 --tree ${APP_ROOT}/lua_modules CFLAGS="-O2 -fPIC -DHAVE_EVP_KDF_CTX=1" \
     && luarocks install http --tree ${APP_ROOT}/lua_modules \
     && cd /tmp \
     && rm -rf luarocks-${LUAROCKS_VERSION} luarocks-${LUAROCKS_VERSION}.tar.gz \
@@ -65,8 +62,8 @@ RUN cd /tmp \
     && tar xzf lua-rover-v${LUAROVER_VERSION}.tar.gz \
     && cd lua-rover-${LUAROVER_VERSION} \
     && luarocks make \
-    && yum -y remove luarocks \
-    && rm -rf /var/cache/yum && yum clean all -y 
+    && rm -rf /var/cache/yum /var/cache/dnf \
+    && microdnf clean all -y
 
 # Directory with the sources is set as the working directory so all STI scripts
 # can execute relative to this path.

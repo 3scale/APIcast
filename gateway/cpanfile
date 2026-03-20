@@ -6,4 +6,3 @@ requires 'JSON';
 requires 'URI::data';
 requires 'TAP::Harness::JUnit';
 requires 'Data::Inspect';
-requires 'YAML';
