@@ -103,7 +103,7 @@ local function matched_patterns(matched_rules)
 end
 
 local function build_backend_client(self, service)
-  return assert(backend_client:new(service, self.http_ng_backend), 'missing backend')
+  return assert(backend_client:new(service, self.http_ng_backend))
 end
 
 function _M:authorize(context, service, usage, credentials, ttl)
