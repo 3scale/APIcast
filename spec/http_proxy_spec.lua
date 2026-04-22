@@ -20,6 +20,8 @@ describe('http_proxy', function()
 
       local resty_http_proxy = require 'resty.http.proxy'
       stub(resty_http_proxy, 'new', function() return httpc end)
+      local http_writer = require 'resty.http.response_writer'
+      stub(http_writer, 'proxy_response')
     end
 
     before_each(function()
