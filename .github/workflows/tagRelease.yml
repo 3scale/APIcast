@@ -12,7 +12,7 @@ on:
         description: 'Tag to be created along with release'
         # Input has to be provided for the workflow to run
         required: true
-      git_ref: 
+      git_ref:
         description: 'Git reference to create tag from, can be a commit hash or branch'
         required: true
 
@@ -22,7 +22,12 @@ jobs:
       runs-on: ubuntu-latest
       name: Create Release
       steps:
-        - uses: softprops/action-gh-release@v1 #This action will create the release with the params specified.
-          with:
-           tag_name: ${{ inputs.tag }}
-           target_commitish: ${{ inputs.git_ref }}
+        - name: Create Release
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            gh release create ${{ inputs.tag }} \
+              --repo ${{ github.repository }} \
+              --target ${{ inputs.git_ref }} \
+              --title "${{ inputs.tag }}" \
+              --generate-notes
