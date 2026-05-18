@@ -20,7 +20,7 @@ lua-resty-url 0.3.5-1||production
 lua-term 0.8-1||testing
 lua_cliargs 3.0-2||testing
 luacov 0.15.0-1|19b52ca0298c8942df82dd441d7a4a588db4c413|testing
-luafilesystem 1.8.0-1|7c6e1b013caec0602ca4796df3b1d7253a2dd258|production,development,testing
+luafilesystem 1.9.0-1||testing,development,production
 luassert 1.9.0-1|8d8dc8a54cc468048a128a867f6449a6c3fdd11a|testing
 luasystem 0.4.1-1|c832d2b857d4174d17247de837426d4cfc95ec2f|testing
 lyaml 6.2.8-1||production
@@ -28,6 +28,6 @@ markdown 0.33-1|8c09109924b218aaecbfd4d4b1de538269c4d765|development
 mediator_lua 1.1.2-0||testing
 net-url 1.1-1|32acd84d06e16ddffc975adafce9cea26f3b2dd1|testing
 nginx-lua-prometheus 0.20181120-3|379c0a4d4d6f3c5b0eb93691fc7e14fff498e1ca|production
-penlight 1.13.1-1|3b42fd05d8e60998b0fc5830a397b2354a81170b|production,development,testing
+penlight 1.15.0-1||testing,development,production
 router 2.1-0||production
 say 1.4.1-3|45a3057e68c52b34ab59ef167efeb2340e356661|testing
