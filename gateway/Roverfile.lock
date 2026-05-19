@@ -13,7 +13,7 @@ lua-resty-http 0.17.1-0|4ab4269cf442ba52507aa2c718f606054452fcad|production
 lua-resty-ipmatcher 0.6.1-0|62d4c44d67227e8f3fe02331c2f8b90fe0d7ccd1|production
 lua-resty-iputils 0.3.0-2|6110b41eaa52efd25e56f89e34412ab95f700d57|production
 lua-resty-jit-uuid 0.0.7-2|64ae38de75c9d58f330d89e140ac872771c19223|production
-lua-resty-jwt 0.2.3-0|b3d5c085643fa95099e72a609c57095802106ff9|production
+lua-resty-jwt 0.2.4-1||production
 lua-resty-openssl 1.5.1-1|a900c5f5897448c181dd58073e51cdeeb3fd0029|production
 lua-resty-repl 0.0.6-0|3878f41b7e8f97b1c96919db19dbee9496569dda|development
 lua-resty-url 0.3.5-1||production
