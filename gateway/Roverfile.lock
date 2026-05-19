@@ -1,7 +1,7 @@
 argparse 0.7.1-1||production
-busted 2.2.0-1|02f31a9c103a44e166617cfdb6ba1b8994a9c912|testing
+busted 2.3.0-1||testing
 date 2.2-2|8d74567cf979c1eab2c6b6ca2e3b978fa40569a2|production
-dkjson 2.8-1||testing
+dkjson 2.10-1||testing
 fifo 0.2-0||development
 inspect 3.1.3-0||production
 jsonschema 0.8-0|c1d72d86bb3dc5b33da57d47febc47657d29ea74|testing
@@ -18,11 +18,11 @@ lua-resty-openssl 1.7.1-1||production
 lua-resty-repl 0.0.6-0|3878f41b7e8f97b1c96919db19dbee9496569dda|development
 lua-resty-url 0.3.5-1||production
 lua-term 0.8-1||testing
-lua_cliargs 3.0-2||testing
+lua_cliargs 3.0.2-1||testing
 luacov 0.15.0-1|19b52ca0298c8942df82dd441d7a4a588db4c413|testing
 luafilesystem 1.9.0-1||testing,development,production
-luassert 1.9.0-1|8d8dc8a54cc468048a128a867f6449a6c3fdd11a|testing
-luasystem 0.4.1-1|c832d2b857d4174d17247de837426d4cfc95ec2f|testing
+luassert 1.9.0-1||testing
+luasystem 0.7.1-1||testing
 lyaml 6.2.8-1||production
 markdown 0.33-1|8c09109924b218aaecbfd4d4b1de538269c4d765|development
 mediator_lua 1.1.2-0||testing

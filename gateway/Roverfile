@@ -7,7 +7,7 @@ luarocks {
     },
 
     group 'testing' {
-        module { 'busted' },
+        module { 'busted', '2.3.0'},
         module { 'luacov' },
         module { 'jsonschema', '0.8' },
     },
