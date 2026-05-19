@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update base image to ubi9-minimal [PR #1566](https://github.com/3scale/APIcast/pull/1566) [THREESCALE-11901](https://issues.redhat.com/browse/THREESCALE-11901)
 - Bump penlight to 1.15.0 [PR #1578](https://github.com/3scale/APIcast/pull/1578)
 - Bump lua-resty-jwt to 0.2.4 [PR #1579](https://github.com/3scale/APIcast/pull/1579)
+- Bump lua-resty-openssl to 1.7.1 [PR #1580](https://github.com/3scale/APIcast/pull/1580)
 
 ### Removed
 
