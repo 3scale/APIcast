@@ -55,7 +55,7 @@ RUN luarocks install --deps-mode=none --tree /usr/local https://luarocks.org/man
 RUN luarocks install --deps-mode=none --tree /usr/local https://luarocks.org/manifests/golgote/net-url-0.9-1.src.rock
 RUN luarocks install --deps-mode=none --tree /usr/local https://luarocks.org/manifests/membphis/lua-resty-ipmatcher-0.6.1-0.src.rock
 RUN luarocks install --deps-mode=none --tree /usr/local https://luarocks.org/manifests/fffonion/lua-resty-openssl-1.5.1-1.src.rock
-RUN luarocks install --deps-mode=none --tree /usr/local https://luarocks.org/manifests/tkan145/lua-resty-jwt-0.2.4-0.src.rock
+RUN luarocks install --deps-mode=none --tree /usr/local https://luarocks.org/manifests/cdbattags/lua-resty-jwt-0.2.4-1.src.rock
 
 RUN microdnf -y remove yum-utils luarocks \
     && rm -rf /var/cache/yum /var/cache/dnf \

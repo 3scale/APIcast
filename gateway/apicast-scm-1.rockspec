@@ -14,7 +14,7 @@ dependencies = {
    'inspect',
    'lyaml',
    'router',
-   'lua-resty-jwt',
+   'lua-resty-jwt == 0.2.4',
    'lua-resty-url',
    'lua-resty-env',
    'lua-resty-execvp',
