@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bump penlight to 1.15.0 [PR #1578](https://github.com/3scale/APIcast/pull/1578)
 - Bump lua-resty-jwt to 0.2.4 [PR #1579](https://github.com/3scale/APIcast/pull/1579)
 - Bump lua-resty-openssl to 1.7.1 [PR #1580](https://github.com/3scale/APIcast/pull/1580)
+- Lock lua-resty-jit-uuid to 0.0.7 [PR #1581](https://github.com/3scale/APIcast/pull/1581)
 
 ### Removed
 
