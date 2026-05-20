@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi9/ubi-minimal
 
-ARG OPENRESTY_RPM_VERSION="1.21.4-4.el9"
+ARG OPENRESTY_RPM_VERSION="1.27.1-1.el9"
 ARG LUAROCKS_VERSION="3.12.0"
 
 LABEL summary="The 3scale API gateway (APIcast) is an OpenResty application, which consists of two parts: NGINX configuration and Lua files." \

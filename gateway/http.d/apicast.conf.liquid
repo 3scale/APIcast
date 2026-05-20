@@ -78,7 +78,8 @@ server {
   {% endif %}
 
   {% if https_port -%}
-    listen {{ https_port }} ssl http2 {% if https_proxy_protocol %}proxy_protocol{% endif %};
+    listen {{ https_port }} ssl {% if https_proxy_protocol %}proxy_protocol{% endif %};
+    http2 on;
 
     ssl_protocols TLSv1.2 TLSv1.3;
   {%- assign https_certificate = env.APICAST_HTTPS_CERTIFICATE -%}

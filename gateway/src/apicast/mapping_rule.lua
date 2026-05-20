@@ -42,7 +42,7 @@ local function regexpify(pattern)
 
   pattern = re_gsub(pattern, [[\?.*]], '', 'oj')
   -- dollar sign is escaped by another $, see https://github.com/openresty/lua-nginx-module#ngxresub
-  pattern = re_gsub(pattern, [[\{.+?\}]], [[([\w-.~%!$$&'()*+,;=@:]+)]], 'oj')
+  pattern = re_gsub(pattern, [[\{.+?\}]], [[([\w\-.~%!$$&'()*+,;=@:]+)]], 'oj')
   pattern = re_gsub(pattern, [[\.]], [[\.]], 'oj')
   return pattern
 end

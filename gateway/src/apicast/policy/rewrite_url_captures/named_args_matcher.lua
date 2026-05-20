@@ -53,7 +53,7 @@ local function transform_rule_to_regex(match_rule)
   return re_gsub(
     match_rule,
     [[\{.+?\}]],
-    [[([\w-.~%!$$&'()*+,;=@:]+)]], -- Same as in the MappingRule module
+    [[([\w\-.~%!$$&'()*+,;=@:]+)]], -- Same as in the MappingRule module
     'oj'
   )
 end
