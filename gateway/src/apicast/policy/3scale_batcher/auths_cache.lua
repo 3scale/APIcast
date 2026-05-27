@@ -41,13 +41,11 @@ function _M:get(transaction)
 
   local colon = str_find(cached_value, ':', 1, true)
   if colon then
-    return {
-      status = tonumber(str_sub(cached_value, 1, colon - 1)),
-      rejection_reason = str_sub(cached_value, colon + 1)
-    }
+    return tonumber(str_sub(cached_value, 1, colon - 1)),
+      str_sub(cached_value, colon + 1)
   end
 
-  return { status = tonumber(cached_value) }
+  return tonumber(cached_value)
 end
 
 --- Store an authorization in the cache.
