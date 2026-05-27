@@ -203,7 +203,7 @@ function _M:access(context)
 
 
   if cached_auth then
-    handle_cached_auth(self, cached_auth, service, transaction)
+    return handle_cached_auth(self, cached_auth, service, transaction)
   else
     local formatted_usage = usage:format()
     local backend_res = backend:authorize(formatted_usage, credentials)
@@ -218,12 +218,12 @@ function _M:access(context)
     end
 
     if backend_status == 200 then
-      handle_backend_ok(self, transaction)
+      return handle_backend_ok(self, transaction)
     elseif backend_status >= 400 and backend_status < 500 then
-      handle_backend_denied(
+      return handle_backend_denied(
         self, service, transaction, backend_status, backend_res.headers)
     else
-      handle_backend_error(self, service, transaction, cache_handler)
+      return handle_backend_error(self, service, transaction, cache_handler)
     end
   end
 end
