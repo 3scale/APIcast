@@ -1,5 +1,5 @@
 local policy = require('apicast.policy')
-local _M = policy.new('http_proxy', 'builtin')
+local _M = policy.new('camel_proxy', 'builtin')
 
 local resty_url = require 'resty.url'
 local ipairs = ipairs
