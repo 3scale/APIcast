@@ -6,20 +6,30 @@
 -- to get the left operand instead of the operand itself.
 
 local setmetatable = setmetatable
-local Operation = require('apicast.conditions.operation')
 local TemplateString = require('apicast.template_string')
 
 local _M = {}
 
 local mt = { __index = _M }
 
+local evaluate_func = {
+  ['=='] = function(left, right) return tostring(left) == tostring(right) end,
+  ['!='] = function(left, right) return tostring(left) ~= tostring(right) end,
+
+  -- Implemented on top of ngx.re.match. Returns true when there is a match and
+  -- false otherwise.
+  ['matches'] = function(left, right)
+    return (match(tostring(left), tostring(right)) and true) or false
+  end
+}
+
 local function new(evaluate_left_side_func, op, value, value_type)
   local self = setmetatable({}, mt)
 
   self.evaluate_left_side_func = evaluate_left_side_func
-  self.op = op
-  self.value = value
-  self.value_type = value_type
+  self.evaluate_func = evaluate_func[op]
+  assert(self.evaluate_func, 'Unsupported operation: ' .. (op or 'nil'))
+  self.right_template = TemplateString.new(value, value_type or 'plain')
 
   return self
 end
@@ -55,21 +65,18 @@ function _M.new_op_with_jwt_claim(jwt_claim_name, op, value, value_type)
 end
 
 function _M.new_op_with_liquid_templating(liquid_expression, op, value, value_type)
+  local template = TemplateString.new(liquid_expression or "", "liquid")
   local eval_left_func = function(context)
-    return TemplateString.new(liquid_expression or "" , "liquid"):render(context)
+    return template:render(context)
   end
 
   return new(eval_left_func, op, value, value_type)
 end
 
 function _M:evaluate(context)
-  local left_operand_val = self.evaluate_left_side_func(context)
-
-  local op = Operation.new(
-    left_operand_val, 'plain', self.op, self.value, self.value_type
-  )
-
-  return op:evaluate(context)
+  local left = self.evaluate_left_side_func(context)
+  local right = self.right_template:render(context)
+  return self.evaluate_func(left, right)
 end
 
 return _M
