@@ -1,5 +1,5 @@
 local policy = require('apicast.policy')
-local _M = policy.new('http_proxy', 'builtin')
+local _M = policy.new('camel_proxy', 'builtin')
 
 local resty_url = require 'resty.url'
 local ipairs = ipairs
@@ -21,17 +21,24 @@ function _M.new(config)
   end
 
   for _, proto in ipairs(proxies) do
-    local val, err =  resty_url.parse(config[string.format("%s_proxy", proto)])
-    if err then
-      ngx.log(ngx.WARN, proto, " proxy is not correctly defined, err: ", err)
+    local proxy_url =  config[string.format("%s_proxy", proto)]
+    if proxy_url then
+      local val, err =  resty_url.parse(proxy_url)
+      if err then
+        ngx.log(ngx.WARN, proto, " proxy is not correctly defined, err: ", err)
+      end
+      self.proxies[proto] = val
+    else
+      self.proxies[proto] = self.all_proxy
     end
-    self.proxies[proto] = val or self.all_proxy
+  end
+  -- This get_http_proxy function will be called in upstream just in case if a
+  -- proxy is defined.
+  self.get_http_proxy = function(uri)
+    if not uri.scheme then return nil end
+    return self.proxies[uri.scheme]
   end
   return self
-end
-
-local function find_proxy(self, scheme)
-  return self.proxies[scheme]
 end
 
 function _M:access(context)
@@ -48,12 +55,7 @@ end
 function _M:rewrite(context)
   -- This get_http_proxy function will be called in upstream just in case if a
   -- proxy is defined.
-  context.get_http_proxy = function(uri)
-    if not uri.scheme then
-      return nil
-    end
-    return find_proxy(self, uri.scheme)
-  end
+  context.get_http_proxy = self.get_http_proxy
 end
 
 return _M
