@@ -1,5 +1,6 @@
 local ipairs = ipairs
 local format = string.format
+local str_find = string.find
 local insert = table.insert
 local concat = table.concat
 local sort = table.sort
@@ -39,11 +40,24 @@ local function metrics_part_in_key(usage)
 end
 
 local regexes_report_key = {
-  [[service_id:(?<service_id>[\w-]+),user_key:(?<user_key>[\S-]+),metric:(?<metric>[\S-]+)]],
-  [[service_id:(?<service_id>[\w-]+),access_token:(?<access_token>[\S-]+),metric:(?<metric>[\S-]+)]],
-  [[service_id:(?<service_id>[\w-]+),app_id:(?<app_id>[\S-]+),app_key:(?<app_key>[\S-]+),metric:(?<metric>[\S-]+)]],
-  [[service_id:(?<service_id>[\w-]+),app_id:(?<app_id>[\S-]+),metric:(?<metric>[\S-]+)]],
+  user_key= [[service_id:(?<service_id>[\w-]+),user_key:(?<user_key>[\S-]+),metric:(?<metric>[\S-]+)]],
+  access_token = [[service_id:(?<service_id>[\w-]+),access_token:(?<access_token>[\S-]+),metric:(?<metric>[\S-]+)]],
+  app_key = [[service_id:(?<service_id>[\w-]+),app_id:(?<app_id>[\S-]+),app_key:(?<app_key>[\S-]+),metric:(?<metric>[\S-]+)]],
+  app_id = [[service_id:(?<service_id>[\w-]+),app_id:(?<app_id>[\S-]+),metric:(?<metric>[\S-]+)]],
 }
+
+
+local function detect_cred_type(key)
+  if str_find(key, 'user_key:', 1, true) then
+    return 'user_key'
+  elseif str_find(key, 'access_token:', 1, true) then
+    return 'access_token'
+  elseif str_find(key, 'app_key:', 1, true) then
+    return 'app_key'
+  elseif str_find(key, 'app_id:', 1, true) then
+    return 'app_id'
+  end
+end
 
 function _M.key_for_cached_auth(transaction)
   local service_part = format("service_id:%s", transaction.service_id)
@@ -61,24 +75,26 @@ function _M.key_for_batched_report(service_id, credentials, metric_name)
 end
 
 function _M.report_from_key_batched_report(key, value)
-  for _, regex in ipairs(regexes_report_key) do
-    local match = ngx_re.match(key, regex, 'oj')
-
-    if match then
-      -- some credentials will be nil.
-      return {
-        service_id = match.service_id,
-        metric = match.metric,
-        user_key = match.user_key,
-        access_token = match.access_token,
-        app_id = match.app_id,
-        app_key = match.app_key,
-        value = value
-      }
-    end
+  local cred_type = detect_cred_type(key)
+  if not cred_type then
+    return nil, 'credentials not found'
   end
 
-  return nil, 'credentials not found'
+  local match = ngx_re.match(key, regexes_report_key[cred_type], 'oj')
+  if not match then
+    return nil, "credentials not found"
+  end
+
+  -- some credentials will be nil.
+  return {
+    service_id = match.service_id,
+    metric = match.metric,
+    user_key = match.user_key,
+    access_token = match.access_token,
+    app_id = match.app_id,
+    app_key = match.app_key,
+    value = value
+  }
 end
 
 return _M
