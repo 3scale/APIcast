@@ -32,11 +32,13 @@ function _M.new(config)
       self.proxies[proto] = self.all_proxy
     end
   end
+  -- This get_http_proxy function will be called in upstream just in case if a
+  -- proxy is defined.
+  self.get_http_proxy = function(uri)
+    if not uri.scheme then return nil end
+    return self.proxies[uri.scheme]
+  end
   return self
-end
-
-local function find_proxy(self, scheme)
-  return self.proxies[scheme]
 end
 
 function _M:access(context)
@@ -53,12 +55,7 @@ end
 function _M:rewrite(context)
   -- This get_http_proxy function will be called in upstream just in case if a
   -- proxy is defined.
-  context.get_http_proxy = function(uri)
-    if not uri.scheme then
-      return nil
-    end
-    return find_proxy(self, uri.scheme)
-  end
+  context.get_http_proxy = self.get_http_proxy
 end
 
 return _M
