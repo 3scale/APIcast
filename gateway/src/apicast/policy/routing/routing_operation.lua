@@ -55,8 +55,9 @@ function _M.new_op_with_jwt_claim(jwt_claim_name, op, value, value_type)
 end
 
 function _M.new_op_with_liquid_templating(liquid_expression, op, value, value_type)
+  local template = TemplateString.new(liquid_expression or "", "liquid")
   local eval_left_func = function(context)
-    return TemplateString.new(liquid_expression or "" , "liquid"):render(context)
+    return template:render(context)
   end
 
   return new(eval_left_func, op, value, value_type)
