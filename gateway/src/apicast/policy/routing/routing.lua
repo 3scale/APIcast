@@ -37,6 +37,16 @@ function _M.new(config)
   return self
 end
 
+local function route_upstream_usage_cleanup(self, usage, matched_rules)
+  if not self.route_upstream then
+    return
+  end
+
+  local usage_diff = mapping_rules_matcher.clean_usage_by_owner_id(
+    matched_rules , self.route_upstream:has_owner_id())
+  usage:merge(usage_diff)
+end
+
 function _M:access(context)
   -- All route definition needs to happen in the access phase to make sure that
   -- the mapping rule with the owner_id happens before the APIcast policy and
@@ -57,16 +67,7 @@ function _M:access(context)
 
   -- this function substract the usage that does not match with the owner_id by
   -- the matched_rules
-  context.route_upstream_usage_cleanup = function(self, usage, matched_rules)
-    if not self.route_upstream then
-      return
-    end
-
-    local usage_diff = mapping_rules_matcher.clean_usage_by_owner_id(
-      matched_rules , self.route_upstream:has_owner_id())
-    usage:merge(usage_diff)
-  end
-
+  context.route_upstream_usage_cleanup = route_upstream_usage_cleanup
 end
 
 
