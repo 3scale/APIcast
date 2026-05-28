@@ -58,10 +58,48 @@ describe('Camel policy', function()
 
     it("invalid protocol", function()
       proxy:rewrite(context)
-      local result = context:get_http_proxy(
-        {}, {scheme="invalid"})
+      local result = context.get_http_proxy({scheme="invalid"})
       assert.is_nil(result)
     end)
 
+    it("nil scheme", function()
+      proxy:rewrite(context)
+      local result = context.get_http_proxy({})
+      assert.is_nil(result)
+    end)
+
+  end)
+
+  describe(".access", function()
+    it("sets skip_https_connect_on_proxy on context", function()
+      local proxy = camel_policy.new({ all_proxy = all_proxy_val })
+
+      local mock_upstream = { set_skip_https_connect_on_proxy = stub.new() }
+      context.get_upstream = function() return mock_upstream end
+
+      proxy:access(context)
+
+      assert.is_true(context.skip_https_connect_on_proxy)
+    end)
+
+    it("calls set_skip_https_connect_on_proxy on upstream", function()
+      local proxy = camel_policy.new({ all_proxy = all_proxy_val })
+
+      local mock_upstream = { set_skip_https_connect_on_proxy = stub.new() }
+      context.get_upstream = function() return mock_upstream end
+
+      proxy:access(context)
+
+      assert.stub(mock_upstream.set_skip_https_connect_on_proxy).was_called()
+    end)
+
+    it("does not error when get_upstream returns nil", function()
+      local proxy = camel_policy.new({ all_proxy = all_proxy_val })
+
+      context.get_upstream = function() return nil end
+
+      assert.has_no.errors(function() proxy:access(context) end)
+      assert.is_true(context.skip_https_connect_on_proxy)
+    end)
   end)
 end)
