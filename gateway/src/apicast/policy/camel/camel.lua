@@ -21,11 +21,16 @@ function _M.new(config)
   end
 
   for _, proto in ipairs(proxies) do
-    local val, err =  resty_url.parse(config[string.format("%s_proxy", proto)])
-    if err then
-      ngx.log(ngx.WARN, proto, " proxy is not correctly defined, err: ", err)
+    local proxy_url =  config[string.format("%s_proxy", proto)]
+    if proxy_url then
+      local val, err =  resty_url.parse(proxy_url)
+      if err then
+        ngx.log(ngx.WARN, proto, " proxy is not correctly defined, err: ", err)
+      end
+      self.proxies[proto] = val
+    else
+      self.proxies[proto] = self.all_proxy
     end
-    self.proxies[proto] = val or self.all_proxy
   end
   return self
 end
