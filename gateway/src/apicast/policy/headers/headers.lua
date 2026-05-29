@@ -88,7 +88,10 @@ local command_functions = {
 local function run_commands(context, commands, header_type, ...)
   for _, command in ipairs(commands) do
     local command_func = command_functions[header_type][command.op]
-    local value = command.template_string:render(context)
+    local value
+    if command.op ~= 'delete' then
+      value = command.template_string:render(context)
+    end
 
     command_func(command.header, value, ...)
   end
