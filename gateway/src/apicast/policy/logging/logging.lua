@@ -40,9 +40,23 @@ function _M.new(config)
   end
 
   self.enable_access_logs_val = val_for_ngx_var[enable_access_logs]
-  self.custom_logging = config.custom_logging
   self.enable_json_logs = config.enable_json_logs
-  self.json_object_config = config.json_object_config or {}
+
+  if config.custom_logging then
+    self.custom_logging_template = TemplateString.new(config.custom_logging, "liquid")
+  end
+
+  if self.enable_json_logs then
+    self.json_object_config = {}
+
+    for _, entry in ipairs(config.json_object_config or {}) do
+      self.json_object_config[#self.json_object_config+1] = {
+        key = entry.key,
+        template = TemplateString.new(
+          entry.value, entry.value_type or default_template_type)
+      }
+    end
+  end
 
   self:load_condition(config)
 
@@ -99,8 +113,8 @@ end
 --- log_dump_json: returns an string with the json output.
 local function log_dump_json(self, extended_context)
   local result = {}
-  for _, value in ipairs(self.json_object_config) do
-    result[value.key] = TemplateString.new(value.value, value.value_type or default_template_type):render(extended_context)
+  for _, entry in ipairs(self.json_object_config) do
+    result[entry.key] = entry.template:render(extended_context)
   end
 
   local status, data = pcall(cjson.encode, result)
@@ -116,8 +130,7 @@ end
 
 -- log_dump_line: render the liquid custom_logging value and return it.
 local function log_dump_line(self, extended_context)
-  local tmpl = TemplateString.new(self.custom_logging, "liquid")
-  return tmpl:render(extended_context)
+  return self.custom_logging_template:render(extended_context)
 end
 
 -- get_log_line return the log line based on the kind of log defined in the
@@ -132,7 +145,7 @@ end
 
 
 function _M:use_default_access_logs()
-  return not (self.custom_logging or self.enable_json_logs)
+  return not (self.custom_logging_template or self.enable_json_logs)
 end
 
 function _M:log(context)
