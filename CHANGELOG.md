@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Performance
 - Camel Policy: avoid unnecessary closure allocation per request [PR #1584](https://github.com/3scale/APIcast/pull/1584)
 - Logging Policy: construct all templates at init time [PR #1587](https://github.com/3scale/APIcast/pull/1587)
+- Routing Policy: eliminate unnecessary TemplateString allocation per request [PR #1585](https://github.com/3scale/APIcast/pull/1585)
 
 ### Fixed
 - Correct FAPI header to `x-fapi-interaction-id` [PR #1557](https://github.com/3scale/APIcast/pull/1557) [THREESCALE-11957](https://issues.redhat.com/browse/THREESCALE-11957)

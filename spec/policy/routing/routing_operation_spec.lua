@@ -31,6 +31,46 @@ describe('RoutingOperation', function()
 
         assert.is_false(operation:evaluate(context))
       end)
+
+      it('evaluates != correctly when paths differ', function()
+        local operation = RoutingOperation.new_op_with_path('!=', '/expected')
+
+        local context = {
+          request = { get_uri = function() return '/other' end }
+        }
+
+        assert.is_true(operation:evaluate(context))
+      end)
+
+      it('evaluates != correctly when paths match', function()
+        local operation = RoutingOperation.new_op_with_path('!=', '/same')
+
+        local context = {
+          request = { get_uri = function() return '/same' end }
+        }
+
+        assert.is_false(operation:evaluate(context))
+      end)
+
+      it('evaluates matches true when regex matches', function()
+        local operation = RoutingOperation.new_op_with_path('matches', '^/api/.*')
+
+        local context = {
+          request = { get_uri = function() return '/api/users' end }
+        }
+
+        assert.is_true(operation:evaluate(context))
+      end)
+
+      it('evaluates matches false when regex does not match', function()
+        local operation = RoutingOperation.new_op_with_path('matches', '^/api/.*')
+
+        local context = {
+          request = { get_uri = function() return '/other/path' end }
+        }
+
+        assert.is_false(operation:evaluate(context))
+      end)
     end)
 
     describe('when the operation involves a header', function()
@@ -234,6 +274,12 @@ describe('RoutingOperation', function()
         assert.is_false(operation:evaluate({}))
       end)
 
+    end)
+
+    it('raises an error for unsupported operators', function()
+      assert.has_error(function()
+        RoutingOperation.new_op_with_path('unsupported_op', '/path')
+      end)
     end)
 
     it('can evaluate the right operand as liquid', function()
