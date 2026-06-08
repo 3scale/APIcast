@@ -138,10 +138,15 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
       end
     end
 
+    local headers = ngx_req_get_headers(0, true)
+    headers["X-Real-IP"] = ngx.var.remote_addr
+    headers["X-3scale-debug"] = nil
+    headers["X-3scale-proxy-secret-token"] = ngx.var.secret_token
+
     local request = {
         uri = uri,
         method = req_method,
-        headers = ngx_req_get_headers(0, true),
+        headers = headers,
         path = (ngx.var.uri or '') .. (ngx.var.is_args or '') .. (ngx.var.query_string or ''),
         body = body,
         proxy_uri = proxy_uri,
