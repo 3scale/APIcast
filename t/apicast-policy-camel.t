@@ -12,6 +12,7 @@ sub large_body {
 }
 
 $ENV{'LARGE_BODY'} = large_body();
+require("policies.pl");
 
 repeat_each(1);
 
@@ -140,6 +141,7 @@ $Test::Nginx::Util::ENDPOINT_SSL_PORT = Test::APIcast::get_random_port();
     {
       "backend_version":  1,
       "proxy": {
+        "secret_token": "token",
         "api_backend": "https://localhost:$Test::Nginx::Util::ENDPOINT_SSL_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
@@ -177,6 +179,9 @@ EOF
   server_name _ default_server;
 
   location /test {
+    echo_foreach_split '\r\n' \$echo_client_request_headers;
+    echo \$echo_it;
+    echo_end;
     access_by_lua_block {
       assert = require('luassert')
       assert.equal('https', ngx.var.scheme)
@@ -186,8 +191,6 @@ EOF
 
       local host = ngx.req.get_headers()["Host"]
       assert.equal(host, 'localhost:$Test::Nginx::Util::ENDPOINT_SSL_PORT')
-      ngx.say("yay, endpoint backend")
-
     }
   }
 }
@@ -211,6 +214,16 @@ GET /test?user_key=test3
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
+--- expected_response_body_like_multiple eval
+[[
+    qr{GET \/test\?user_key=test3 HTTP\/1\.1},
+    qr{ETag\: foobar},
+    qr{Connection\: close},
+    qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
+    qr{Host\: localhost\:\d+},
+    qr{X\-Real\-IP\: 127.0.0.1},
+    qr{X\-3scale\-proxy\-secret\-token\: token}
+]]
 --- error_code: 200
 --- user_files fixture=tls.pl eval
 --- error_log eval
