@@ -151,11 +151,11 @@ local function handle_backend_error(self, service, transaction, cache_handler)
   end
 end
 
-local function handle_cached_auth(self, cached_auth, service, transaction)
-  if cached_auth.status == 200 then
+local function handle_cached_auth(self, cached_status, rejection_reason, service, transaction)
+  if cached_status == 200 then
     self.reports_batcher:add(transaction)
   else
-    return error(service, cached_auth.rejection_reason)
+    return error(service, rejection_reason)
   end
 end
 
@@ -197,13 +197,13 @@ function _M:access(context)
 
   ensure_timer_task_created(self, service_id, backend)
 
-  local cached_auth = self.auths_cache:get(transaction)
-  local auth_is_cached = (cached_auth and true) or false
+  local cached_status, rejection_reason = self.auths_cache:get(transaction)
+  local auth_is_cached = cached_status ~= nil
   metrics.update_cache_counters(auth_is_cached)
 
 
-  if cached_auth then
-    handle_cached_auth(self, cached_auth, service, transaction)
+  if cached_status then
+    return handle_cached_auth(self, cached_status, rejection_reason, service, transaction)
   else
     local formatted_usage = usage:format()
     local backend_res = backend:authorize(formatted_usage, credentials)
@@ -218,12 +218,12 @@ function _M:access(context)
     end
 
     if backend_status == 200 then
-      handle_backend_ok(self, transaction)
+      return handle_backend_ok(self, transaction)
     elseif backend_status >= 400 and backend_status < 500 then
-      handle_backend_denied(
+      return handle_backend_denied(
         self, service, transaction, backend_status, backend_res.headers)
     else
-      handle_backend_error(self, service, transaction, cache_handler)
+      return handle_backend_error(self, service, transaction, cache_handler)
     end
   end
 end

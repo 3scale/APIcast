@@ -1,7 +1,7 @@
 local keys_helper = require('apicast.policy.3scale_batcher.keys_helper')
 
-local re = require('ngx.re')
-local re_split = re.split
+local str_find = string.find
+local str_sub = string.sub
 
 local setmetatable = setmetatable
 local format = string.format
@@ -39,8 +39,13 @@ function _M:get(transaction)
 
   if not cached_value then return nil end
 
-  local split_val = re_split(cached_value, ':', 'oj', nil, 2)
-  return { status = tonumber(split_val[1]), rejection_reason = split_val[2] }
+  local colon = str_find(cached_value, ':', 1, true)
+  if colon then
+    return tonumber(str_sub(cached_value, 1, colon - 1)),
+      str_sub(cached_value, colon + 1)
+  end
+
+  return tonumber(cached_value)
 end
 
 --- Store an authorization in the cache.
