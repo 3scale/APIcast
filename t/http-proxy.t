@@ -451,6 +451,7 @@ proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/test?user
     {
       "backend_version":  1,
       "proxy": {
+        "secret_token": "token",
         "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
@@ -495,7 +496,9 @@ ETag: foobar
     qr{ETag\: foobar},
     qr{Connection\: close},
     qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
-    qr{Host\: test-upstream.lvh.me\:\d+}
+    qr{Host\: test-upstream.lvh.me\:\d+},
+    qr{X\-Real\-IP\: 127.0.0.1},
+    qr{X\-3scale\-proxy\-secret\-token\: token}
 ]]
 --- error_code: 200
 --- error_log env
