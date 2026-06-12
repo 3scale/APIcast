@@ -196,15 +196,11 @@ $(PROJECT_PATH)/lua_modules $(PROJECT_PATH)/local $(PROJECT_PATH)/.cpanm $(PROJE
 
 dep_folders: $(PROJECT_PATH)/lua_modules $(PROJECT_PATH)/local $(PROJECT_PATH)/.cpanm $(PROJECT_PATH)/vendor/cache $(PROJECT_PATH)/.cache
 
-ifeq ($(origin USER),environment)
-development: USER := $(shell id -u $(USER))
-development: GROUP := $(shell id -g $(USER))
-endif
 development: ## Run bash inside the development image
 	@echo "Running on $(os)"
 	- $(DOCKER) compose -f $(DEVEL_DOCKER_COMPOSE_FILE) -f $(DEVEL_DOCKER_COMPOSE_VOLMOUNT_FILE) up -d
 	@ # https://github.com/moby/moby/issues/33794#issuecomment-312873988 for fixing the terminal width
-	$(DOCKER) compose -f $(DEVEL_DOCKER_COMPOSE_FILE) -f $(DEVEL_DOCKER_COMPOSE_VOLMOUNT_FILE) exec -e COLUMNS="`tput cols`" -e LINES="`tput lines`" --user $(USER):$(GROUP) development bash
+	$(DOCKER) compose -f $(DEVEL_DOCKER_COMPOSE_FILE) -f $(DEVEL_DOCKER_COMPOSE_VOLMOUNT_FILE) exec -e COLUMNS="`tput cols`" -e LINES="`tput lines`" development bash
 
 stop-development: clean-containers ## Stop development environment
 
@@ -215,7 +211,7 @@ $(GATEWAY_CONTEXT)/Roverfile.lock : $(GATEWAY_CONTEXT)/Roverfile $(GATEWAY_CONTE
 	$(ROVER) lock --roverfile=$(GATEWAY_CONTEXT)/Roverfile
 
 translate_git_protocol:
-	@git config --global url.https://github.com/.insteadOf git://github.com/
+	@git config --global --replace-all url.https://github.com/.insteadOf git://github.com/ || true
 
 lua_modules: $(ROVER) translate_git_protocol $(GATEWAY_CONTEXT)/Roverfile.lock
 # This variable is to skip issues with openssl 1.1.1
