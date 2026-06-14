@@ -18,7 +18,7 @@ dependencies = {
    'lua-resty-url',
    'lua-resty-env',
    'lua-resty-execvp',
-   'liquid',
+   'liquid == 0.2.1',
    'argparse',
    'penlight == 1.15.0',
    'nginx-lua-prometheus == 0.20181120',
