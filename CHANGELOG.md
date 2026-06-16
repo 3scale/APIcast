@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bump openresty to 1.27.1.2 [PR #1577](https://github.com/3scale/APIcast/pull/1577) [THREESCALE-14177](https://issues.redhat.com/browse/THREESCALE-14177)
 - Bump pcre to pcre2 10.47 [PR #1577](https://github.com/3scale/APIcast/pull/1577) [THREESCALE-14541](https://redhat.atlassian.net/browse/THREESCALE-14541)
 - Bump zlib to 1.3.1 [PR #1577](https://github.com/3scale/APIcast/pull/1577) [THREESCALE-12242](https://redhat.atlassian.net/browse/THREESCALE-12242)
+- Bump liquid-lua to 0.2.1 [PR #1590](https://github.com/3scale/APIcast/pull/1590)
 
 ### Removed
 
