@@ -451,6 +451,9 @@ proxy request: GET http://test-upstream.lvh.me:$TEST_NGINX_SERVER_PORT/test?user
     {
       "backend_version":  1,
       "proxy": {
+        "secret_token": "token",
+        "backend_authentication_type": "service_token",
+        "backend_authentication_value": "token-value",
         "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
         "proxy_rules": [
           { "pattern": "/test", "http_method": "GET", "metric_system_name": "hits", "delta": 2 }
@@ -482,6 +485,7 @@ location /test {
        assert.equal('https', ngx.var.scheme)
        assert.equal('$TEST_NGINX_RANDOM_PORT', ngx.var.server_port)
        assert.equal('test-upstream.lvh.me', ngx.var.ssl_server_name)
+       assert.is_nil(ngx.var.http_x_3scale_debug)
     }
 }
 --- request
@@ -489,13 +493,16 @@ GET /test?user_key=test3
 --- more_headers
 User-Agent: Test::APIcast::Blackbox
 ETag: foobar
+X-3scale-debug: token-value
 --- expected_response_body_like_multiple eval
 [[
     qr{GET \/test\?user_key=test3 HTTP\/1\.1},
     qr{ETag\: foobar},
     qr{Connection\: close},
     qr{User\-Agent\: Test\:\:APIcast\:\:Blackbox},
-    qr{Host\: test-upstream.lvh.me\:\d+}
+    qr{Host\: test-upstream.lvh.me\:\d+},
+    qr{X\-Real\-IP\: 127.0.0.1},
+    qr{X\-3scale\-proxy\-secret\-token\: token}
 ]]
 --- error_code: 200
 --- error_log env
