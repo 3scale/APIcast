@@ -25,20 +25,20 @@ services:
       - "8080:8080"
       - "8090:8090"
     volumes:
-      - ./apicast-config.json:/tmp/config.json
+      - ./apicast-config.json:/tmp/config.json:Z
   proxy.socat:
     image: quay.io/openshift-logging/alpine-socat:1.8.0.0
-    container_name: proxy
+    container_name: proxy-socat
     restart: unless-stopped
-    command: "-d -v -d TCP-LISTEN:8080,reuseaddr,fork TCP:camel.proxy:8080"
+    command: "-d -v -d TCP-LISTEN:8080,reuseaddr,fork TCP:camel-proxy:8080"
   camel.proxy:
     image: quay.io/zregvart/camel-netty-proxy
-    container_name: camel.proxy
+    container_name: camel-proxy
     expose:
-      - "8080:8080"
+      - "8080"
   tls.camel.proxy:
     image: quay.io/zregvart/camel-netty-proxy
-    container_name: tls.camel.proxy
+    container_name: tls-camel-proxy
     entrypoint:
       - java
       - -Dcom.sun.net.ssl.checkRevocation=false
@@ -46,9 +46,9 @@ services:
       - camel-netty-proxy.jar:lib/*
       - com.github.zregvart.cnp.ProxyApp
     expose:
-      - "8443:8443"
+      - "8443"
     volumes:
-      - ./cert/keystore.jks:/tls/keystore.jks
+      - ./cert/keystore.jks:/tls/keystore.jks:Z
   example.com:
     image: quay.io/openshift-logging/alpine-socat:1.8.0.0
     container_name: example.com

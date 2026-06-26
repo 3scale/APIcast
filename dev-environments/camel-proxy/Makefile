@@ -10,10 +10,10 @@ gateway: ## run gateway configured to access upstream powered with TLS
        echo "$(WORKDIR)/cert does not exist! run make certs!"; \
        exit 1; \
   fi
-	$(DOCKER) compose -f docker-compose.yml up --attach gateway
+	$(DOCKER) compose -f docker-compose.yml up
 
 $(WORKDIR)/cert:
-	mkdir -p cert
+	mkdir -p cert && chmod g+w cert
 
 ifeq ($(origin USER),environment)
 $(WORKDIR)/cert/keystore.jks: USER := $(shell id -u $(USER))
@@ -22,13 +22,11 @@ endif
 $(WORKDIR)/cert/keystore.jks: ## use same JVM version as camel-netty-proxy, currently openjdk 11.0.9
 	$(MAKE) $(WORKDIR)/cert -f $(WORKDIR)/Makefile
 	$(DOCKER) run -t --rm \
-		-v $(WORKDIR)/cert:/tmp/cert \
-		--user $(USER):$(GROUP) \
+		-v $(WORKDIR)/cert:/tmp/cert:Z \
 		registry.access.redhat.com/ubi8/openjdk-11:1.21-1.1733300800 \
-		keytool -genkeypair -keystore /tmp/cert/keystore.jks -dname "CN=tls.camel.proxy" -keypass changeit -storepass changeit -alias camel -keyalg RSA -ext SAN=dns:tls.camel.proxy
+		keytool -genkeypair -storetype JKS -keystore /tmp/cert/keystore.jks -dname "CN=tls-camel-proxy" -keypass changeit -storepass changeit -alias camel -keyalg RSA -ext SAN=dns:tls-camel-proxy
 	$(DOCKER) run -t --rm \
-		-v $(WORKDIR)/cert:/tmp/cert \
-		--user $(USER):$(GROUP) \
+		-v $(WORKDIR)/cert:/tmp/cert:Z \
 		registry.access.redhat.com/ubi8/openjdk-11:1.21-1.1733300800 \
 		keytool -list -v -keystore /tmp/cert/keystore.jks -storepass changeit
 
