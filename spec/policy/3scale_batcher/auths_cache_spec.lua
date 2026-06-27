@@ -25,8 +25,8 @@ describe('Auths cache', function()
 
     cache:set(transaction, auth_status)
 
-    local cached = cache:get(transaction)
-    assert.equals(auth_status, cached.status)
+    local cached_status = cache:get(transaction)
+    assert.equals(auth_status, cached_status)
   end)
 
   it('caches auth with app id + app key', function()
@@ -35,8 +35,8 @@ describe('Auths cache', function()
 
     cache:set(transaction, auth_status)
 
-    local cached = cache:get(transaction)
-    assert.equals(auth_status, cached.status)
+    local cached_status = cache:get(transaction)
+    assert.equals(auth_status, cached_status)
   end)
 
   it('caches auth with access token', function()
@@ -45,8 +45,8 @@ describe('Auths cache', function()
 
     cache:set(transaction, auth_status)
 
-    local cached = cache:get(transaction)
-    assert.equals(auth_status, cached.status)
+    local cached_status = cache:get(transaction)
+    assert.equals(auth_status, cached_status)
   end)
 
   it('caches auths with same usages but different order in the same key', function()
@@ -65,8 +65,8 @@ describe('Auths cache', function()
 
     cache:set(transaction_with_order_1, auth_status)
 
-    local cached = cache:get(transaction_with_order_2)
-    assert.equals(auth_status, cached.status)
+    local cached_status = cache:get(transaction_with_order_2)
+    assert.equals(auth_status, cached_status)
   end)
 
   it('caches a rejection reason when given', function()
@@ -77,15 +77,54 @@ describe('Auths cache', function()
 
     cache:set(transaction, not_authorized_status, rejection_reason)
 
-    local cached = cache:get(transaction)
-    assert.equals(not_authorized_status, cached.status)
-    assert.equals(rejection_reason, cached.rejection_reason)
+    local cached_status, cached_rejection_reason = cache:get(transaction)
+    assert.equals(not_authorized_status, cached_status)
+    assert.equals(rejection_reason, cached_rejection_reason)
   end)
 
   it('returns nil when something is not cached', function()
     local user_key = { user_key = 'uk' }
     local transaction = Transaction.new(service_id, user_key, usage)
+    
 
     assert.is_nil(cache:get(transaction))
+  end)
+
+  it('returns status without rejection_reason when cached without one', function()
+    local user_key = { user_key = 'uk' }
+    local transaction = Transaction.new(service_id, user_key, usage)
+
+    cache:set(transaction, auth_status)
+
+    local cached_status, cached_rejection_reason = cache:get(transaction)
+    assert.equals(auth_status, cached_status)
+    assert.is_nil(cached_rejection_reason)
+  end)
+
+  it('parses rejection reason containing colons', function()
+    local app_id_and_key = { app_id = 'an_id', app_key = 'a_key' }
+    local transaction = Transaction.new(service_id, app_id_and_key, usage)
+    local rejection_reason = 'reason:with:colons'
+
+    cache:set(transaction, 409, rejection_reason)
+
+    local cached_status, cached_rejection_reason = cache:get(transaction)
+    assert.equals(409, cached_status)
+    assert.equals(rejection_reason, cached_rejection_reason)
+  end)
+
+  it('returns correct status for different HTTP status codes', function()
+    local user_key = { user_key = 'uk' }
+
+    for _, status_code in ipairs({ 200, 403, 404, 409, 500 }) do
+      local tx_usage = Usage.new()
+      tx_usage:add('m_' .. status_code, 1)
+      local transaction = Transaction.new(service_id, user_key, tx_usage)
+
+      cache:set(transaction, status_code)
+
+      local cached_status, cached_rejection_reason = cache:get(transaction)
+      assert.equals(status_code, cached_status)
+    end
   end)
 end)

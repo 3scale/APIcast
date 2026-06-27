@@ -72,8 +72,6 @@ end
 function _M:get_all(service_id)
   local cached_reports = {}
 
-  local cached_report_keys = self.storage:get_keys()
-
   local lock, new_lock_err = resty_lock:new(self.lock_shdict_name, lock_options)
   if not lock then
     ngx.log(ngx.ERR, 'failed to create lock: ', new_lock_err)
@@ -85,6 +83,8 @@ function _M:get_all(service_id)
     ngx.log(ngx.ERR, "failed to acquire the lock: ", lock_err)
     return {}
   end
+
+  local cached_report_keys = self.storage:get_keys()
 
   for _, key in ipairs(cached_report_keys) do
     local value = self.storage:get(key)
