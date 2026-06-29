@@ -39,7 +39,7 @@ function _M:acquire(key)
   if not semaphores then
     return nil, 'not initialized'
   end
-  return semaphores[key], key
+  return semaphores[key], nil
 end
 
 --- release semaphore
@@ -60,7 +60,7 @@ end
 -- @param ...: the variable number of arguments that are going to be send to the callback function.
 function _M:run(key, timeout, callback, ...)
   local sema, err = self:acquire(key)
-  if err ~= key then
+  if not sema then
     ngx.log(ngx.WARN, 'failed to acquire lock on key: ', key, ' error: ', err)
     return false
   end
@@ -75,7 +75,7 @@ function _M:run(key, timeout, callback, ...)
   local ret, result, execute_error = task:execute(...)
 
   if lock_acquired then
-    self.release(key)
+    self:release(key)
     sema:post()
   end
 

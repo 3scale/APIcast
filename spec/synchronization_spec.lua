@@ -60,6 +60,37 @@ describe("Synchronization", function()
     assert.same(err, "not initialized")
   end)
 
+  it("run releases the lock so a subsequent acquire succeeds", function()
+    local callback = function() return 1 end
+
+    local ret, result = synchronization:run(key, 4, callback)
+    assert.same(ret, true)
+    assert.same(result, {1})
+
+    -- If run properly released the lock, a non-blocking acquire+wait should succeed
+    local sema = synchronization:acquire(key)
+    local ok = sema:wait(0)
+    assert.is_true(ok, "expected lock to be available after run completed")
+
+    synchronization:release(key)
+    sema:post()
+  end)
+
+  it("run releases the lock even when callback throws", function()
+    local callback = function() error("boom") end
+
+    local ret, _, execute_error = synchronization:run(key, 4, callback)
+    assert.same(ret, false)
+    assert.is_truthy(execute_error)
+
+    local sema = synchronization:acquire(key)
+    local ok = sema:wait(0)
+    assert.is_true(ok, "expected lock to be available after failed run")
+
+    synchronization:release(key)
+    sema:post()
+  end)
+
   it("validate that acquire/release workflow", function()
 
     local sema, _ = synchronization:acquire(key)

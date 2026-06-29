@@ -398,7 +398,11 @@ function _M.get_servers(self, qname, opts)
 
   -- TODO: pass proper options to dns resolver (like SRV query type)
 
-  local sema, key = synchronization:acquire(format('qname:%s:qtype:%s', qname, 'A'))
+  local key = format('qname:%s:qtype:%s', qname, 'A')
+  local sema, err = synchronization:acquire(key)
+  if not sema then
+    return nil, "failed to acquire lock on key: " .. key .. 'error: ' .. err
+  end
   local ok = sema:wait(0)
 
   local answers, err = self:lookup(qname, not ok)
