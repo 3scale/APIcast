@@ -21,7 +21,7 @@ dependencies = {
    'liquid == 0.2.1',
    'argparse',
    'penlight == 1.15.0',
-   'nginx-lua-prometheus == 0.20181120',
+   'nginx-lua-prometheus == 0.20220527',
    'lua-resty-jit-uuid',
    'lua-resty-ipmatcher',
    'lua-resty-openssl == 1.7.1'

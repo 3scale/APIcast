@@ -27,7 +27,7 @@ lyaml 6.2.8-1||production
 markdown 0.33-1|8c09109924b218aaecbfd4d4b1de538269c4d765|development
 mediator_lua 1.1.2-0||testing
 net-url 1.1-1|32acd84d06e16ddffc975adafce9cea26f3b2dd1|testing
-nginx-lua-prometheus 0.20181120-3|379c0a4d4d6f3c5b0eb93691fc7e14fff498e1ca|production
+nginx-lua-prometheus 0.20220527-1||production
 penlight 1.15.0-1||testing,development,production
 router 2.1-0||production
 say 1.4.1-3|45a3057e68c52b34ab59ef167efeb2340e356661|testing
