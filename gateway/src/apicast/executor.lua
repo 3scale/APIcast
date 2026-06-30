@@ -121,6 +121,7 @@ do
         -- Need to seed the UUID in init_worker.
         -- Ref: https://github.com/thibaultcha/lua-resty-jit-uuid/blob/c4c0004da0c4c4cdd23644a5472ea5c0d18decbb/README.md#usage
         uuid.seed()
+        prometheus.init_worker()
 
         local executed = {}
 
