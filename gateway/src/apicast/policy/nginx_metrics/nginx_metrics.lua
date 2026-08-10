@@ -155,7 +155,9 @@ function _M.log(_, context)
   if context.service and extended_metrics then
     service = context.service
   end
-  upstream_metrics.report(ngx.var.upstream_status, ngx.var.upstream_response_time, service)
+  local upstream_status = ngx.var.upstream_status or ngx.ctx.proxy_upstream_status
+  local upstream_response_time = ngx.var.upstream_response_time or ngx.ctx.proxy_upstream_response_time
+  upstream_metrics.report(upstream_status, upstream_response_time, service)
   report_req_response_time(service)
   metrics_updater.inc(apicast_status_metric, status_map[ngx.status])
 end

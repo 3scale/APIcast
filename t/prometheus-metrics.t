@@ -2,6 +2,7 @@ use lib 't';
 use Test::APIcast::Blackbox 'no_plan';
 
 require("policies.pl");
+require("http_proxy.pl");
 # The output varies between requests, so run only once
 repeat_each(1);
 
@@ -492,3 +493,226 @@ qr/apicast_status\{status="404"\} 1/,
 ]]
 --- no_error_log
 [error]
+
+
+=== TEST 9: HTTPS proxy reports upstream metrics via ngx.ctx fallback
+When the request goes through the HTTPS proxy path, ngx.var.upstream_status is
+not set by nginx. The http_proxy module populates ngx.ctx.proxy_upstream_status
+and ngx.ctx.proxy_upstream_response_time, and the nginx_metrics policy falls
+back to those values. Verify the upstream_status metric is reported.
+--- env eval
+(
+  "https_proxy" => $ENV{TEST_NGINX_HTTPS_PROXY},
+  'BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}"
+)
+--- configuration random_port env
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "hosts": ["one"],
+        "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+server_name test_backend.lvh.me;
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.exit(ngx.OK)
+    }
+  }
+--- upstream env
+server_name test-upstream.lvh.me;
+listen $TEST_NGINX_RANDOM_PORT ssl;
+ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
+ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+location / {
+  content_by_lua_block {
+     ngx.exit(200);
+  }
+}
+--- request eval
+["GET /?user_key=value", "GET /metrics/"]
+--- more_headers eval
+["Host: one", "Host: metrics"]
+--- error_code eval
+[ 200, 200 ]
+--- expected_response_body_like_multiple eval
+[
+"",
+[
+    qr/upstream_response_time_seconds(.|\n)/,
+    qr/upstream_response_time_seconds_bucket\{service_id="",service_system_name="",le=".*"\} 1/,
+    qr/upstream_status\{status="200",service_id="",service_system_name=""\} 1/
+]]
+--- no_error_log
+[error]
+--- user_files fixture=tls.pl eval
+
+
+=== TEST 10: Report upstream metrics when using http_proxy policy
+--- env eval
+('BACKEND_ENDPOINT_OVERRIDE' => "http://test_backend.lvh.me:$ENV{TEST_NGINX_SERVER_PORT}")
+--- configuration random_port env
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "hosts": ["one"],
+        "api_backend": "https://test-upstream.lvh.me:$TEST_NGINX_RANDOM_PORT",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.apicast"
+          },
+          {
+            "name": "apicast.policy.http_proxy",
+            "configuration": {
+                "https_proxy": "$TEST_NGINX_HTTPS_PROXY"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- backend
+server_name test_backend.lvh.me;
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.exit(ngx.OK)
+    }
+  }
+--- upstream env
+server_name test-upstream.lvh.me;
+listen $TEST_NGINX_RANDOM_PORT ssl;
+ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
+ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+location / {
+  content_by_lua_block {
+     ngx.exit(200);
+  }
+}
+--- request eval
+["GET /?user_key=value", "GET /metrics/"]
+--- more_headers eval
+["Host: one", "Host: metrics"]
+--- error_code eval
+[ 200, 200 ]
+--- expected_response_body_like_multiple eval
+[
+"",
+[
+    qr/upstream_response_time_seconds(.|\n)/,
+    qr/upstream_response_time_seconds_bucket\{service_id="",service_system_name="",le=".*"\} 1/,
+    qr/upstream_status\{status="200",service_id="",service_system_name=""\} 1/
+]]
+--- no_error_log
+[error]
+--- user_files fixture=tls.pl eval
+
+
+=== TEST 11: Report upstream metrics when using camel policy
+--- init eval
+$Test::Nginx::Util::PROXY_SSL_PORT = Test::APIcast::get_random_port();
+$Test::Nginx::Util::ENDPOINT_SSL_PORT = Test::APIcast::get_random_port();
+--- configuration random_port env eval
+<<EOF
+{
+  "services": [
+    {
+      "id": 42,
+      "backend_version":  1,
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "hosts": ["one"],
+        "secret_token": "token",
+        "api_backend": "https://localhost:$Test::Nginx::Util::ENDPOINT_SSL_PORT",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.apicast"
+          },
+          {
+            "name": "apicast.policy.camel",
+            "configuration": {
+                "https_proxy": "http://127.0.0.1:$Test::Nginx::Util::PROXY_SSL_PORT"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+EOF
+--- backend
+  location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.exit(ngx.OK)
+    }
+  }
+--- upstream eval
+<<EOF
+  # Endpoint config
+  listen $Test::Nginx::Util::ENDPOINT_SSL_PORT ssl;
+
+  ssl_certificate $Test::Nginx::Util::ServRoot/html/server.crt;
+  ssl_certificate_key $Test::Nginx::Util::ServRoot/html/server.key;
+
+  server_name _ default_server;
+
+  location / {
+    content_by_lua_block {
+      ngx.exit(200)
+    }
+  }
+}
+server {
+  # Proxy config
+  listen $Test::Nginx::Util::PROXY_SSL_PORT ssl;
+
+  ssl_certificate $Test::Nginx::Util::ServRoot/html/server.crt;
+  ssl_certificate_key $Test::Nginx::Util::ServRoot/html/server.key;
+
+  server_name _ default_server;
+
+  location ~ /.* {
+    proxy_http_version 1.1;
+    proxy_pass https://\$http_host;
+  }
+EOF
+--- request eval
+["GET /?user_key=value", "GET /metrics/"]
+--- more_headers eval
+["Host: one", "Host: metrics"]
+--- error_code eval
+[ 200, 200 ]
+--- expected_response_body_like_multiple eval
+[
+"",
+[
+    qr/upstream_response_time_seconds(.|\n)/,
+    qr/upstream_response_time_seconds_bucket\{service_id="",service_system_name="",le=".*"\} 1/,
+    qr/upstream_status\{status="200",service_id="",service_system_name=""\} 1/
+]]
+--- no_error_log
+[error]
+--- user_files fixture=tls.pl eval

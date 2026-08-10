@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix batcher policy fails silently when configured with string values instead of integers. [PR #1597](https://github.com/3scale/APIcast/pull/1597) [THREESCALE-15547](https://redhat.atlassian.net/browse/THREESCALE-15547)
 - Unify timeout options between http clients library [PR #1600](https://github.com/3scale/APIcast/pull/1600)
 - Set request timeout for OIDC query. [PR #1601](https://github.com/3scale/APIcast/pull/1601) [THREESCALE-8006](https://redhat.atlassian.net/browse/THREESCALE-8006)
+- Set upstream metrics when sending request via proxy. [PR #1598](https://github.com/3scale/APIcast/pull/1598) [THREESCALE-10571](https://redhat.atlassian.net/browse/THREESCALE-15071)
 
 ### Added
 - Update APIcast schema manifest [PR #1550](https://github.com/3scale/APIcast/pull/1550)
