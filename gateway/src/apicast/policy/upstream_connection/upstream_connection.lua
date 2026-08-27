@@ -15,15 +15,17 @@ function _M.new(config)
   self.send_timeout = tonumber(config.send_timeout)
   self.read_timeout = tonumber(config.read_timeout)
 
-  return self
-end
-
-function _M:rewrite(context)
-  context.upstream_connection_opts = {
+  self.upstream_connection_opts = {
     connect_timeout = self.connect_timeout,
     send_timeout = self.send_timeout,
     read_timeout = self.read_timeout
   }
+
+  return self
+end
+
+function _M:rewrite(context)
+  context.upstream_connection_opts = self.upstream_connection_opts
 end
 
 return _M

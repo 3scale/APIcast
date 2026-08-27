@@ -46,6 +46,17 @@ describe('HTTP proxy  policy', function()
     assert.is_nil(context.get_http_proxy(http_uri))
   end)
 
+  it("reuses the same get_http_proxy function across requests instead of allocating a new one", function()
+    local proxy = proxy_policy.new({ all_proxy = all_proxy_val })
+
+    local context_a = {}
+    local context_b = {}
+    proxy:rewrite(context_a)
+    proxy:rewrite(context_b)
+
+    assert.equal(context_a.get_http_proxy, context_b.get_http_proxy)
+  end)
+
   describe("get_http_proxy callback", function()
     local proxy = proxy_policy.new({
       all_proxy = all_proxy_val,
