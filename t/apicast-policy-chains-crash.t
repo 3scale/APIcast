@@ -32,3 +32,34 @@ GET /test HTTP/1.1
 --- error_code: 200
 --- error_log
 Policy error_policy crashed in .new()
+
+
+
+=== TEST 2: policy chain with a policy that crashes on rewrite/access()
+Policies that crash during request phase should ternimate the request
+--- configuration
+{
+    "services": [
+      {
+        "id": 42,
+        "proxy": {
+            "policy_chain" : [
+              { "name" : "error_policy", "version" : "2.0.0" },
+              { "name" : "apicast.policy.echo" }
+            ]
+        }
+      }
+    ]
+}
+--- request
+GET /test
+--- ignore_response
+--- error_code: 500
+--- error_log eval
+[
+'lua entry thread aborted: runtime error:',
+'terminated in rewrite phase',
+'stack traceback:',
+" in function 'error'",
+": in function 'rewrite'",
+]
