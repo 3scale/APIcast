@@ -6,7 +6,7 @@ WORKDIR := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 DOCKER ?= $(shell which docker 2> /dev/null || echo "docker")
 
 gateway: ## run gateway configured to access upstream powered with TLS
-	$(DOCKER) compose -f docker-compose.yml up --attach gateway
+	$(DOCKER) compose -f docker-compose.yml up
 
 clean:
 	$(DOCKER) compose down --volumes --remove-orphans
