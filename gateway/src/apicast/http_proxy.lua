@@ -151,7 +151,8 @@ local function forward_https_request(proxy_uri, uri, proxy_opts)
         body = body,
         proxy_uri = proxy_uri,
         timeout = opts.upstream_connection_opts,  -- Extract timeouts to top level
-        proxy_options = opts
+        options = opts.options,
+        proxy_options = opts,
     }
 
     local httpc, err = http_proxy.new(request)
@@ -242,7 +243,7 @@ function _M.request(upstream, proxy_uri)
             skip_https_connect = upstream.skip_https_connect,
             request_unbuffered = upstream.request_unbuffered,
             upstream_connection_opts = upstream.upstream_connection_opts,
-            upstream_ssl = upstream.upstream_ssl
+            options = upstream.options
         }
 
         forward_https_request(proxy_uri, uri, proxy_opts)

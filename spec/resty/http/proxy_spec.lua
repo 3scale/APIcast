@@ -196,4 +196,67 @@ describe('resty.http.proxy', function()
           end)
       end)
     end)
+
+    describe('options.ssl', function()
+        local http, httpc_mock, connect_spy
+
+        local function create_httpc_mock()
+            return {
+                set_timeouts = function() end,
+                connect = function() return true end,
+                request = function() return { status = 200, read_body = function() return 'ok' end } end,
+                close = function() end,
+                set_keepalive = function() end,
+                pool = 'test',
+                get_reused_times = function() return 0 end,
+                host = 'example.com',
+                port = 443
+            }
+        end
+
+        before_each(function()
+            http = require('resty.resolver.http')
+            httpc_mock = create_httpc_mock()
+            connect_spy = spy.new(function() return true end)
+            httpc_mock.connect = connect_spy
+            stub(http, 'new', function() return httpc_mock end)
+        end)
+
+        it('propagates options.ssl.verify to the connect ssl_verify option (used by http_ng)', function()
+            local request = {
+                url = 'https://upstream:8091/request',
+                method = 'GET',
+                options = { ssl = { verify = true } }
+            }
+
+            assert(_M.new(request))
+
+            local connect_options = connect_spy.calls[1].vals[2]
+            assert.is_true(connect_options.ssl_verify)
+        end)
+
+        it('propagates options.ssl.client_cert/client_priv_key set by the forward-proxy path', function()
+            local cert, key = 'cert-data', 'key-data'
+            local request = {
+                url = 'https://upstream:8091/request',
+                method = 'GET',
+                options = { ssl = { verify = true, client_cert = cert, client_priv_key = key } }
+            }
+
+            assert(_M.new(request))
+
+            local connect_options = connect_spy.calls[1].vals[2]
+            assert.same(cert, connect_options.ssl_client_cert)
+            assert.same(key, connect_options.ssl_client_priv_key)
+        end)
+
+        it('defaults ssl_verify to false when options.ssl is not set', function()
+            local request = { url = 'https://upstream:8091/request', method = 'GET' }
+
+            assert(_M.new(request))
+
+            local connect_options = connect_spy.calls[1].vals[2]
+            assert.is_false(connect_options.ssl_verify)
+        end)
+    end)
 end)

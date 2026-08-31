@@ -233,10 +233,12 @@ function _M:call(context)
 
         self.request_unbuffered = context.request_unbuffered
         self.upstream_connection_opts = context.upstream_connection_opts
-        self.upstream_ssl = {
-          ssl_verify = context.upstream_verify,
-          ssl_client_cert = context.upstream_certificate,
-          ssl_client_priv_key = context.upstream_key
+        self.options = {
+          ssl = {
+            verify = context.upstream_verify,
+            client_cert = context.upstream_certificate,
+            client_priv_key = context.upstream_key
+          }
         }
         http_proxy.request(self, proxy_uri)
     else
