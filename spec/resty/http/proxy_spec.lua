@@ -259,4 +259,58 @@ describe('resty.http.proxy', function()
             assert.is_false(connect_options.ssl_verify)
         end)
     end)
+
+    describe('skip_https_connect', function()
+        local http, httpc_mock, ssl_handshake_spy
+
+        local function create_httpc_mock()
+            return {
+                set_timeouts = function() end,
+                connect = function() return true end,
+                ssl_handshake = function() return true end,
+                request = function() return { status = 200, read_body = function() return 'ok' end } end,
+                close = function() end,
+                set_keepalive = function() end,
+                pool = 'test',
+                get_reused_times = function() return 0 end,
+                host = 'example.com',
+                port = 443
+            }
+        end
+
+        before_each(function()
+            http = require('resty.resolver.http')
+            httpc_mock = create_httpc_mock()
+            ssl_handshake_spy = spy.new(function() return true end)
+            httpc_mock.ssl_handshake = ssl_handshake_spy
+            stub(http, 'new', function() return httpc_mock end)
+        end)
+
+        it('passes options.ssl.verify to ssl_handshake, not the unset request.ssl_verify', function()
+            local request = {
+                url = 'https://upstream:8091/request',
+                method = 'GET',
+                proxy_uri = { scheme = 'http', host = 'proxy', port = 8080 },
+                proxy_options = { skip_https_connect = true },
+                options = { ssl = { verify = true } }
+            }
+
+            assert(_M.new(request))
+
+            assert.spy(ssl_handshake_spy).was_called_with(match.is_table(), nil, 'upstream', true)
+        end)
+
+        it('defaults ssl_verify to false in ssl_handshake when options.ssl is not set', function()
+            local request = {
+                url = 'https://upstream:8091/request',
+                method = 'GET',
+                proxy_uri = { scheme = 'http', host = 'proxy', port = 8080 },
+                proxy_options = { skip_https_connect = true }
+            }
+
+            assert(_M.new(request))
+
+            assert.spy(ssl_handshake_spy).was_called_with(match.is_table(), nil, 'upstream', false)
+        end)
+    end)
 end)
