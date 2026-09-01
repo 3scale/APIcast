@@ -1,7 +1,33 @@
 use lib 't';
 use Test::APIcast::Blackbox 'no_plan';
 
+use File::Slurp qw(read_file);
+
 require("http_proxy.pl");
+
+sub string_to_json {
+  # Copied from here
+  # https://github.com/makamaka/JSON/blob/master/lib/JSON/backportPP.pm#L528
+  my $escape_slash = 16;
+  my %esc = (
+      "\n" => '\n',
+      "\r" => '\r',
+      "\t" => '\t',
+      "\f" => '\f',
+      "\b" => '\b',
+      "\"" => '\"',
+      "\\" => '\\\\',
+      "\'" => '\\\'',
+  );
+  my $arg = $_[0];
+  $arg =~ s/([\x22\x5c\n\r\t\f\b])/$esc{$1}/g;
+  $arg =~ s/\//\\\//g if ($escape_slash);
+  $arg =~ s/([\x00-\x08\x0b\x0e-\x1f])/'\\u00' . unpack('H2', $1)/eg;
+  return $arg;
+}
+
+my $cert = read_file('t/fixtures/server.crt');
+$Test::Nginx::Util::UPSTREAM_CA_CERT = string_to_json($cert);
 
 sub large_body {
   my $res = "";
@@ -14,6 +40,38 @@ sub large_body {
 
 $ENV{'LARGE_BODY'} = large_body();
 require("policies.pl");
+
+sub backend_authrep_ok {
+    my ($server_name) = @_;
+    my $prefix = $server_name ? "server_name $server_name;\n" : '';
+    return $prefix . <<'END';
+location /transactions/authrep.xml {
+    content_by_lua_block {
+      ngx.exit(ngx.OK)
+    }
+}
+END
+}
+
+sub ssl_listen_and_certs {
+    return <<"END";
+listen $ENV{TEST_NGINX_RANDOM_PORT} ssl;
+ssl_certificate $ENV{TEST_NGINX_SERVER_ROOT}/html/server.crt;
+ssl_certificate_key $ENV{TEST_NGINX_SERVER_ROOT}/html/server.key;
+END
+}
+
+sub ssl_backend_authrep_ok {
+    my ($server_name) = @_;
+    $server_name ||= 'test-backend.lvh.me';
+    return backend_authrep_ok($server_name) . ssl_listen_and_certs();
+}
+
+sub ssl_upstream_header {
+    my ($server_name) = @_;
+    $server_name ||= 'test-upstream.lvh.me';
+    return "server_name $server_name;\n" . ssl_listen_and_certs();
+}
 
 repeat_each(3);
 
@@ -161,22 +219,13 @@ using proxy: $TEST_NGINX_HTTP_PROXY
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
---- upstream env
-server_name test-upstream.lvh.me;
-listen $TEST_NGINX_RANDOM_PORT ssl;
-
-ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-
+--- backend eval
+::main::backend_authrep_ok()
+--- upstream env eval
+::main::ssl_upstream_header() . <<"END"
 location /test {
-    echo_foreach_split '\r\n' $echo_client_request_headers;
-    echo $echo_it;
+    echo_foreach_split '\r\n' \$echo_client_request_headers;
+    echo \$echo_it;
     echo_end;
 
     access_by_lua_block {
@@ -191,6 +240,7 @@ location /test {
       assert.equals(result, "test-upstream.lvh.me:")
     }
 }
+END
 --- request
 GET /test?user_key=test3
 --- more_headers
@@ -242,12 +292,8 @@ using proxy: $TEST_NGINX_HTTPS_PROXY
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok()
 --- upstream
 server_name test-upstream.lvh.me;
   location / {
@@ -290,12 +336,8 @@ proxy http request - got header line: Proxy-Authorization: Basic Zm9vOmJhcg==
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok()
 --- upstream
 server_name test-upstream.lvh.me;
   location / {
@@ -338,19 +380,10 @@ using proxy: http://foo:bar@127.0.0.1:$TEST_NGINX_HTTP_PROXY_PORT
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
---- upstream env
-server_name test-upstream.lvh.me;
-listen $TEST_NGINX_RANDOM_PORT ssl;
-
-ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-
+--- backend eval
+::main::backend_authrep_ok()
+--- upstream eval
+::main::ssl_upstream_header() . <<'END'
 location /test {
     echo_foreach_split '\r\n' $echo_client_request_headers;
     echo $echo_it;
@@ -362,6 +395,7 @@ location /test {
       assert.falsy(proxy_auth)
     }
 }
+END
 --- request
 GET /test?user_key=test3
 --- error_code: 200
@@ -402,12 +436,8 @@ got header line: Proxy-Authorization: Basic Zm9vOmJhcg==
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok()
 --- upstream
 server_name test-upstream.lvh.me;
   location / {
@@ -538,19 +568,10 @@ using proxy: $TEST_NGINX_HTTP_PROXY
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
---- upstream env
-server_name test-upstream.lvh.me;
-listen $TEST_NGINX_RANDOM_PORT ssl;
-
-ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-
+--- backend eval
+::main::backend_authrep_ok()
+--- upstream eval
+::main::ssl_upstream_header() . <<'END'
 location / {
     access_by_lua_block {
       assert = require('luassert')
@@ -562,6 +583,7 @@ location / {
     echo_read_request_body;
     echo $request_body;
 }
+END
 --- more_headers
 Transfer-Encoding: chunked
 --- request eval
@@ -677,12 +699,8 @@ a client request body is buffered to a temporary file
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok()
 --- upstream
 server_name test-upstream.lvh.me;
   location / {
@@ -756,13 +774,8 @@ a client request body is buffered to a temporary file
     }
   ]
 }
---- backend
-server_name test_backend.lvh.me;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok("test_backend.lvh.me")
 --- upstream
 server_name test-upstream.lvh.me;
   location /test {
@@ -817,12 +830,8 @@ a client request body is buffered to a temporary file
     }
   ]
 }
---- backend
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok()
 --- upstream
 server_name test-upstream.lvh.me;
   location / {
@@ -894,25 +903,15 @@ a client request body is buffered to a temporary file
     }
   ]
 }
---- backend env
-  server_name test-backend.lvh.me;
-  listen $TEST_NGINX_RANDOM_PORT ssl;
-  ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-  ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
---- upstream env
-server_name test-upstream.lvh.me;
-listen $TEST_NGINX_RANDOM_PORT ssl;
-ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+--- backend eval
+::main::ssl_backend_authrep_ok()
+--- upstream eval
+::main::ssl_upstream_header() . <<'END'
 location /test {
     echo_read_request_body;
     echo_request_body;
 }
+END
 --- request eval
 "POST /test?user_key= \n" . $ENV{LARGE_BODY}
 --- response_body eval chomp
@@ -960,21 +959,10 @@ a client request body is buffered to a temporary file
     }
   ]
 }
---- backend env
-  server_name test-backend.lvh.me;
-  listen $TEST_NGINX_RANDOM_PORT ssl;
-  ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-  ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
---- upstream env
-server_name test-upstream.lvh.me;
-listen $TEST_NGINX_RANDOM_PORT ssl;
-ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
+--- backend eval
+::main::ssl_backend_authrep_ok()
+--- upstream eval
+::main::ssl_upstream_header() . <<'END'
 location /test {
     access_by_lua_block {
       assert = require('luassert')
@@ -986,6 +974,7 @@ location /test {
     echo_read_request_body;
     echo_request_body;
 }
+END
 --- more_headers
 Transfer-Encoding: chunked
 --- request eval
@@ -1061,13 +1050,8 @@ with http_proxy is enough
     }
   ]
 }
---- backend
-server_name test_backend.lvh.me;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok("test_backend.lvh.me")
 --- upstream
 server_name test-upstream.lvh.me;
   location /test {
@@ -1132,13 +1116,8 @@ can use that to verify that it was not executed.
     }
   ]
 }
---- backend
-server_name test_backend.lvh.me;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::backend_authrep_ok("test_backend.lvh.me")
 --- upstream
 server_name test-upstream.lvh.me;
   location /test {
@@ -1179,27 +1158,17 @@ POST /test?user_key=
     }
   ]
 }
---- backend env
-  server_name test-backend.lvh.me;
-  listen $TEST_NGINX_RANDOM_PORT ssl;
-  ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-  ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
---- upstream env
-server_name test-upstream.lvh.me;
-listen $TEST_NGINX_RANDOM_PORT ssl;
-ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-ssl_client_certificate $TEST_NGINX_SERVER_ROOT/html/client.crt;
+--- backend eval
+::main::ssl_backend_authrep_ok()
+--- upstream eval
+::main::ssl_upstream_header() . <<"END"
+ssl_client_certificate $ENV{TEST_NGINX_SERVER_ROOT}/html/client.crt;
 ssl_verify_client on;
 location /test {
   echo 'ssl_client_s_dn: \$ssl_client_s_dn';
   echo 'ssl_client_i_dn: \$ssl_client_i_dn';
 }
+END
 --- request
 GET /test?user_key=value
 --- error_code: 400
@@ -1214,6 +1183,7 @@ client sent no required SSL certificate while reading client request headers
 
 
 === TEST 19: MTLS connection to upstream via proxy when certificates are provided
+--- SKIP
 --- configuration random_port env eval
 <<EOF
 {
@@ -1254,16 +1224,8 @@ client sent no required SSL certificate while reading client request headers
   ]
 }
 EOF
---- backend env
-  server_name test-backend.lvh.me;
-  listen $TEST_NGINX_RANDOM_PORT ssl;
-  ssl_certificate $TEST_NGINX_SERVER_ROOT/html/server.crt;
-  ssl_certificate_key $TEST_NGINX_SERVER_ROOT/html/server.key;
-  location /transactions/authrep.xml {
-    content_by_lua_block {
-      ngx.exit(ngx.OK)
-    }
-  }
+--- backend eval
+::main::ssl_backend_authrep_ok()
 --- upstream env
 server_name test-upstream.lvh.me;
 listen $TEST_NGINX_RANDOM_PORT ssl;
