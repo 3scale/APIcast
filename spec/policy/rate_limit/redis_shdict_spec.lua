@@ -48,10 +48,10 @@ describe('Redis Shared Dictionary', function()
     end)
 
     describe('incr', function()
-        pending('without default', function()
+        it('without default', function()
             local ret, err = shdict:incr('somekey', 2)
 
-            -- TODO: nginx shdict:incr returns: nil, 'not found' when the key does not exist
+            -- nginx shdict:incr returns: nil, 'not found' when the key does not exist
             assert.is_nil(ret)
             assert.equal('not found', err)
         end)
