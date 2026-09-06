@@ -25,6 +25,16 @@ function _M:incr(key, value, init, init_ttl)
     if not redis then return nil, 'not initialized' end
 
     if not init then
+        -- Unlike Redis' INCRBY (which auto-vivifies a missing key at 0),
+        -- ngx.shared.DICT:incr() without an init value returns `nil, 'not
+        -- found'` for a missing key. Callers (e.g. resty.limit.count-inc's
+        -- and resty.limit.conn's rollback/uncommit logic) rely on that
+        -- contract to detect an already-expired/evicted key instead of
+        -- silently recreating it with no TTL.
+        local exists, err = redis:exists(key)
+        if exists == nil then return nil, err end
+        if exists == 0 then return nil, 'not found' end
+
         return redis:incrby(key, value), nil
     end
 

@@ -104,6 +104,7 @@ describe('3scale batcher policy', function()
       ngx.var = {}
       ngx.header = {}
       stub(ngx, 'print')
+      stub(ngx.timer, 'at')
 
       batcher_policy = ThreescaleBatcher.new({})
       batcher_policy.auths_cache = AuthsCache.new(lrucache.new(10), 10)

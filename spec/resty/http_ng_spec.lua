@@ -32,17 +32,6 @@ describe('http_ng', function()
     assert.equal('foo', last_request.headers.host)
   end)
 
-  pending('options method works with default options', function()
-    http = http_ng.new{backend = backend, options = { headers = { host = "foo" }}}
-    local response = http.options('http://example.com')
-    local last_request = assert(backend.last_request)
-
-    assert.truthy(response)
-    assert.equal('OPTIONS', last_request.method)
-    assert.equal('http://example.com', last_request.url)
-    assert.equal('foo', last_request.headers.host)
-  end)
-
   for _,method in ipairs{ 'put', 'post', 'patch' } do
     it('makes ' .. method .. ' call to backend with body', function()
       local response = http[method]('http://example.com', 'body')

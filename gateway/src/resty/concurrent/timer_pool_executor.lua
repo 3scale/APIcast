@@ -61,11 +61,22 @@ local function worker(_, pool, event, task, ...)
 end
 
 local function schedule(...)
-    ngx.timer.at(0, ...)
+    return ngx.timer.at(0, ...)
 end
 
 local function execute(pool, event, task, ...)
-    schedule(worker, pool, event, task, ...)
+    local ok, err = schedule(worker, pool, event, task, ...)
+
+    if not ok then
+        ngx.log(ngx.ERR, 'failed to schedule background task: ', err)
+
+        -- The timer was never created, so `worker` will never run to call
+        -- checkin_timer()/event:set() for us. Do it here so callers waiting
+        -- on the returned Event resolve immediately instead of blocking
+        -- until their own wait() timeout expires.
+        checkin_timer(pool)
+        event:set()
+    end
 end
 
 --- The number of running timers.
