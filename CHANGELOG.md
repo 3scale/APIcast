@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Routing Policy: eliminate unnecessary TemplateString allocation per request [PR #1585](https://github.com/3scale/APIcast/pull/1585)
 - Headers Policy: don't render template string when delete header [PR #1586](https://github.com/3scale/APIcast/pull/1586)
 - 3scale Batcher Policy: replace regex with string operations [PR #1583](https://github.com/3scale/APIcast/pull/1583)
+- Proxy/Upstream Connection: setup configuration in init phase - [PR #1602](https://github.com/3scale/APIcast/pull/1602)
 
 ### Fixed
 - Correct FAPI header to `x-fapi-interaction-id` [PR #1557](https://github.com/3scale/APIcast/pull/1557) [THREESCALE-11957](https://issues.redhat.com/browse/THREESCALE-11957)

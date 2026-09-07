@@ -8,6 +8,10 @@ local new = _M.new
 
 local proxies = {"http", "https"}
 
+local function find_proxy(self, scheme)
+  return self.proxies[scheme]
+end
+
 function _M.new(config)
   local self = new(config)
   self.proxies = {}
@@ -27,22 +31,21 @@ function _M.new(config)
     end
     self.proxies[proto] = val or self.all_proxy
   end
-  return self
-end
 
-local function find_proxy(self, scheme)
-  return self.proxies[scheme]
-end
-
-function _M:rewrite(context)
-  -- APIcast reads this flag in the access phase, that's why we need to set it
-  -- in rewrite phase.
-  context.get_http_proxy = function(uri)
+  self.get_http_proxy = function(uri)
     if not uri.scheme then
       return nil
     end
     return find_proxy(self, uri.scheme)
   end
+
+  return self
+end
+
+function _M:rewrite(context)
+  -- APIcast reads this flag in the access phase, that's why we need to set it
+  -- in rewrite phase.
+  context.get_http_proxy = self.get_http_proxy
 end
 
 return _M
