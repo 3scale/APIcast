@@ -118,3 +118,46 @@
     ]
   }
   ```
+
+## `no_match` option
+
+By default, when a request does not match any configured resource, the policy applies its type's default posture: a `whitelist` denies the request, a `blacklist` allows it. The `no_match` option overrides this behaviour independently of `type`.
+
+| `no_match` value | Behaviour on unmatched resource |
+|---|---|
+| `type_defined` (default) | Follows `type`: whitelist denies, blacklist allows |
+| `deny` | Always denies |
+| `allow` | Always allows |
+
+- When you want to protect only specific paths with a role check and leave all other paths open (scoped whitelist). Set `no_match` to `"allow"`.
+
+  ```json
+  {
+    "scopes": [
+      {
+        "realm_roles": [ { "name": "admin" } ],
+        "resource": "/admin"
+      }
+    ],
+    "no_match": "allow"
+  }
+  ```
+
+  Requests to `/admin` require the `admin` realm role. Requests to any other path are allowed regardless of roles.
+
+- When you want to block role-holders from specific paths and also deny access to any path not explicitly listed. Set `type` to `"blacklist"` and `no_match` to `"deny"`.
+
+  ```json
+  {
+    "scopes": [
+      {
+        "realm_roles": [ { "name": "restricted_role" } ],
+        "resource": "/sensitive"
+      }
+    ],
+    "type": "blacklist",
+    "no_match": "deny"
+  }
+  ```
+
+  Requests to `/sensitive` are denied if the token contains `restricted_role`. Requests to any other path are also denied.

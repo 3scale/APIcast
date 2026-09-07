@@ -105,6 +105,12 @@
         "description": "Type of the role check",
         "enum": ["whitelist", "blacklist"],
         "default": "whitelist"
+      },
+      "no_match": {
+        "type": "string",
+        "description": "Action to take when a request does not match any configured resource. 'type_defined' (default) follows the type: whitelist denies, blacklist allows. 'deny' always denies. 'allow' always allows.",
+        "enum": ["type_defined", "deny", "allow"],
+        "default": "type_defined"
       }
     }
   }
