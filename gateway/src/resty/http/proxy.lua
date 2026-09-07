@@ -71,9 +71,9 @@ local function connect(request)
     if scheme == 'https' then
         options.ssl_server_name = host
         options.ssl_verify = ssl_verify
-        if proxy_options.upstream_ssl then
-          options.ssl_client_cert = proxy_options.upstream_ssl.ssl_client_cert
-          options.ssl_client_priv_key = proxy_options.upstream_ssl.ssl_client_priv_key
+        if request.options and request.options.ssl then
+          options.ssl_client_cert = request.options.ssl.client_cert
+          options.ssl_client_priv_key = request.options.ssl.client_priv_key
         end
     end
 
@@ -116,7 +116,7 @@ local function connect(request)
 
             ngx.log(ngx.DEBUG, 'targeting server ', host, ':', port)
 
-            local ok, err = httpc:ssl_handshake(nil, host, request.ssl_verify)
+            local ok, err = httpc:ssl_handshake(nil, host, ssl_verify)
             if not ok then return nil, err end
 
             return httpc
