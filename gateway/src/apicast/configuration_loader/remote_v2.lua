@@ -46,7 +46,7 @@ function _M.new(url, options)
     path = path and path[6],
     options = opts,
     http_client = http_client,
-    oidc = oidc_discovery.new_with_http_client(http_client),
+    oidc = oidc_discovery.new(opts.client),
     ttl = ttl
   }, mt)
 end

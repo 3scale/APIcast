@@ -100,6 +100,16 @@ that improve the performance of the whole gateway.
 Allows to set the log level for the logs related to OpenID Connect integration
 
 
+### `APICAST_OIDC_CONNECT_TIMEOUT`
+
+**Values:** integer (seconds)
+**Default:** 5
+
+Sets the request timeout, in seconds, used when querying the OIDC issuer endpoint during
+configuration loading (OpenID Connect discovery). Prevents APIcast from hanging indefinitely
+when an OIDC issuer is unreachable or slow to respond.
+
+
 ### `APICAST_MANAGEMENT_API`
 
 **Values:**

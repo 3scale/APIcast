@@ -62,6 +62,27 @@ describe('Configuration Remote Loader V2', function()
     end)
   end)
 
+  describe('oidc client', function()
+    it('is built with its own http client, separate from the main one', function()
+      assert.not_equal(loader.http_client, loader.oidc.http_client)
+    end)
+
+    it('has the OIDC request timeout configured by default', function()
+      assert.is_not_nil(loader.oidc.http_client.options)
+      assert.equals(5, loader.oidc.http_client.options.timeout)
+    end)
+
+    it('respects APICAST_OIDC_CONNECT_TIMEOUT independently of the main http client', function()
+      env.set('APICAST_OIDC_CONNECT_TIMEOUT', 10)
+
+      local another_loader = _M.new('http://example.com', { client = test_backend })
+
+      assert.equals(10, another_loader.oidc.http_client.options.timeout)
+      -- the main http client used for portal API calls is unaffected
+      assert.is_nil(another_loader.http_client.options.timeout)
+    end)
+  end)
+
   describe(':services', function()
     it('retuns list of services', function()
       test_backend.expect{ url = 'http://example.com/admin/api/services.json?'..

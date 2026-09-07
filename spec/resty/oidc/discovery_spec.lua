@@ -1,6 +1,7 @@
 local test_backend_client = require 'resty.http_ng.backend.test'
 local _M = require('resty.oidc.discovery')
 local cjson = require('cjson')
+local env = require('resty.env')
 
 describe('OIDC Discovery', function()
     local test_backend
@@ -12,6 +13,29 @@ describe('OIDC Discovery', function()
     describe('.new', function()
         it('has .http_client', function()
             assert(_M.new().http_client,'has .http_client')
+        end)
+    end)
+
+    describe('timeout configuration', function()
+        it('uses default 5 second timeout when APICAST_OIDC_CONNECT_TIMEOUT not set', function()
+            env.set('APICAST_OIDC_CONNECT_TIMEOUT', nil)
+            local instance = _M.new(test_backend)
+            assert.is_not_nil(instance.http_client)
+            assert.is_not_nil(instance.http_client.options)
+            assert.equals(5, instance.http_client.options.timeout)
+        end)
+
+        it('respects APICAST_OIDC_CONNECT_TIMEOUT environment variable', function()
+            env.set('APICAST_OIDC_CONNECT_TIMEOUT', 10)
+
+            local instance = _M.new(test_backend)
+            assert.equals(10, instance.http_client.options.timeout)
+        end)
+
+        it('handles invalid APICAST_OIDC_CONNECT_TIMEOUT by using default', function()
+            env.set('APICAST_OIDC_CONNECT_TIMEOUT', 'invalid')
+            local instance = _M.new(test_backend)
+            assert.equals(5, instance.http_client.options.timeout)
         end)
     end)
 

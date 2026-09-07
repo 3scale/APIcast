@@ -45,10 +45,14 @@ local function decode_json(response)
 end
 
 function _M.new(http_backend)
+    -- Default 5 second timeout to prevent hanging on unreachable OIDC endpoints
+    local timeout = tonumber(resty_env.value('APICAST_OIDC_CONNECT_TIMEOUT')) or 5
+
     local http_client = http_ng.new{
         backend = http_backend,
         options = {
-            ssl = { verify = resty_env.enabled('OPENSSL_VERIFY') }
+            ssl = { verify = resty_env.enabled('OPENSSL_VERIFY') },
+            timeout = timeout
         }
     }
     return _M.new_with_http_client(http_client)

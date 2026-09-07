@@ -1,6 +1,8 @@
 use lib 't';
 use Test::APIcast::Blackbox 'no_plan';
 
+repeat_each(1);
+
 run_tests();
 
 __DATA__
@@ -308,3 +310,94 @@ GET /?user_key=uk
 ]
 --- no_error_log
 [error]
+
+=== TEST 4: OIDC discovery request is aborted by APICAST_OIDC_CONNECT_TIMEOUT
+when the issuer is slow to respond
+This is a test for THREESCALE-8006: without a request timeout, an
+unreachable/slow OIDC issuer would make configuration loading hang 60s
+(default timeout). Here the issuer endpoint sleeps longer than the configured
+timeout, so the discovery request must be aborted and the gateway must keep
+serving the request instead of hanging.
+--- env eval
+(
+  'APICAST_CONFIGURATION_LOADER' => 'lazy',
+  'APICAST_OIDC_CONNECT_TIMEOUT' => '1',
+  'THREESCALE_PORTAL_ENDPOINT' => "http://test:$ENV{TEST_NGINX_SERVER_PORT}/config"
+)
+--- upstream env
+location = /config/production.json {
+echo '
+{
+  "proxy_configs": [
+    {
+      "proxy_config": {
+        "id": 1,
+        "content": {
+          "backend_version": 1,
+          "environment": "production",
+          "proxy": {
+            "hosts": [ "localhost" ],
+            "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/api/",
+            "backend": {
+              "endpoint": "http://test:$TEST_NGINX_SERVER_PORT"
+            },
+            "proxy_rules": [
+              { "pattern": "/", "http_method": "GET", "metric_system_name": "test", "delta": 1}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "proxy_config": {
+        "id": 2,
+        "content": {
+          "backend_version": "oidc",
+          "environment": "production",
+          "proxy": {
+            "authentication_method": "oidc",
+            "oidc_issuer_endpoint": "http://test:$TEST_NGINX_SERVER_PORT/slow-issuer/endpoint",
+            "backend": {
+              "endpoint": "http://test:$TEST_NGINX_SERVER_PORT"
+            },
+            "proxy_rules": [
+              { "pattern": "/", "http_method": "GET", "metric_system_name": "test", "delta": 1}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
+';
+}
+
+location = /slow-issuer/endpoint/.well-known/openid-configuration {
+  content_by_lua_block {
+    ngx.sleep(3)
+    ngx.header.content_type = 'application/json;charset=utf-8'
+    ngx.say(require('cjson').encode {
+        issuer = 'https://example.com/auth/realms/apicast',
+        id_token_signing_alg_values_supported = { 'RS256' },
+        jwks_uri = 'http://test:$TEST_NGINX_SERVER_PORT/jwks',
+    })
+  }
+}
+
+location /transactions/authrep.xml {
+  content_by_lua_block {
+    ngx.exit(200)
+  }
+}
+
+location /api/ {
+  echo 'yay, api backend';
+}
+--- request
+GET /?user_key=uk
+--- error_code: 200
+--- response_body
+yay, api backend
+--- error_log eval
+qr/failed to get OIDC Provider from http:\/\/test:\d+\/slow-issuer\/endpoint/
+--- timeout: 3

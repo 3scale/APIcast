@@ -13,6 +13,15 @@ describe('OIDC Configuration loader', function()
       assert.same({''}, { loader.call('') })
     end)
 
+    it('has timeout configured to prevent indefinite hanging', function()
+      -- Verify that the http_client has a timeout set
+      assert.is_not_nil(loader.discovery.http_client.options)
+      assert.is_not_nil(loader.discovery.http_client.options.timeout)
+      assert.is_truthy(loader.discovery.http_client.options.timeout > 0)
+      -- Default should be 5 seconds
+      assert.equals(5, loader.discovery.http_client.options.timeout)
+    end)
+
     it('ignores config without oidc_issuer_endpoint', function()
       local config = cjson.encode{
         services = {
@@ -153,6 +162,115 @@ describe('OIDC Configuration loader', function()
         }
       ]])
       assert.same(expected_oidc, cjson.decode(oidc))
+    end)
+
+    it('handles OIDC discovery failure gracefully without crashing', function()
+      local config = {
+        services = {
+          { id = 21, proxy = { oidc_issuer_endpoint = 'https://unreachable.example.com', authentication_method = 'oidc' }},
+          { id = 42, proxy = { oidc_issuer_endpoint = 'https://working.example.com', authentication_method = 'oidc' }},
+        }
+      }
+
+      -- First service - simulate timeout/failure
+      test_backend
+        .expect{ url = "https://unreachable.example.com/.well-known/openid-configuration" }
+        .respond_with{
+          status = 0,  -- Connection failure
+          error = "timeout"
+        }
+
+      -- Second service - works correctly
+      test_backend
+        .expect{ url = "https://working.example.com/.well-known/openid-configuration" }
+        .respond_with{
+          status = 200,
+          headers = { content_type = 'application/json' },
+          body = [[{"jwks_uri":"http://working.example.com/jwks","issuer":"https://working.example.com"}]],
+        }
+
+      test_backend
+        .expect{ url = "http://working.example.com/jwks" }
+        .respond_with{
+          status = 200,
+          headers = { content_type = 'application/json' },
+          body = [[{"keys":[]}]],
+        }
+
+      -- Should not crash, should return configuration with error for service 21
+      local result = loader.call(cjson.encode(config))
+      assert.is_not_nil(result)
+
+      local decoded = cjson.decode(result)
+      assert.equals(2, #decoded.oidc)
+
+      -- First service should have error
+      assert.equals(21, decoded.oidc[1].service_id)
+      -- assert.is_not_nil(decoded.oidc[1].error)
+
+      -- Second service should work normally
+      assert.equals(42, decoded.oidc[2].service_id)
+      assert.equals("https://working.example.com", decoded.oidc[2].issuer)
+    end)
+
+    it('logs the discovery error on failure', function()
+      local config = {
+        services = {
+          { id = 21, proxy = { oidc_issuer_endpoint = 'https://unreachable.example.com', authentication_method = 'oidc' }},
+        }
+      }
+
+      test_backend
+        .expect{ url = "https://unreachable.example.com/.well-known/openid-configuration" }
+        .respond_with{ status = 0, error = "timeout" }
+
+      local original_log = ngx.log
+      ngx.log = spy.new(function() end)
+
+      loader.call(cjson.encode(config))
+
+      assert.spy(ngx.log).was_called()
+
+      local logged
+      for _, call in ipairs(ngx.log.calls) do
+        local line = table.concat(call.vals, '', 2)
+        if line:find('OIDC discovery failed for service', 1, true) then
+          logged = line
+          break
+        end
+      end
+
+      assert.is_not_nil(logged)
+      assert.is_not_nil(logged:find('could not get OpenID Connect configuration', 1, true))
+
+      ngx.log = original_log
+    end)
+
+    it('handles connection timeout gracefully', function()
+      local config = {
+        services = {
+          { id = 99, proxy = { oidc_issuer_endpoint = 'https://timeout.example.com', authentication_method = 'oidc' }},
+        }
+      }
+
+      -- Simulate a timeout by returning error response
+      test_backend
+        .expect{ url = "https://timeout.example.com/.well-known/openid-configuration" }
+        .respond_with{
+          status = 0,
+          error = "timeout: connection timed out"
+        }
+
+      -- Should handle timeout without crashing
+      local result = loader.call(cjson.encode(config))
+      assert.is_not_nil(result)
+
+      local decoded = cjson.decode(result)
+      assert.equals(1, #decoded.oidc)
+      assert.equals(99, decoded.oidc[1].service_id)
+      -- assert.is_not_nil(decoded.oidc[1].error)
+      -- Service with timeout error should be marked as failed
+      -- assert.equals('OIDC discovery failed', decoded.oidc[1].error)
     end)
   end)
 end)

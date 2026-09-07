@@ -29,8 +29,14 @@ local function load_service(service)
     if authentication ~= 'oidc' then
       return nil
     end
+    local result, err = _M.discovery:call(service.proxy.oidc_issuer_endpoint)
 
-    local result = _M.discovery:call(service.proxy.oidc_issuer_endpoint)
+    if err then
+        ngx.log(ngx.ERR, 'OIDC discovery failed for service ', service.id,
+                ' (issuer: ', service.proxy.oidc_issuer_endpoint or 'nil', '): ',
+                err)
+        return nil
+    end
 
     if result and service.id then
       result.service_id = service.id
