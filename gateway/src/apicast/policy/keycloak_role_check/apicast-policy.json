@@ -106,11 +106,10 @@
         "enum": ["whitelist", "blacklist"],
         "default": "whitelist"
       },
-      "no_match": {
-        "type": "string",
-        "description": "Action to take when a request does not match any configured resource. 'type_defined' (default) follows the type: whitelist denies, blacklist allows. 'deny' always denies. 'allow' always allows.",
-        "enum": ["type_defined", "deny", "allow"],
-        "default": "type_defined"
+      "whitelist_deny_unmatched": {
+        "type": "boolean",
+        "description": "Only applies when type is 'whitelist'. When true (default), requests to paths not matching any configured scope are denied. When false, unmatched paths are allowed through.",
+        "default": true
       }
     }
   }

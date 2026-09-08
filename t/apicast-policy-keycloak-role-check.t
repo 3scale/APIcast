@@ -552,7 +552,7 @@ Check an allowed role with the blacklisted mode with methods
 oauth failed with
 
 
-=== TEST 8: no_match "allow" with whitelist - unmatched path is allowed
+=== TEST 8: whitelist_deny_unmatched false - unmatched path is allowed
 Scoped whitelist: paths not listed in scopes are allowed regardless of roles.
 --- backend
   location /transactions/oauth_authrep.xml {
@@ -593,7 +593,7 @@ Scoped whitelist: paths not listed in scopes are allowed regardless of roles.
                   "resource": "/protected"
                 }
               ],
-              "no_match": "allow"
+              "whitelist_deny_unmatched": false
             }
           },
           { "name": "apicast.policy.apicast" }
@@ -625,8 +625,8 @@ oauth failed with
 
 
 
-=== TEST 9: no_match "deny" with blacklist - unmatched path is denied
-Blacklist with no_match deny: paths not listed in scopes are also denied.
+=== TEST 9: whitelist_deny_unmatched true (default) - unmatched path is denied
+Whitelist default behaviour: paths not listed in scopes are denied.
 --- backend
   location /transactions/oauth_authrep.xml {
     content_by_lua_block {
@@ -667,9 +667,7 @@ Blacklist with no_match deny: paths not listed in scopes are also denied.
                   "realm_roles": [ { "name": "restricted" } ],
                   "resource": "/sensitive"
                 }
-              ],
-              "type": "blacklist",
-              "no_match": "deny"
+              ]
             }
           },
           { "name": "apicast.policy.apicast" }

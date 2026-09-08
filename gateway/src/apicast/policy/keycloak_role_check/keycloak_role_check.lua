@@ -58,10 +58,6 @@ local TemplateString = require('apicast.template_string')
 local errors = require('apicast.errors')
 local default_type = 'plain'
 
-local MATCH_PASS = 1
-local MATCH_FAIL = 2
-local NO_MATCH   = 3
-
 local new = _M.new
 
 local any_method = MappingRule.any_method
@@ -103,7 +99,10 @@ end
 function _M.new(config)
   local self = new()
   self.type = config.type or "whitelist"
-  self.no_match = config.no_match or "type_defined"
+  -- When true (default), a whitelist denies requests to paths not matching any
+  -- configured scope. When false, unmatched paths are allowed through.
+  -- Has no effect when type is "blacklist".
+  self.whitelist_deny_unmatched = config.whitelist_deny_unmatched ~= false and true or false
   self.scopes = config.scopes or {}
 
   build_scopes(self.scopes)
@@ -163,9 +162,6 @@ local function match_client_roles(scope, context)
   return true
 end
 
--- Returns resource_matched, roles_passed as two separate booleans.
--- resource_matched is true if any method+resource pattern matched the request.
--- roles_passed is true if resource_matched and all configured roles were found in the JWT.
 local function validate_scope_access(scope, context, uri, request_method)
   for _, method in ipairs(scope.methods) do
 
@@ -194,7 +190,7 @@ local function scopes_check(scopes, context)
   local request_method = ngx.req.get_method()
 
   if not context.jwt then
-    return NO_MATCH
+    return false, false
   end
 
   local any_resource_matched = false
@@ -203,30 +199,27 @@ local function scopes_check(scopes, context)
     local resource_matched, roles_passed = validate_scope_access(scope, context, uri, request_method)
     if resource_matched then
       if roles_passed then
-        return MATCH_PASS
+        return true, true
       end
       any_resource_matched = true
     end
   end
 
-  return any_resource_matched and MATCH_FAIL or NO_MATCH
+  return any_resource_matched, false
 end
 
 function _M:access(context)
-  local result = scopes_check(self.scopes, context)
+  local resource_matched, roles_passed = scopes_check(self.scopes, context)
 
-  if result == MATCH_PASS then
-    if self.type == "blacklist" then
+  if self.type == "whitelist" then
+    if resource_matched and not roles_passed then
       return errors.authorization_failed(context.service)
     end
-  elseif result == MATCH_FAIL then
-    if self.type == "whitelist" then
+    if not resource_matched and self.whitelist_deny_unmatched then
       return errors.authorization_failed(context.service)
     end
-  else -- NO_MATCH
-    local no_match = self.no_match
-    if no_match == "deny"
-      or (no_match == "type_defined" and self.type == "whitelist") then
+  elseif self.type == "blacklist" then
+    if resource_matched and roles_passed then
       return errors.authorization_failed(context.service)
     end
   end
