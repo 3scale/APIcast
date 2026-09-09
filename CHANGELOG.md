@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bump zlib to 1.3.1 [PR #1577](https://github.com/3scale/APIcast/pull/1577) [THREESCALE-12242](https://redhat.atlassian.net/browse/THREESCALE-12242)
 - Bump liquid-lua to 0.2.1 [PR #1590](https://github.com/3scale/APIcast/pull/1590)
 - Bump nginx-lua-prometheus to 0.20220527 [PR #1591](https://github.com/3scale/APIcast/pull/1591)
+- Bump net-url to 1.2-1 [PR #1591](https://github.com/3scale/APIcast/pull/1606)
 
 ### Removed
 
