@@ -105,6 +105,11 @@
         "description": "Type of the role check",
         "enum": ["whitelist", "blacklist"],
         "default": "whitelist"
+      },
+      "whitelist_deny_unmatched": {
+        "type": "boolean",
+        "description": "Only applies when type is 'whitelist'. When true (default), requests to paths not matching any configured scope are denied. When false, unmatched paths are allowed through.",
+        "default": true
       }
     }
   }

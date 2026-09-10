@@ -99,6 +99,10 @@ end
 function _M.new(config)
   local self = new()
   self.type = config.type or "whitelist"
+  -- When true (default), a whitelist denies requests to paths not matching any
+  -- configured scope. When false, unmatched paths are allowed through.
+  -- Has no effect when type is "blacklist".
+  self.whitelist_deny_unmatched = config.whitelist_deny_unmatched ~= false
   self.scopes = config.scopes or {}
 
   build_scopes(self.scopes)
@@ -158,8 +162,12 @@ local function match_client_roles(scope, context)
   return true
 end
 
+-- Returns:
+--   true  — path matched and all configured roles found in JWT
+--   false — path matched but role check failed
+--   nil   — no path matched
 local function validate_scope_access(scope, context, uri, request_method)
-  for _, method  in ipairs(scope.methods) do
+  for _, method in ipairs(scope.methods) do
 
     local resource = scope.resource_template_string:render(context)
 
@@ -175,38 +183,53 @@ local function validate_scope_access(scope, context, uri, request_method)
       if match_realm_roles(scope, context) and match_client_roles(scope, context) then
         return true
       end
+      return false
     end
   end
-  return false
+  return nil
 end
 
 local function scopes_check(scopes, context)
   local uri = ngx.var.uri
-  local request_method =  ngx.req.get_method()
+  local request_method = ngx.req.get_method()
 
   if not context.jwt then
-    return false
+    return nil
   end
 
+  local resource_matched = false
+
   for _, scope in ipairs(scopes) do
-    if validate_scope_access(scope, context, uri, request_method) then
+    local result = validate_scope_access(scope, context, uri, request_method)
+    if result == true then
       return true
+    elseif result == false then
+      resource_matched = true
     end
   end
 
-  return false
+  if resource_matched then
+    return false  -- path matched, roles did not pass
+  end
+  return nil  -- no path matched
 end
 
 function _M:access(context)
-  if scopes_check(self.scopes, context) then
-    if self.type == "blacklist" then
+  local result = scopes_check(self.scopes, context)
+
+  if self.type == "whitelist" then
+    if result == false then
       return errors.authorization_failed(context.service)
     end
-  else
-    if self.type == "whitelist" then
+    if result == nil and self.whitelist_deny_unmatched then
+      return errors.authorization_failed(context.service)
+    end
+  elseif self.type == "blacklist" then
+    if result == true then
       return errors.authorization_failed(context.service)
     end
   end
+
   return true
 end
 

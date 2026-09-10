@@ -663,5 +663,72 @@ describe('Keycloak Role check policy', function()
       end)
 
     end)
+
+    describe('whitelist_deny_unmatched option', function()
+      local context_with_jwt = {
+        jwt = {
+          realm_access = { roles = { "known_role" } }
+        },
+        service = {
+          auth_failed_status = 403,
+          error_auth_failed = "auth failed"
+        }
+      }
+
+      local scopes = {
+        {
+          realm_roles = { { name = "known_role" } },
+          resource = "/protected"
+        }
+      }
+
+      describe('unmatched path behaviour', function()
+        before_each(function()
+          ngx.var = { uri = '/unmatched' }
+        end)
+
+        it('denies unmatched path by default', function()
+          local policy = KeycloakRoleCheckPolicy.new({ scopes = scopes, type = "whitelist" })
+          policy:access(context_with_jwt)
+          assert.same(ngx.status, 403)
+        end)
+
+        it('denies unmatched path when whitelist_deny_unmatched is true', function()
+          local policy = KeycloakRoleCheckPolicy.new({ scopes = scopes, type = "whitelist", whitelist_deny_unmatched = true })
+          policy:access(context_with_jwt)
+          assert.same(ngx.status, 403)
+        end)
+
+        it('allows unmatched path when whitelist_deny_unmatched is false', function()
+          local policy = KeycloakRoleCheckPolicy.new({ scopes = scopes, type = "whitelist", whitelist_deny_unmatched = false })
+          policy:access(context_with_jwt)
+          assert.not_same(ngx.status, 403)
+        end)
+
+        it('blacklist always allows unmatched path regardless of whitelist_deny_unmatched', function()
+          local policy = KeycloakRoleCheckPolicy.new({ scopes = scopes, type = "blacklist", whitelist_deny_unmatched = true })
+          policy:access(context_with_jwt)
+          assert.not_same(ngx.status, 403)
+        end)
+      end)
+
+      describe('matched path behaviour is unaffected', function()
+        before_each(function()
+          ngx.var = { uri = '/protected' }
+        end)
+
+        it('whitelist + whitelist_deny_unmatched false: matched path with correct role is still allowed', function()
+          local policy = KeycloakRoleCheckPolicy.new({ scopes = scopes, type = "whitelist", whitelist_deny_unmatched = false })
+          policy:access(context_with_jwt)
+          assert.not_same(ngx.status, 403)
+        end)
+
+        it('blacklist + whitelist_deny_unmatched true: matched path with correct role is still denied', function()
+          local policy = KeycloakRoleCheckPolicy.new({ scopes = scopes, type = "blacklist", whitelist_deny_unmatched = true })
+          policy:access(context_with_jwt)
+          assert.same(ngx.status, 403)
+        end)
+      end)
+    end)
   end)
 end)
