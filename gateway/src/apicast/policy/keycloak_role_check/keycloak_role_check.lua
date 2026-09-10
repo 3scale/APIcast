@@ -102,7 +102,7 @@ function _M.new(config)
   -- When true (default), a whitelist denies requests to paths not matching any
   -- configured scope. When false, unmatched paths are allowed through.
   -- Has no effect when type is "blacklist".
-  self.whitelist_deny_unmatched = config.whitelist_deny_unmatched ~= false and true or false
+  self.whitelist_deny_unmatched = config.whitelist_deny_unmatched ~= false
   self.scopes = config.scopes or {}
 
   build_scopes(self.scopes)
@@ -162,6 +162,10 @@ local function match_client_roles(scope, context)
   return true
 end
 
+-- Returns:
+--   true  — path matched and all configured roles found in JWT
+--   false — path matched but role check failed
+--   nil   — no path matched
 local function validate_scope_access(scope, context, uri, request_method)
   for _, method in ipairs(scope.methods) do
 
@@ -177,12 +181,12 @@ local function validate_scope_access(scope, context, uri, request_method)
 
     if mapping_rule:matches(request_method, uri) then
       if match_realm_roles(scope, context) and match_client_roles(scope, context) then
-        return true, true
+        return true
       end
-      return true, false
+      return false
     end
   end
-  return false, false
+  return nil
 end
 
 local function scopes_check(scopes, context)
@@ -190,36 +194,38 @@ local function scopes_check(scopes, context)
   local request_method = ngx.req.get_method()
 
   if not context.jwt then
-    return false, false
+    return nil
   end
 
-  local any_resource_matched = false
+  local resource_matched = false
 
   for _, scope in ipairs(scopes) do
-    local resource_matched, roles_passed = validate_scope_access(scope, context, uri, request_method)
-    if resource_matched then
-      if roles_passed then
-        return true, true
-      end
-      any_resource_matched = true
+    local result = validate_scope_access(scope, context, uri, request_method)
+    if result == true then
+      return true
+    elseif result == false then
+      resource_matched = true
     end
   end
 
-  return any_resource_matched, false
+  if resource_matched then
+    return false  -- path matched, roles did not pass
+  end
+  return nil  -- no path matched
 end
 
 function _M:access(context)
-  local resource_matched, roles_passed = scopes_check(self.scopes, context)
+  local result = scopes_check(self.scopes, context)
 
   if self.type == "whitelist" then
-    if resource_matched and not roles_passed then
+    if result == false then
       return errors.authorization_failed(context.service)
     end
-    if not resource_matched and self.whitelist_deny_unmatched then
+    if result == nil and self.whitelist_deny_unmatched then
       return errors.authorization_failed(context.service)
     end
   elseif self.type == "blacklist" then
-    if resource_matched and roles_passed then
+    if result == true then
       return errors.authorization_failed(context.service)
     end
   end
