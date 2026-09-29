@@ -47,7 +47,7 @@ function _M:rewrite(context)
   local req_uri = ngx.var.uri
 
   for _, rule in ipairs(self.rules) do
-    if match(req_uri, rule.regex) then
+    if match(req_uri, rule.regex, 'oj') then
       ngx.log(ngx.DEBUG, 'upstream policy uri: ', req_uri, ' regex: ', rule.regex, ' match: true')
       -- better to allocate new object for each request as it is going to get mutated
       context[self] = Upstream.new(rule.url)

@@ -238,17 +238,21 @@ end
 -- @return @{credentials_v1}, @{credentials_v2}, or @{credentials_oauth}
 -- @return[opt] error message why credentials could not be extracted
 function _M:extract_credentials()
-  local backend_version = tostring(self.backend_version)
   local credentials = rawget(self, 'credentials')
 
   if not credentials then
     return nil, 'missing credentials'
   end
 
-  local extractor = backend_version_credentials['version_' .. backend_version]
+  local extractor = self.credentials_extractor
 
   if not extractor then
-   return nil, 'invalid backend version: ' .. backend_version
+    local backend_version = tostring(self.backend_version)
+    extractor = backend_version_credentials['version_' .. backend_version]
+    if not extractor then
+      return nil, 'invalid backend version: ' .. backend_version
+    end
+    self.credentials_extractor = extractor
   end
 
   return extractor(credentials)
