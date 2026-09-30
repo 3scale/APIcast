@@ -45,7 +45,9 @@ describe('OIDC Configuration loader', function()
     end)
 
     it('forwards all parameters', function()
-      assert.same({'{"oidc":[]}', 'one', 'two'}, { loader.call('{}', 'one', 'two')})
+      local result = { loader.call('{}', 'one', 'two') }
+      assert.same({ oidc = {} }, result[1])
+      assert.same({ 'one', 'two' }, { result[2], result[3] })
     end)
 
     it('gets openid configuration', function()
@@ -96,7 +98,7 @@ describe('OIDC Configuration loader', function()
           ]
         }
       ]])
-      assert.same(expected_oidc, cjson.decode(oidc))
+      assert.same(expected_oidc, oidc)
     end)
 
     -- This is a regression test. cjson crashed when parsing a config where
@@ -161,7 +163,7 @@ describe('OIDC Configuration loader', function()
           ]
         }
       ]])
-      assert.same(expected_oidc, cjson.decode(oidc))
+      assert.same(expected_oidc, oidc)
     end)
 
     it('handles OIDC discovery failure gracefully without crashing', function()
@@ -201,7 +203,7 @@ describe('OIDC Configuration loader', function()
       local result = loader.call(cjson.encode(config))
       assert.is_not_nil(result)
 
-      local decoded = cjson.decode(result)
+      local decoded = result
       assert.equals(2, #decoded.oidc)
 
       -- First service should have error
@@ -265,7 +267,7 @@ describe('OIDC Configuration loader', function()
       local result = loader.call(cjson.encode(config))
       assert.is_not_nil(result)
 
-      local decoded = cjson.decode(result)
+      local decoded = result
       assert.equals(1, #decoded.oidc)
       assert.equals(99, decoded.oidc[1].service_id)
       -- assert.is_not_nil(decoded.oidc[1].error)

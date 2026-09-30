@@ -9,4 +9,7 @@ require('apicast.loader')
 local configuration = require 'apicast.configuration_loader'
 local config = configuration.boot()
 
+if type(config) == 'table' then
+  config = require('cjson').encode(config)
+end
 ngx.say(config)

@@ -133,7 +133,7 @@ local function parse_proxy_configs(self, proxy_configs)
 
     config.oidc[i] = oidc_copy
   end
-  return cjson.encode(config)
+  return config
 end
 
 local function parse_resp_body(self, resp_body)
@@ -207,7 +207,7 @@ function _M:index_per_service()
     configs[i] = nil
   end
 
-  return cjson.encode(configs)
+  return configs
 end
 
 function _M:index_custom_path(host)

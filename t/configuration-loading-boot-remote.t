@@ -29,7 +29,7 @@ env PATH;
 location = /t {
   content_by_lua_block {
     local loader = require('apicast.configuration_loader.remote_v2')
-    ngx.say(assert(loader:call()))
+    ngx.say(assert(require('cjson').encode(loader:call())))
   }
 }
 
@@ -55,7 +55,7 @@ env PATH;
 location = /t {
   content_by_lua_block {
     local loader = require('apicast.configuration_loader.remote_v2')
-    ngx.say(assert(loader:call()))
+    ngx.say(assert(require('cjson').encode(loader:call())))
   }
 }
 
@@ -102,7 +102,7 @@ echo '
 GET /t
 --- exit_code: 200
 
-=== TEST 4: retrieve config with liquid values using THREESCALE_PORTAL_ENDPOINT with path
+=== TEST 3: retrieve config with liquid values using THREESCALE_PORTAL_ENDPOINT with path
 should not fail
 --- main_config
 env THREESCALE_PORTAL_ENDPOINT=http://127.0.0.1:$TEST_NGINX_SERVER_PORT/config;
@@ -115,7 +115,7 @@ env PATH;
 location = /t {
   content_by_lua_block {
     local loader = require('apicast.configuration_loader.remote_v2')
-    ngx.say(assert(loader:call()))
+    ngx.say(assert(require('cjson').encode(loader:call())))
   }
 }
 
