@@ -23,10 +23,14 @@ local _M = {
 }
 
 local mt = { __index = _M }
+local empty_table = {}
 
 local function hash_to_array(hash)
-  local array = {}
+  if not hash or next(hash) == nil then
+    return empty_table
+  end
 
+  local array = {}
   for k,v in pairs(hash or {}) do
     insert(array, { k, v })
   end
@@ -86,17 +90,16 @@ local function matches_querystring_params(params, args)
 end
 
 local function matches_uri(rule_pattern, uri)
-  return re_match(uri, format("^%s", rule_pattern), 'oj')
+  return re_match(uri, rule_pattern, 'oj')
 end
 
 local function new(http_method, pattern, params, querystring_params, metric, delta, last, owner_id, owner_type)
   local self = setmetatable({}, mt)
 
-  local querystring_parameters = hash_to_array(querystring_params)
-
+  self.querystring_parameters = hash_to_array(querystring_params)
   self.method = http_method
   self.pattern = pattern
-  self.regexpified_pattern = regexpify(pattern)
+  self.regexpified_pattern = format("^%s", regexpify(pattern))
   self.parameters = params
   self.system_name = metric or error('missing metric name of rule')
   self.delta = delta
@@ -104,11 +107,6 @@ local function new(http_method, pattern, params, querystring_params, metric, del
 
   if owner_type == BackendAPIconst then
     self.owner_id = owner_id
-  end
-
-
-  self.querystring_params = function(args)
-    return matches_querystring_params(querystring_parameters, args)
   end
 
   return self
@@ -153,7 +151,7 @@ end
 function _M:matches(method, uri, args)
   local match = (self.method == self.any_method or self.method == method) and
       matches_uri(self.regexpified_pattern, uri) and
-      self.querystring_params(args)
+      matches_querystring_params(self.querystring_parameters, args)
 
   -- match can be nil. Convert to boolean.
   return match == true
