@@ -94,22 +94,22 @@ local function matches_uri(rule_pattern, uri)
 end
 
 local function new(http_method, pattern, params, querystring_params, metric, delta, last, owner_id, owner_type)
-  local self = setmetatable({}, mt)
-
-  self.querystring_parameters = hash_to_array(querystring_params)
-  self.method = http_method
-  self.pattern = pattern
-  self.regexpified_pattern = format("^%s", regexpify(pattern))
-  self.parameters = params
-  self.system_name = metric or error('missing metric name of rule')
-  self.delta = delta
-  self.last = last or false
+  local self = {
+    querystring_parameters = hash_to_array(querystring_params),
+    method = http_method,
+    pattern = pattern,
+    regexpified_pattern = format("^%s", regexpify(pattern)),
+    parameters = params,
+    system_name = metric or error('missing metric name of rule'),
+    delta = delta,
+    last = last or false
+  }
 
   if owner_type == BackendAPIconst then
     self.owner_id = owner_id
   end
 
-  return self
+  return setmetatable(self, mt)
 end
 
 --- Initializes a mapping rule from a proxy rule of the service configuration.
