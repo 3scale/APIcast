@@ -19,7 +19,7 @@ dependencies = {
    'lua-resty-env',
    'lua-resty-execvp',
    'liquid == 0.2.1',
-   'argparse',
+   'argparse == 0.7.2',
    'penlight == 1.15.0',
    'nginx-lua-prometheus == 0.20220527',
    'lua-resty-jit-uuid',
