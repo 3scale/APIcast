@@ -61,7 +61,11 @@ function _M.call(...)
 
         config.oidc = oidc
 
-        return cjson.encode(config), select(2, ...)
+        -- Return the decoded table instead of re-encoding to JSON.
+        -- configuration_parser.decode() passes tables through untouched, so
+        -- downstream configuration_parser.parse() won't need to re-decode it
+        -- either.
+        return config, select(2, ...)
     else
         return ...
     end

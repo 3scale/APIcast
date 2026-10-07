@@ -396,9 +396,9 @@ UwIDAQAB
       local config = assert(loader:index_per_service())
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      assert.equals(2, #(cjson.decode(config).services))
+      assert.equals(2, #(config.services))
     end)
 
     it('does not crash on error when getting services', function()
@@ -447,9 +447,9 @@ UwIDAQAB
       local config = assert(loader:index_per_service())
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      assert.equals(1, #(cjson.decode(config).services))
+      assert.equals(1, #(config.services))
     end)
 
     describe("When using APICAST_SERVICES_FILTER_BY_URL", function()
@@ -503,9 +503,9 @@ UwIDAQAB
         local config = assert(loader:index_per_service())
 
         assert.truthy(config)
-        assert.equals('string', type(config))
+        assert.equals('table', type(config))
 
-        local res_services = cjson.decode(config).services
+        local res_services = config.services
         assert.equals(1, #res_services)
         assert.equals(1, res_services[1].id)
       end)
@@ -516,9 +516,9 @@ UwIDAQAB
         local config = assert(loader:index_per_service())
 
         assert.truthy(config)
-        assert.equals('string', type(config))
+        assert.equals('table', type(config))
 
-        local res_services = cjson.decode(config).services
+        local res_services = config.services
         assert.equals(2, #res_services)
         assert.equals(1, res_services[1].id)
         assert.equals(2, res_services[2].id)
@@ -531,9 +531,9 @@ UwIDAQAB
         local config = assert(loader:index_per_service())
 
         assert.truthy(config)
-        assert.equals('string', type(config))
+        assert.equals('table', type(config))
 
-        local res_services = cjson.decode(config).services
+        local res_services = config.services
         assert.equals(2, #res_services)
         assert.equals(1, res_services[1].id)
         assert.equals(2, res_services[2].id)
@@ -546,9 +546,9 @@ UwIDAQAB
         local config = assert(loader:index_per_service())
 
         assert.truthy(config)
-        assert.equals('string', type(config))
+        assert.equals('table', type(config))
 
-        local res_services = cjson.decode(config).services
+        local res_services = config.services
         assert.equals(2, #res_services)
         assert.equals(1, res_services[1].id)
         assert.equals(2, res_services[2].id)
@@ -560,9 +560,9 @@ UwIDAQAB
         local config = assert(loader:index_per_service())
 
         assert.truthy(config)
-        assert.equals('string', type(config))
+        assert.equals('table', type(config))
 
-        local res_services = cjson.decode(config).services
+        local res_services = config.services
         assert.equals(2, #res_services)
         assert.equals(1, res_services[1].id)
         assert.equals(2, res_services[2].id)
@@ -665,17 +665,16 @@ UwIDAQAB
       local config = assert(loader:index_per_service())
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(11, #result_config.services)
-      assert.equals(11, #result_config.oidc)
+      assert.equals(11, #config.services)
+      assert.equals(11, #config.oidc)
       assert.same({
           id_token_signing_alg_values_supported = { 'RS256' },
           issuer = 'https://idp.example.com/auth/realms/foo',
           jwks_uri = 'https://idp.example.com/auth/realms/foo/jwks'
-      }, result_config.oidc[11].config)
-      assert.same('https://idp.example.com/auth/realms/foo', result_config.oidc[11].issuer)
+      }, config.oidc[11].config)
+      assert.same('https://idp.example.com/auth/realms/foo', config.oidc[11].issuer)
       assert.same({ ['3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y'] = {
         e = 'AQAB',
         kid = '3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y',
@@ -692,7 +691,7 @@ Bw2ns0fQOZZRjWFRVh8BjkVdqa4vCAb6zw8hpR1y9uSNG+fqUAPHy5IYQaD8k8QX
 UwIDAQAB
 -----END PUBLIC KEY-----
 ]], }
-      }, result_config.oidc[11].keys)
+      }, config.oidc[11].keys)
     end)
   end)
 
@@ -725,12 +724,11 @@ UwIDAQAB
       local config = assert(loader:index_custom_path())
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
 
     it('returns configuration for all services with host', function()
@@ -749,12 +747,11 @@ UwIDAQAB
       local config = assert(loader:index_custom_path('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
 
     it('returns nil and an error if the config is not a valid', function()
@@ -818,18 +815,17 @@ UwIDAQAB
       local config = assert(loader:index_custom_path('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
       assert.same({
           id_token_signing_alg_values_supported = { 'RS256' },
           issuer = 'https://idp.example.com/auth/realms/foo',
           jwks_uri = 'https://idp.example.com/auth/realms/foo/jwks'
-      }, result_config.oidc[1].config)
-      assert.same('https://idp.example.com/auth/realms/foo', result_config.oidc[1].issuer)
+      }, config.oidc[1].config)
+      assert.same('https://idp.example.com/auth/realms/foo', config.oidc[1].issuer)
       assert.same({ ['3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y'] = {
         e = 'AQAB',
         kid = '3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y',
@@ -846,7 +842,7 @@ Bw2ns0fQOZZRjWFRVh8BjkVdqa4vCAb6zw8hpR1y9uSNG+fqUAPHy5IYQaD8k8QX
 UwIDAQAB
 -----END PUBLIC KEY-----
 ]], }
-      }, result_config.oidc[1].keys)
+      }, config.oidc[1].keys)
     end)
 
     it('returns configuration from master endpoint', function()
@@ -865,12 +861,11 @@ UwIDAQAB
       local config = assert(loader:index_custom_path('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
   end)
 
@@ -918,12 +913,11 @@ UwIDAQAB
       local config = assert(loader:index())
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
 
     it('returns configuration for all services with host', function()
@@ -942,12 +936,11 @@ UwIDAQAB
       local config = assert(loader:index('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
 
     it('returns nil and an error if the config is not a valid', function()
@@ -1011,18 +1004,17 @@ UwIDAQAB
       local config = assert(loader:index('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
       assert.same({
           id_token_signing_alg_values_supported = { 'RS256' },
           issuer = 'https://idp.example.com/auth/realms/foo',
           jwks_uri = 'https://idp.example.com/auth/realms/foo/jwks'
-      }, result_config.oidc[1].config)
-      assert.same('https://idp.example.com/auth/realms/foo', result_config.oidc[1].issuer)
+      }, config.oidc[1].config)
+      assert.same('https://idp.example.com/auth/realms/foo', config.oidc[1].issuer)
       assert.same({ ['3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y'] = {
         e = 'AQAB',
         kid = '3g-I9PWt6NrznPLcbE4zZrakXar27FDKEpqRPlD2i2Y',
@@ -1039,7 +1031,7 @@ Bw2ns0fQOZZRjWFRVh8BjkVdqa4vCAb6zw8hpR1y9uSNG+fqUAPHy5IYQaD8k8QX
 UwIDAQAB
 -----END PUBLIC KEY-----
 ]], }
-      }, result_config.oidc[1].keys)
+      }, config.oidc[1].keys)
     end)
 
     it('returns configuration from admin portal endpoint', function()
@@ -1058,12 +1050,11 @@ UwIDAQAB
       local config = assert(loader:index('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
 
     it('retuns configurations from multiple pages', function()
@@ -1094,10 +1085,9 @@ UwIDAQAB
       local config = loader:index()
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      local result_config = cjson.decode(config)
-      assert.equals(2*PROXY_CONFIGS_PER_PAGE + 51, #result_config.services)
+      assert.equals(2*PROXY_CONFIGS_PER_PAGE + 51, #config.services)
     end)
   end)
 
@@ -1137,8 +1127,8 @@ UwIDAQAB
 
       local config = assert(loader:call())
       assert.truthy(config)
-      assert.equals('string', type(config))
-      assert.equals(1, #(cjson.decode(config).services))
+      assert.equals('table', type(config))
+      assert.equals(1, #(config.services))
     end)
 
     it('with custom path call index_custom_path', function()
@@ -1157,12 +1147,11 @@ UwIDAQAB
       local config = assert(loader:call('foobar.example.com'))
 
       assert.truthy(config)
-      assert.equals('string', type(config))
+      assert.equals('table', type(config))
 
-      result_config = cjson.decode(config)
-      assert.equals(1, #result_config.services)
-      assert.equals(1, #result_config.oidc)
-      assert.same('2', result_config.oidc[1].service_id)
+      assert.equals(1, #config.services)
+      assert.equals(1, #config.oidc)
+      assert.same('2', config.oidc[1].service_id)
     end)
 
     it('by default call index', function()
@@ -1180,8 +1169,8 @@ UwIDAQAB
 
       local config = assert(loader:call("foobar.example.com"))
       assert.truthy(config)
-      assert.equals('string', type(config))
-      assert.equals(1, #(cjson.decode(config).services))
+      assert.equals('table', type(config))
+      assert.equals(1, #(config.services))
     end)
   end)
 end)
