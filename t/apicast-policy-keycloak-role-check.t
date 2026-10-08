@@ -550,3 +550,146 @@ Check an allowed role with the blacklisted mode with methods
 --- no_error_log
 [error]
 oauth failed with
+
+
+=== TEST 8: whitelist_deny_unmatched false - unmatched path is allowed
+Scoped whitelist: paths not listed in scopes are allowed regardless of roles.
+--- backend
+  location /transactions/oauth_authrep.xml {
+    content_by_lua_block {
+      ngx.exit(200)
+    }
+  }
+
+--- configuration
+{
+  "oidc": [
+    {
+      "issuer": "https://example.com/auth/realms/apicast",
+      "config": { "id_token_signing_alg_values_supported": [ "RS256" ] },
+      "keys": { "somekid": { "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----", "alg": "RS256" } }
+    }
+  ],
+  "services": [
+    {
+      "id": 42,
+      "backend_version": "oauth",
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "authentication_method": "oidc",
+        "oidc_issuer_endpoint": "https://example.com/auth/realms/apicast",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.keycloak_role_check",
+            "configuration": {
+              "scopes": [
+                {
+                  "realm_roles": [ { "name": "admin" } ],
+                  "resource": "/protected"
+                }
+              ],
+              "whitelist_deny_unmatched": false
+            }
+          },
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location /public {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /public
+--- more_headers eval
+::authorization_bearer_jwt('audience', {
+  realm_access => {
+    roles => [ 'regular_user' ]
+  }
+}, 'somekid')
+--- error_code: 200
+--- response_body
+yay, api backend
+--- no_error_log
+[error]
+oauth failed with
+
+
+
+=== TEST 9: whitelist_deny_unmatched true (default) - unmatched path is denied
+Whitelist default behaviour: paths not listed in scopes are denied.
+--- backend
+  location /transactions/oauth_authrep.xml {
+    content_by_lua_block {
+      ngx.exit(200)
+    }
+  }
+
+--- configuration
+{
+  "oidc": [
+    {
+      "issuer": "https://example.com/auth/realms/apicast",
+      "config": { "id_token_signing_alg_values_supported": [ "RS256" ] },
+      "keys": { "somekid": { "pem": "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALClz96cDQ965ENYMfZzG+Acu25lpx2K\nNpAALBQ+catCA59us7+uLY5rjQR6SOgZpCz5PJiKNAdRPDJMXSmXqM0CAwEAAQ==\n-----END PUBLIC KEY-----", "alg": "RS256" } }
+    }
+  ],
+  "services": [
+    {
+      "id": 42,
+      "backend_version": "oauth",
+      "backend_authentication_type": "service_token",
+      "backend_authentication_value": "token-value",
+      "proxy": {
+        "authentication_method": "oidc",
+        "error_status_auth_failed": 403,
+        "error_auth_failed": "auth failed",
+        "oidc_issuer_endpoint": "https://example.com/auth/realms/apicast",
+        "api_backend": "http://test:$TEST_NGINX_SERVER_PORT/",
+        "proxy_rules": [
+          { "pattern": "/", "http_method": "GET", "metric_system_name": "hits", "delta": 1 }
+        ],
+        "policy_chain": [
+          {
+            "name": "apicast.policy.keycloak_role_check",
+            "configuration": {
+              "scopes": [
+                {
+                  "realm_roles": [ { "name": "restricted" } ],
+                  "resource": "/sensitive"
+                }
+              ]
+            }
+          },
+          { "name": "apicast.policy.apicast" }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location /other {
+     content_by_lua_block {
+       ngx.say('yay, api backend');
+     }
+  }
+--- request
+GET /other
+--- more_headers eval
+::authorization_bearer_jwt('audience', {
+  realm_access => {
+    roles => [ 'regular_user' ]
+  }
+}, 'somekid')
+--- error_code: 403
+--- response_body chomp
+auth failed

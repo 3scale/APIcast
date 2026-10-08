@@ -118,3 +118,25 @@
     ]
   }
   ```
+
+## `whitelist_deny_unmatched` option
+
+By default, when using `whitelist` mode, requests to paths not matching any configured scope are denied. Set `whitelist_deny_unmatched` to `false` to allow unmatched paths through instead.
+
+This option has no effect when `type` is `"blacklist"`.
+
+- When you want to protect only specific paths with a role check and leave all other paths open. Set `whitelist_deny_unmatched` to `false`.
+
+  ```json
+  {
+    "scopes": [
+      {
+        "realm_roles": [ { "name": "admin" } ],
+        "resource": "/admin"
+      }
+    ],
+    "whitelist_deny_unmatched": false
+  }
+  ```
+
+  Requests to `/admin` require the `admin` realm role. Requests to any other path are allowed regardless of roles.

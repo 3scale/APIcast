@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bump nginx-lua-prometheus to 0.20220527 [PR #1591](https://github.com/3scale/APIcast/pull/1591)
 - Bump net-url to 1.2-1 [PR #1606](https://github.com/3scale/APIcast/pull/1606)
 - Bump argparse to 0.7.2 [PR #1607](https://github.com/3scale/APIcast/pull/1607)
+- Add `whitelist_deny_unmatched` option to keycloak_role_check policy [PR #1605](https://github.com/3scale/APIcast/pull/1605) [THREESCALE-11887](https://redhat.atlassian.net/browse/THREESCALE-11887)
 
 ### Removed
 
