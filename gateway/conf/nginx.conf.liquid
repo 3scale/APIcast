@@ -60,14 +60,21 @@ http {
     resolver {{ nameservers | join: " " }};
   {% endif %}
 
+  {%- comment -%}
+Capture environment variables for init.conf, excluding APICAST_SERVICES_LIST which can be
+very large and hit NGINX parser limits. APICAST_SERVICES_LIST is cached separately in
+init.conf using os.getenv() during init phase before the environment is cleared.
+  {%- endcomment -%}
   {%- capture ENV -%}
-    {
-      {%- for env in env -%}
-      {%- if env.name | starts_with: 'APICAST_', 'THREESCALE_' %}
-      [ [[{{ env.name }}]] ] = [[{{ env.value }}]],
-      {%- endif -%}
+  {
+    {%- for env in env -%}
+    {%- if env.name | starts_with: 'APICAST_', 'THREESCALE_' %}
+    {%- unless env.name == 'APICAST_SERVICES_LIST' %}
+    [ [[{{ env.name }}]] ] = [[{{ env.value }}]],
+    {%- endunless -%}
+    {%- endif -%}
     {%- endfor %}
-    }
+  }
   {%- endcapture -%}
 
   {% for file in "http.d/*.conf" | filesystem %}
