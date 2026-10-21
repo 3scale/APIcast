@@ -43,16 +43,11 @@ The JSON file needs to follow the [schema](schema.json), see an [example
 file](examples/configuration/example-config.json) with the fields that are used
 by APIcast.
 
-### Openshift
+### OpenShift
 
-You need to create a secret with your `ACCESS_TOKEN` and your `ADMIN_PORTAL_DOMAIN`:
-
-```shell
-oc create secret generic apicast-configuration-url-secret \
-   --from-literal=password=https://ACCESS_TOKEN@ADMIN_PORTAL_DOMAIN \
-   --type=kubernetes.io/basic-auth
-oc new-app -f https://raw.githubusercontent.com/3scale/apicast/master/openshift/apicast-template.yml
-```
+The legacy OpenShift template was removed because it is no longer used to deploy
+APIcast. For current OpenShift deployment guidance, use the documentation for
+your 3scale product version.
 
 ## Features
 
