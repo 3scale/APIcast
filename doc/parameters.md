@@ -2,8 +2,6 @@
 
 APIcast v2 has a number of parameters configured as [environment variables](#environment-variables) that can modify the behavior of the gateway. The following reference provides descriptions of these parameters.
 
-Note that when deploying APIcast v2 with OpenShift, some of these parameters can be configured via OpenShift template parameters. The latter can be consulted directly in the [template](https://raw.githubusercontent.com/3scale/apicast/master/openshift/apicast-template.yml).
-
 ## Environment variables
 
 ### `APICAST_BACKEND_CACHE_HANDLER`
