@@ -72,8 +72,6 @@ end
 function _M:get_all(service_id)
   local cached_reports = {}
 
-  local cached_report_keys = self.storage:get_keys()
-
   local lock, new_lock_err = resty_lock:new(self.lock_shdict_name, lock_options)
   if not lock then
     ngx.log(ngx.ERR, 'failed to create lock: ', new_lock_err)
@@ -86,17 +84,30 @@ function _M:get_all(service_id)
     return {}
   end
 
+  -- The keys need to be read while holding the lock. There is one reporting
+  -- timer per worker, so reading them before acquiring it allows another
+  -- worker to delete a key in between, and then storage:get() below returns
+  -- nil for it.
+  local cached_report_keys = self.storage:get_keys()
+
   for _, key in ipairs(cached_report_keys) do
     local value = self.storage:get(key)
-    local report, err = keys_helper.report_from_key_batched_report(key, value)
 
-    if not err then
-      if value > 0 and report and report.service_id == service_id then
-        insert(cached_reports, report)
-        self.storage:delete(key)
+    -- Deletes only happen while holding the lock, but the entry can still be
+    -- gone, for example if it was evicted. Skip it rather than raising, an
+    -- error here would leave the lock to expire on its own and would prevent
+    -- the caller from scheduling the next run.
+    if value then
+      local report, err = keys_helper.report_from_key_batched_report(key, value)
+
+      if not err then
+        if value > 0 and report and report.service_id == service_id then
+          insert(cached_reports, report)
+          self.storage:delete(key)
+        end
+      else
+        ngx.log(ngx.WARN, 'failed to get report for key ', key, ' err: ', err)
       end
-    else
-      ngx.log(ngx.WARN, 'failed to get report for key ', key, ' err: ', err)
     end
   end
 
