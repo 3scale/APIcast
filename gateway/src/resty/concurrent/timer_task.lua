@@ -2,6 +2,7 @@ local GC = require 'apicast.gc'
 
 local uuid = require 'resty.jit-uuid'
 local unpack = unpack
+local pcall = pcall
 
 local _M = {}
 
@@ -68,7 +69,15 @@ run_periodic = function(run_now, id, func, args, interval)
   end
 
   if run_now then
-    func(unpack(args))
+    -- The task is run inside a pcall so that a failing run cannot prevent the
+    -- next one from being scheduled. Letting the error propagate aborts the
+    -- timer thread before schedule_next() below, which stops the task from
+    -- ever running again on this worker.
+    local ok, err = pcall(func, unpack(args))
+
+    if not ok then
+      ngx.log(ngx.ERR, 'timer task failed to run: ', err)
+    end
   end
 
   if not _M.last_one[id] then

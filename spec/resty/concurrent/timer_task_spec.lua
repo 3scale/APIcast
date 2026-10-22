@@ -132,6 +132,24 @@ describe('TimerTask', function()
       end)
     end)
 
+    describe('when the task raises an error', function()
+      local failing_task = function() error('something went wrong') end
+
+      it('does not propagate the error', function()
+        local timer_task = TimerTask.new(failing_task, { args = args, interval = interval })
+
+        assert.has_no.errors(function() timer_task:execute(true) end)
+      end)
+
+      it('schedules the next one', function()
+        local timer_task = TimerTask.new(failing_task, { args = args, interval = interval })
+
+        timer_task:execute(true)
+
+        assert.stub(ngx_timer_stub).was_called()
+      end)
+    end)
+
     describe('when the task is not active', function()
       it('does not run the task', function()
         local timer_task = TimerTask.new(func, { args = args, interval = interval })
