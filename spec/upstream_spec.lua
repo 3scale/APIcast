@@ -53,6 +53,8 @@ describe('Upstream', function()
     end)
 
     describe(':append_path', function()
+        before_each(function() ngx.var = { } end)
+
         it('return valid path when is not set', function()
             local up = Upstream.new('http://host:8090')
             up:append_path("/test")
@@ -69,6 +71,22 @@ describe('Upstream', function()
             local up = Upstream.new('http://host:8090/test')
             up:append_path("")
             assert.same(up.uri.path, "/test")
+        end)
+
+        it('keeps an encoded "?" of the request path in the path', function()
+            ngx.var = { uri = '/REST/svc/files/a?b' }
+            local up = Upstream.new('http://host:8090/REST/svc')
+            up:append_path("/files/a?b")
+            assert.same(up.uri.path, "/REST/svc/files/a?b")
+            assert.is_nil(up.uri.query)
+        end)
+
+        it('does not use the query of the rendered path', function()
+            ngx.var = { uri = '/REST/svc/files/a' }
+            local up = Upstream.new('http://host:8090/REST/svc')
+            up:append_path("/files/a?b")
+            assert.same(up.uri.path, "/REST/svc/files/a")
+            assert.is_nil(up.uri.query)
         end)
 
     end)
