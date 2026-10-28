@@ -2586,3 +2586,54 @@ content_by_lua_block {
 }
 --- no_error_log
 [error]
+
+
+=== TEST 37: Encoded "?" in the path is kept when the backend has a path
+The rule is the one 3scale generates for a Backend used with a path. A "%3F"
+in the request path must reach the upstream as "%3F" and not cut the path.
+--- configuration
+{
+  "services": [
+    {
+      "id": 42,
+      "proxy": {
+        "policy_chain": [
+          {
+            "name": "apicast.policy.routing",
+            "configuration": {
+              "rules": [
+                {
+                  "url": "http://test:$TEST_NGINX_SERVER_PORT/REST/svc",
+                  "replace_path": "{{uri | remove_first: '/REST/svc'}}",
+                  "condition": {
+                    "operations": [
+                      {
+                        "match": "path",
+                        "op": "matches",
+                        "value": "^(/REST/svc/.*|/REST/svc/?)"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+--- upstream
+  location ~ / {
+     content_by_lua_block {
+       ngx.say(ngx.var.request_uri)
+     }
+  }
+--- request eval
+["GET /REST/svc/files/a%3Fb", "GET /REST/svc/files/a%3Fb?x=1", "GET /REST/svc/files/a?x=1"]
+--- response_body eval
+["/REST/svc/files/a%3Fb\n", "/REST/svc/files/a%3Fb?x=1\n", "/REST/svc/files/a?x=1\n"]
+--- error_code eval
+[200, 200, 200]
+--- no_error_log
+[error]

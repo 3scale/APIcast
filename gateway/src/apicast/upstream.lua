@@ -8,6 +8,7 @@
 
 local setmetatable = setmetatable
 local str_format = string.format
+local str_find = string.find
 
 local resty_resolver = require('resty.resolver')
 local resty_url = require('resty.url')
@@ -121,7 +122,17 @@ function _M:set_path(path)
 end
 
 function _M:append_path(path)
-    local tmp_path, tmp_query = url_helper.split_path(path)
+    local tmp_path, tmp_query
+
+    -- ngx.var.uri is decoded, so a "?" in it was sent as "%3F" and is part of a
+    -- path segment. A path rendered from it must not be split there.
+    local uri = ngx.var.uri
+    if uri and str_find(uri, '?', 1, true) then
+      tmp_path = path
+    else
+      tmp_path, tmp_query = url_helper.split_path(path)
+    end
+
     if not self.uri.path then
       self.uri.path = "/"
     end
