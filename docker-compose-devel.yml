@@ -9,7 +9,6 @@ services:
     working_dir: /opt/app-root/src/
     command: cat
     tty: true
-    init: true
     environment:
       EDITOR: vi
       TEST_NGINX_REDIS_HOST: redis

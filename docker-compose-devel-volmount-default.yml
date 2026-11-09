@@ -3,7 +3,8 @@ services:
   development:
     privileged: true
     pid: "host"
+    user: "0:0"
     volumes:
-      - .:/opt/app-root/src/
+      - .:/opt/app-root/src/:Z
       - /sys/kernel/debug:/sys/kernel/debug
       - /lib/modules:/lib/module
