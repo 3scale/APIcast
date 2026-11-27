@@ -90,23 +90,26 @@ function _M:get_all(service_id)
   -- nil for it.
   local cached_report_keys = self.storage:get_keys()
 
+  local service_prefix = "service_id:" .. service_id .. ","
   for _, key in ipairs(cached_report_keys) do
-    local value = self.storage:get(key)
+    if key:find(service_prefix, 1, true) == 1 then
+      local value = self.storage:get(key)
 
-    -- Deletes only happen while holding the lock, but the entry can still be
-    -- gone, for example if it was evicted. Skip it rather than raising, an
-    -- error here would leave the lock to expire on its own and would prevent
-    -- the caller from scheduling the next run.
-    if value then
-      local report, err = keys_helper.report_from_key_batched_report(key, value)
+      -- Deletes only happen while holding the lock, but the entry can still be
+      -- gone, for example if it was evicted. Skip it rather than raising, an
+      -- error here would leave the lock to expire on its own and would prevent
+      -- the caller from scheduling the next run.
+      if value then
+        local report, err = keys_helper.report_from_key_batched_report(key, value)
 
-      if not err then
-        if value > 0 and report and report.service_id == service_id then
-          insert(cached_reports, report)
-          self.storage:delete(key)
+        if not err then
+          if value > 0 and report and report.service_id == service_id then
+            insert(cached_reports, report)
+            self.storage:delete(key)
+          end
+        else
+          ngx.log(ngx.WARN, 'failed to get report for key ', key, ' err: ', err)
         end
-      else
-        ngx.log(ngx.WARN, 'failed to get report for key ', key, ' err: ', err)
       end
     end
   end
